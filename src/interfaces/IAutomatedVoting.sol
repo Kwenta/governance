@@ -53,6 +53,10 @@ interface IAutomatedVoting {
     /// @notice returns the current elite council
     function getEliteCouncil() external view returns (address[] memory);
 
+    /// @notice returns if the election is finalized
+    /// @param election the election to check
+    function isElectionFinalized(uint256 election) external view returns (bool);
+
     // Mutative Functions
 
     /// @notice start the 6 month election cycle
