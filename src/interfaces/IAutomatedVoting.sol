@@ -4,6 +4,18 @@ pragma solidity ^0.8.19;
 interface IAutomatedVoting {
     // Events
 
+    /// @notice emitted when an elite council member is added
+    /// @param eliteCouncilMember the elite council member that was added
+    event EliteCouncilMemberAdded(address eliteCouncilMember);
+
+    /// @notice emitted when an elite council member is removed
+    /// @param eliteCouncilMember the elite council member that was removed
+    event EliteCouncilMemberRemoved(address eliteCouncilMember);
+
+    /// @notice emitted when an election ends
+    /// @param election the election that ended
+    event ElectionEnded(uint256 election);
+
     // Errors
 
     // View Functions
