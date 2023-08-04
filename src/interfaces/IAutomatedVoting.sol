@@ -10,4 +10,7 @@ interface IAutomatedVoting {
 
     // Mutative Functions
 
+    /// @notice start the 6 month election cycle
+    function startScheduledElections() external;
+
 }
