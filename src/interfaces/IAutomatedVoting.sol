@@ -20,6 +20,20 @@ interface IAutomatedVoting {
     /// @notice start the 6 month election cycle
     function startScheduledElection() external;
 
+    /// @notice start an election to remove a member of the elite council
+    /// @notice this is only callable by the elite council
+    /// @param eliteCouncil the elite council member to remove
+    function startEliteCouncilElection(address eliteCouncil) external;
+
+    /// @notice start an election to remove a member of the eliteCouncil
+    /// @notice this is only callable by the stakers through the CKIP
+    /// @param eliteCouncil the elite council member to remove
+    function startCKIPElection(address eliteCouncil) external;
+
+    /// @notice step down from the elite council
+    /// @dev this triggers an election to replace the member
+    function stepDown() external;
+
     /// @notice finalize the election
     /// @param election the election to finalize
     function finalizeElection(uint256 election) external;
