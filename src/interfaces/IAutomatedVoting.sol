@@ -4,26 +4,26 @@ pragma solidity ^0.8.19;
 interface IAutomatedVoting {
     // Events
 
-    /// @notice emitted when an elite council member is added
-    /// @param eliteCouncilMember the elite council member that was added
-    event EliteCouncilMemberAdded(address eliteCouncilMember);
+    /// @notice emitted when an council member is added
+    /// @param councilMember the council member that was added
+    event CouncilMemberAdded(address councilMember);
 
-    /// @notice emitted when an elite council member is removed
-    /// @param eliteCouncilMember the elite council member that was removed
-    event EliteCouncilMemberRemoved(address eliteCouncilMember);
+    /// @notice emitted when an council member is removed
+    /// @param councilMember the council member that was removed
+    event CouncilMemberRemoved(address councilMember);
 
     /// @notice emitted when an election ends
     /// @param election the election that ended
     event ElectionEnded(uint256 election);
 
-    /// @notice emitted when an elite council member steps down
-    /// @param eliteCouncilMember the elite council member that stepped down
-    event EliteCouncilMemberStepDown(address eliteCouncilMember);
+    /// @notice emitted when an council member steps down
+    /// @param councilMember the council member that stepped down
+    event CouncilMemberStepDown(address councilMember);
 
     // Errors
 
-    /// @notice emitted when the caller is not the elite council
-    error CallerNotEliteCouncil();
+    /// @notice emitted when the caller is not the council
+    error CallerNotCouncil();
 
     /// @notice emitted when the caller is not staked
     error CallerNotStaked();
@@ -34,9 +34,9 @@ interface IAutomatedVoting {
     /// @notice emitted when the election is not ready to be started
     error ElectionNotReadyToBeStarted();
 
-    /// @notice emitted when an elite council member cannot step down
+    /// @notice emitted when an council member cannot step down
     /// this could happen if everyone tries to step down at once
-    error EliteCouncilMemberCannotStepDown();
+    error CouncilMemberCannotStepDown();
 
     /// @notice emitted when the caller has already voted for this election
     error AlreadyVoted();
@@ -50,8 +50,8 @@ interface IAutomatedVoting {
     /// @param election the election to check
     function timeUntilElectionStateEnd(uint256 election) external view returns (uint256);
 
-    /// @notice returns the current elite council
-    function getEliteCouncil() external view returns (address[] memory);
+    /// @notice returns the current council
+    function getCouncil() external view returns (address[] memory);
 
     /// @notice returns if the election is finalized
     /// @param election the election to check
@@ -62,17 +62,17 @@ interface IAutomatedVoting {
     /// @notice start the 6 month election cycle
     function startScheduledElection() external;
 
-    /// @notice start an election to remove a member of the elite council
-    /// @notice this is only callable by the elite council
-    /// @param eliteCouncil the elite council member to remove
-    function startEliteCouncilElection(address eliteCouncil) external;
+    /// @notice start an election to remove a member of the council
+    /// @notice this is only callable by the council
+    /// @param Council the council member to remove
+    function startCouncilElection(address Council) external;
 
-    /// @notice start an election to remove a member of the eliteCouncil
+    /// @notice start an election to remove a member of the Council
     /// @notice this is only callable by the stakers through the CKIP
-    /// @param eliteCouncil the elite council member to remove
-    function startCKIPElection(address eliteCouncil) external;
+    /// @param Council the council member to remove
+    function startCKIPElection(address Council) external;
 
-    /// @notice step down from the elite council
+    /// @notice step down from the council
     /// @dev this triggers an election to replace the member
     function stepDown() external;
 
