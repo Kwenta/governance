@@ -8,9 +8,14 @@ interface IAutomatedVoting {
 
     // View Functions
 
+    /// @notice returns the time until the next scheduled election
+    function timeUntilNextScheduledElection() external view returns (uint256);
+
+    function timeUntilElectionStateEnd(uint256 election) external view returns (uint256);
+
     // Mutative Functions
 
     /// @notice start the 6 month election cycle
-    function startScheduledElections() external;
+    function startScheduledElection() external;
 
 }
