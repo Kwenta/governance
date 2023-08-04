@@ -2,5 +2,12 @@
 pragma solidity ^0.8.19;
 
 interface IAutomatedVoting {
-    
+    // Events
+
+    // Errors
+
+    // View Functions
+
+    // Mutative Functions
+
 }
