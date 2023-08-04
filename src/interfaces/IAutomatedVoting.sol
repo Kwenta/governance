@@ -50,6 +50,9 @@ interface IAutomatedVoting {
     /// @param election the election to check
     function timeUntilElectionStateEnd(uint256 election) external view returns (uint256);
 
+    /// @notice returns the current elite council
+    function getEliteCouncil() external view returns (address[] memory);
+
     // Mutative Functions
 
     /// @notice start the 6 month election cycle
