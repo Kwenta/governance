@@ -24,4 +24,8 @@ interface IAutomatedVoting {
     /// @param election the election to finalize
     function finalizeElection(uint256 election) external;
 
+    /// @notice vote for a nominee
+    /// @param nominee the nominee to vote for
+    function vote(address nominee) external;
+
 }
