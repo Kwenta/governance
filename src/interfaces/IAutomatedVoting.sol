@@ -16,6 +16,10 @@ interface IAutomatedVoting {
     /// @param election the election that ended
     event ElectionEnded(uint256 election);
 
+    /// @notice emitted when an elite council member steps down
+    /// @param eliteCouncilMember the elite council member that stepped down
+    event EliteCouncilMemberStepDown(address eliteCouncilMember);
+
     // Errors
 
     // View Functions
