@@ -5,6 +5,8 @@ import "./interfaces/IAutomatedVoting.sol";
 
 contract AutomatedVoting is IAutomatedVoting {
     
+    address[] public council;
+
     constructor() {
         
     }
@@ -18,8 +20,6 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     function getCouncil() public view override returns (address[] memory) {
-        address[] memory council = new address[](1);
-        council[0] = msg.sender; //TODO: replace with actual council
         return council;
     }
 
