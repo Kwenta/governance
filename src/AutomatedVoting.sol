@@ -11,7 +11,6 @@ contract AutomatedVoting is IAutomatedVoting {
         council = _council;
     }
         
-    }
 
     function timeUntilNextScheduledElection() public view override returns (uint256) {
         return 0;

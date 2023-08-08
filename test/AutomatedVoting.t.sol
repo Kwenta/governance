@@ -1,4 +1,4 @@
-/ SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
@@ -8,10 +8,14 @@ contract CounterTest is Test {
     AutomatedVoting public automatedVoting;
 
     function setUp() public {
-        automatedVoting = new AutomatedVoting();
+        address[] memory council = new address[](1);
+        council[0] = address(0x1);
+        automatedVoting = new AutomatedVoting(council);
     }
 
     function testGetCouncil() public {
-        //todo
+        address[] memory result = automatedVoting.getCouncil();
+        assertEq(result.length, 1, "Council should have 1 member");
+        assertEq(result[0], address(0x1), "Council member should be 0x1");
     }
 }
