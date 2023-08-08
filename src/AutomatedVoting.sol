@@ -7,7 +7,9 @@ contract AutomatedVoting is IAutomatedVoting {
     
     address[] public council;
 
-    constructor() {
+    constructor(address[] memory _council) {
+        council = _council;
+    }
         
     }
 

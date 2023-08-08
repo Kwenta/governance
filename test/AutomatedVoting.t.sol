@@ -11,7 +11,7 @@ contract CounterTest is Test {
         automatedVoting = new AutomatedVoting();
     }
 
-    function testTest() public {
+    function testGetCouncil() public {
         //todo
     }
 }
