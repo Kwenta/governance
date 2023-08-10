@@ -48,7 +48,11 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     function startScheduledElection() public override {
-        _recordElectionState();
+        if (block.timestamp < lastScheduledElection + 24 weeks) {
+            revert ElectionNotReadyToBeStarted();
+        } else {
+            _recordElectionState();
+        }
     }
 
     function startCouncilElection(address _council) public override {
