@@ -24,6 +24,14 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    modifier onlyStaker() {
+        if (_isStaker(msg.sender)) {
+            _;
+        } else {
+            revert CallerNotStaked();
+        }
+    }
+
     constructor(address[] memory _council) {
         council = _council;
     }
@@ -106,6 +114,10 @@ contract AutomatedVoting is IAutomatedVoting {
         if (!isCouncilMember) {
             return false;
         }
+    }
+
+    function _isStaker(address voter) internal view returns(bool isStaker) {
+        //todo: check if voter is staker
     }
 
 }
