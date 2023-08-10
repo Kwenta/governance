@@ -7,6 +7,7 @@ contract AutomatedVoting is IAutomatedVoting {
     
     address[] public council;
     mapping(uint256 => election) elections;
+    uint256 lastScheduledElection;
 
     struct election {
         uint256 startTime;
@@ -20,7 +21,12 @@ contract AutomatedVoting is IAutomatedVoting {
         
 
     function timeUntilNextScheduledElection() public view override returns (uint256) {
-        return 0;
+        if (block.timestamp > lastScheduledElection + 24 weeks ) {
+            return 0;
+        }
+        else {
+            return block.timestamp + 24 weeks - lastScheduledElection;
+        }
     }
 
     function timeUntilElectionStateEnd(uint256 election) public view override returns (uint256) {
