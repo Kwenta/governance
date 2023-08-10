@@ -6,6 +6,7 @@ import "./interfaces/IAutomatedVoting.sol";
 contract AutomatedVoting is IAutomatedVoting {
     address[] public council;
     mapping(uint256 => election) elections;
+    mapping(address => mapping(uint256 => bool)) hasVoted;
     uint256[] public electionNumbers;
     uint256 lastScheduledElection;
 
@@ -99,6 +100,10 @@ contract AutomatedVoting is IAutomatedVoting {
         uint256 _election,
         address[] calldata candidates
     ) public override onlyStaker {
+        if(hasVoted[msg.sender][_election]) {
+            revert AlreadyVoted();
+        }
+        hasVoted[msg.sender][_election] = true;
         //todo: voting
         _checkIfQuorumReached(_election);
     }
@@ -107,6 +112,10 @@ contract AutomatedVoting is IAutomatedVoting {
         uint256 _election,
         address candidate
     ) public override onlyCouncil {
+        if(hasVoted[msg.sender][_election]) {
+            revert AlreadyVoted();
+        }
+        hasVoted[msg.sender][_election] = true;
         //todo: voting
         _checkIfQuorumReached(_election);
     }
@@ -115,6 +124,10 @@ contract AutomatedVoting is IAutomatedVoting {
         uint256 _election,
         address[] calldata candidates
     ) public override onlyStaker {
+        if(hasVoted[msg.sender][_election]) {
+            revert AlreadyVoted();
+        }
+        hasVoted[msg.sender][_election] = true;
         //todo: voting
         _checkIfQuorumReached(_election);
     }
