@@ -71,11 +71,11 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    function startCouncilElection(address _council) public override {
+    function startCouncilElection(address _council) public override onlyCouncil() {
 
     }
 
-    function startCKIPElection(address _council) public override {
+    function startCKIPElection(address _council) public override onlyStaker() {
 
     }
 
@@ -92,7 +92,15 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    function vote(uint256 _election, address candidate) public override {
+    function voteInScheduledElection(uint256 _election, address[] calldata candidates) public override onlyStaker() {
+
+    }
+
+    function voteInCouncilElection(uint256 _election, address candidate) public override onlyCouncil() {
+
+    }
+
+    function voteInCKIPElection(uint256 _election, address[] calldata candidates) public override onlyStaker() {
 
     }
 
