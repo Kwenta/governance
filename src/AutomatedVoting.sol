@@ -7,6 +7,7 @@ contract AutomatedVoting is IAutomatedVoting {
     
     address[] public council;
     mapping(uint256 => election) elections;
+    uint256[] public electionNumbers;
     uint256 lastScheduledElection;
 
     struct election {
@@ -47,7 +48,7 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     function startScheduledElection() public override {
-
+        _election();
     }
 
     function startCouncilElection(address council) public override {
@@ -68,6 +69,15 @@ contract AutomatedVoting is IAutomatedVoting {
 
     function vote(uint256 election, address candidate) public override {
 
+    }
+
+    function _election() internal {
+        lastScheduledElection = block.timestamp;
+        uint256 electionNumber = electionNumbers.length;
+        electionNumbers.push(electionNumber);
+        elections[electionNumber].startTime = block.timestamp;
+        elections[electionNumber].endTime = block.timestamp + 2 weeks;
+        elections[electionNumber].isFinalized = false;
     }
 
 }
