@@ -30,12 +30,12 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    function timeUntilElectionStateEnd(uint256 election) public view override returns (uint256) {
-        if (elections[election].isFinalized) {
+    function timeUntilElectionStateEnd(uint256 _election) public view override returns (uint256) {
+        if (elections[_election].isFinalized) {
             return 0;
         }
         else {
-            return elections[election].endTime - block.timestamp;
+            return elections[_election].endTime - block.timestamp;
         }
     }
 
@@ -43,35 +43,36 @@ contract AutomatedVoting is IAutomatedVoting {
         return council;
     }
 
-    function isElectionFinalized(uint256 election) public view override returns (bool) {
-        return elections[election].isFinalized;
+    function isElectionFinalized(uint256 _election) public view override returns (bool) {
+        return elections[_election].isFinalized;
     }
 
     function startScheduledElection() public override {
-        _election();
+        _recordElectionState();
     }
 
-    function startCouncilElection(address council) public override {
+    function startCouncilElection(address _council) public override {
 
     }
 
-    function startCKIPElection(address council) public override {
+    function startCKIPElection(address _council) public override {
 
     }
 
     function stepDown() public override {
+        //todo: burn msg.sender rights
+        _recordElectionState();
+    }
+
+    function finalizeElection(uint256 _election) public override {
 
     }
 
-    function finalizeElection(uint256 election) public override {
+    function vote(uint256 _election, address candidate) public override {
 
     }
 
-    function vote(uint256 election, address candidate) public override {
-
-    }
-
-    function _election() internal {
+    function _recordElectionState() internal {
         lastScheduledElection = block.timestamp;
         uint256 electionNumber = electionNumbers.length;
         electionNumbers.push(electionNumber);
