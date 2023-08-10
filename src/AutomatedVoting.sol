@@ -6,6 +6,7 @@ import "./interfaces/IAutomatedVoting.sol";
 contract AutomatedVoting is IAutomatedVoting {
     
     address[] public council;
+    mapping(uint256 => election) elections;
 
     struct election {
         uint256 startTime;
@@ -31,7 +32,7 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     function isElectionFinalized(uint256 election) public view override returns (bool) {
-        
+        return elections[election].isFinalized;
     }
 
     function startScheduledElection() public override {
