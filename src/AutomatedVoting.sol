@@ -16,6 +16,14 @@ contract AutomatedVoting is IAutomatedVoting {
         bool isFinalized;
     }
 
+    modifier onlyCouncil() {
+        if (_isCouncilMember(msg.sender)) {
+            _;
+        } else {
+            revert CallerNotCouncil();
+        }
+    }
+
     constructor(address[] memory _council) {
         council = _council;
     }
