@@ -24,7 +24,12 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     function timeUntilElectionStateEnd(uint256 election) public view override returns (uint256) {
-        return 0;
+        if (elections[election].isFinalized) {
+            return 0;
+        }
+        else {
+            return elections[election].endTime - block.timestamp;
+        }
     }
 
     function getCouncil() public view override returns (address[] memory) {
