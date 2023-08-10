@@ -89,7 +89,7 @@ contract AutomatedVoting is IAutomatedVoting {
 
     function finalizeElection(uint256 _election) public override {
         if (block.timestamp > elections[_election].endTime) {
-            elections[_election].isFinalized = true;
+            _finalizeElection(_election);
         } else {
             revert ElectionNotReadyToBeFinalized();
         }
@@ -98,18 +98,28 @@ contract AutomatedVoting is IAutomatedVoting {
     function voteInScheduledElection(
         uint256 _election,
         address[] calldata candidates
-    ) public override onlyStaker {}
+    ) public override onlyStaker {
+        //todo: voting
+        _checkIfQuorumReached(_election);
+    }
 
     function voteInCouncilElection(
         uint256 _election,
         address candidate
-    ) public override onlyCouncil {}
+    ) public override onlyCouncil {
+        //todo: voting
+        _checkIfQuorumReached(_election);
+    }
 
     function voteInCKIPElection(
         uint256 _election,
         address[] calldata candidates
-    ) public override onlyStaker {}
+    ) public override onlyStaker {
+        //todo: voting
+        _checkIfQuorumReached(_election);
+    }
 
+    /// @dev this likely needs refactoring/changing
     function _recordElectionState() internal {
         lastScheduledElection = block.timestamp;
         uint256 electionNumber = electionNumbers.length;
@@ -135,4 +145,14 @@ contract AutomatedVoting is IAutomatedVoting {
     function _isStaker(address voter) internal view returns (bool isStaker) {
         //todo: check if voter is staker
     }
+
+    function _checkIfQuorumReached(uint256 _election) internal {
+        //todo: check if quorum reached
+        //todo: if quorum reached, finalize election _finalizeElection(_election)
+    }
+
+    function _finalizeElection(uint256 _election) internal {
+        elections[_election].isFinalized = true;
+    }
+
 }
