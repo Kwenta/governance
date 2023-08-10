@@ -7,6 +7,12 @@ contract AutomatedVoting is IAutomatedVoting {
     
     address[] public council;
 
+    struct election {
+        uint256 startTime;
+        uint256 endTime;
+        bool isFinalized;
+    }
+
     constructor(address[] memory _council) {
         council = _council;
     }
