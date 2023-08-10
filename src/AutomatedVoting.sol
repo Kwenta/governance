@@ -4,7 +4,6 @@ pragma solidity 0.8.19;
 import "./interfaces/IAutomatedVoting.sol";
 
 contract AutomatedVoting is IAutomatedVoting {
-    
     address[] public council;
     mapping(uint256 => election) elections;
     uint256[] public electionNumbers;
@@ -35,22 +34,26 @@ contract AutomatedVoting is IAutomatedVoting {
     constructor(address[] memory _council) {
         council = _council;
     }
-        
 
-    function timeUntilNextScheduledElection() public view override returns (uint256) {
-        if (block.timestamp > lastScheduledElection + 24 weeks ) {
+    function timeUntilNextScheduledElection()
+        public
+        view
+        override
+        returns (uint256)
+    {
+        if (block.timestamp > lastScheduledElection + 24 weeks) {
             return 0;
-        }
-        else {
+        } else {
             return block.timestamp + 24 weeks - lastScheduledElection;
         }
     }
 
-    function timeUntilElectionStateEnd(uint256 _election) public view override returns (uint256) {
+    function timeUntilElectionStateEnd(
+        uint256 _election
+    ) public view override returns (uint256) {
         if (elections[_election].isFinalized) {
             return 0;
-        }
-        else {
+        } else {
             return elections[_election].endTime - block.timestamp;
         }
     }
@@ -59,7 +62,9 @@ contract AutomatedVoting is IAutomatedVoting {
         return council;
     }
 
-    function isElectionFinalized(uint256 _election) public view override returns (bool) {
+    function isElectionFinalized(
+        uint256 _election
+    ) public view override returns (bool) {
         return elections[_election].isFinalized;
     }
 
@@ -71,13 +76,11 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    function startCouncilElection(address _council) public override onlyCouncil() {
+    function startCouncilElection(
+        address _council
+    ) public override onlyCouncil {}
 
-    }
-
-    function startCKIPElection(address _council) public override onlyStaker() {
-
-    }
+    function startCKIPElection(address _council) public override onlyStaker {}
 
     function stepDown() public override {
         //todo: burn msg.sender rights
@@ -85,24 +88,27 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     function finalizeElection(uint256 _election) public override {
-        if(block.timestamp > elections[_election].endTime) {
-        elections[_election].isFinalized = true;
+        if (block.timestamp > elections[_election].endTime) {
+            elections[_election].isFinalized = true;
         } else {
             revert ElectionNotReadyToBeFinalized();
         }
     }
 
-    function voteInScheduledElection(uint256 _election, address[] calldata candidates) public override onlyStaker() {
+    function voteInScheduledElection(
+        uint256 _election,
+        address[] calldata candidates
+    ) public override onlyStaker {}
 
-    }
+    function voteInCouncilElection(
+        uint256 _election,
+        address candidate
+    ) public override onlyCouncil {}
 
-    function voteInCouncilElection(uint256 _election, address candidate) public override onlyCouncil() {
-
-    }
-
-    function voteInCKIPElection(uint256 _election, address[] calldata candidates) public override onlyStaker() {
-
-    }
+    function voteInCKIPElection(
+        uint256 _election,
+        address[] calldata candidates
+    ) public override onlyStaker {}
 
     function _recordElectionState() internal {
         lastScheduledElection = block.timestamp;
@@ -113,7 +119,9 @@ contract AutomatedVoting is IAutomatedVoting {
         elections[electionNumber].isFinalized = false;
     }
 
-    function _isCouncilMember(address voter) internal view returns(bool isCouncilMember) {
+    function _isCouncilMember(
+        address voter
+    ) internal view returns (bool isCouncilMember) {
         for (uint i = 0; i < council.length; i++) {
             if (council[i] == voter) {
                 return true;
@@ -124,8 +132,7 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    function _isStaker(address voter) internal view returns(bool isStaker) {
+    function _isStaker(address voter) internal view returns (bool isStaker) {
         //todo: check if voter is staker
     }
-
 }

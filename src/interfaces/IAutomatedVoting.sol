@@ -48,7 +48,9 @@ interface IAutomatedVoting {
 
     /// @notice returns the time until the election state ends
     /// @param election the election to check
-    function timeUntilElectionStateEnd(uint256 election) external view returns (uint256);
+    function timeUntilElectionStateEnd(
+        uint256 election
+    ) external view returns (uint256);
 
     /// @notice returns the current council
     function getCouncil() external view returns (address[] memory);
@@ -84,5 +86,4 @@ interface IAutomatedVoting {
     /// @param election the election to vote in
     /// @param nominee the nominee to vote for
     function vote(uint256 election, address nominee) external;
-
 }
