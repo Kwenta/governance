@@ -89,4 +89,15 @@ contract AutomatedVoting is IAutomatedVoting {
         elections[electionNumber].isFinalized = false;
     }
 
+    function _isCouncilMember(address voter) internal view returns(bool isCouncilMember) {
+        for (uint i = 0; i < council.length; i++) {
+            if (council[i] == voter) {
+                return true;
+            }
+        }
+        if (!isCouncilMember) {
+            return false;
+        }
+    }
+
 }
