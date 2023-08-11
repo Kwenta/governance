@@ -2,9 +2,8 @@
 pragma solidity 0.8.19;
 
 import "./interfaces/IAutomatedVoting.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract AutomatedVoting is IAutomatedVoting, Initializable {
+contract AutomatedVoting is IAutomatedVoting {
     address[] public council;
     mapping(uint256 => election) elections;
     mapping(address => mapping(uint256 => bool)) hasVoted;
@@ -15,6 +14,7 @@ contract AutomatedVoting is IAutomatedVoting, Initializable {
         uint256 startTime;
         uint256 endTime;
         bool isFinalized;
+        //todo: type of election single or full
     }
 
     modifier onlyCouncil() {
@@ -33,11 +33,7 @@ contract AutomatedVoting is IAutomatedVoting, Initializable {
         }
     }
 
-    constructor() {
-        _disableInitializers();
-    }
-
-    initialize(address[] memory _council) initializer public {
+    constructor(address[] memory _council) {
         council = _council;
     }
 
@@ -172,5 +168,18 @@ contract AutomatedVoting is IAutomatedVoting, Initializable {
     function _finalizeElection(uint256 _election) internal {
         elections[_election].isFinalized = true;
     }
+
+
+    //todo: special functionality to boot someone off
+    //todo: voting is one function/idea (stakers do it)
+
+    //full council election
+    //single council election
+
+
+    //todo: no quorum, whoever has the most at the end
+    //remove hasFinalized
+
+    //removing council member has quorum
 
 }
