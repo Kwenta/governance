@@ -2,8 +2,9 @@
 pragma solidity 0.8.19;
 
 import "./interfaces/IAutomatedVoting.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract AutomatedVoting is IAutomatedVoting {
+contract AutomatedVoting is IAutomatedVoting, Initializable {
     address[] public council;
     mapping(uint256 => election) elections;
     mapping(address => mapping(uint256 => bool)) hasVoted;
@@ -32,7 +33,11 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    constructor(address[] memory _council) {
+    constructor() {
+        _disableInitializers();
+    }
+
+    initialize(address[] memory _council) initializer public {
         council = _council;
     }
 
