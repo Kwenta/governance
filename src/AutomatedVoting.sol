@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 
 import "./interfaces/IAutomatedVoting.sol";
+import "../lib/token/contracts/interfaces/IStakingRewards.sol";
 
 contract AutomatedVoting is IAutomatedVoting {
     address[] public council;
@@ -9,6 +10,7 @@ contract AutomatedVoting is IAutomatedVoting {
     mapping(address => mapping(uint256 => bool)) hasVoted;
     uint256[] public electionNumbers;
     uint256 lastScheduledElection;
+    IStakingRewards public stakingRewards;
 
     struct election {
         uint256 startTime;
@@ -33,8 +35,9 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    constructor(address[] memory _council) {
+    constructor(address[] memory _council, address _stakingRewards) {
         council = _council;
+        stakingRewards = IStakingRewards(_stakingRewards);
     }
 
     function timeUntilNextScheduledElection()
@@ -143,7 +146,11 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     function _isStaker(address voter) internal view returns (bool isStaker) {
-        //todo: check if voter is staker
+        if (stakingRewards.balanceOf(voter) > 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     function _checkIfQuorumReached(uint256 _election) internal {
