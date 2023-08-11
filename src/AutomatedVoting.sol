@@ -97,40 +97,26 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    function voteInScheduledElection(
-        uint256 _election,
-        address[] calldata candidates
-    ) public override onlyStaker {
-        if(hasVoted[msg.sender][_election]) {
-            revert AlreadyVoted();
-        }
-        hasVoted[msg.sender][_election] = true;
-        //todo: voting
-        _checkIfQuorumReached(_election);
-    }
-
-    function voteInCouncilElection(
+    function voteInSingleElection(
         uint256 _election,
         address candidate
-    ) public override onlyCouncil {
-        if(hasVoted[msg.sender][_election]) {
+    ) public override onlyStaker {
+        if (hasVoted[msg.sender][_election]) {
             revert AlreadyVoted();
         }
         hasVoted[msg.sender][_election] = true;
         //todo: voting
-        _checkIfQuorumReached(_election);
     }
 
-    function voteInCKIPElection(
+    function voteInFullElection(
         uint256 _election,
         address[] calldata candidates
     ) public override onlyStaker {
-        if(hasVoted[msg.sender][_election]) {
+        if (hasVoted[msg.sender][_election]) {
             revert AlreadyVoted();
         }
         hasVoted[msg.sender][_election] = true;
         //todo: voting
-        _checkIfQuorumReached(_election);
     }
 
     /// @dev this likely needs refactoring/changing
@@ -169,17 +155,14 @@ contract AutomatedVoting is IAutomatedVoting {
         elections[_election].isFinalized = true;
     }
 
-
     //todo: special functionality to boot someone off
     //todo: voting is one function/idea (stakers do it)
 
     //full council election
     //single council election
 
-
     //todo: no quorum, whoever has the most at the end
     //remove hasFinalized
 
     //removing council member has quorum
-
 }
