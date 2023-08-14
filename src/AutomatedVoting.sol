@@ -17,8 +17,9 @@ contract AutomatedVoting is IAutomatedVoting {
         uint256 startTime;
         uint256 endTime;
         bool isFinalized;
-        //todo: type of election single or full
+        string electionType;
         address[] candidateAddresses; // Array of candidate addresses for this election
+        address[] nominatedCandidates; // Array of candidates elected
     }
 
     modifier onlyCouncil() {
