@@ -19,7 +19,7 @@ contract AutomatedVoting is IAutomatedVoting {
         bool isFinalized;
         string electionType;
         address[] candidateAddresses; // Array of candidate addresses for this election
-        address[] nominatedCandidates; // Array of candidates elected
+        address[] winningCandidates; // Array of candidates that won
     }
 
     modifier onlyCouncil() {
@@ -144,6 +144,8 @@ contract AutomatedVoting is IAutomatedVoting {
         }
         hasVoted[msg.sender][_election] = true;
         for (uint256 i = 0; i < candidates.length; i++) {
+            //todo: optimize this to not repeat the same candidates
+            elections[_election].candidateAddresses.push(candidates[i]);
             address candidate = candidates[i];
             voteCounts[_election][candidate]++;
         }
@@ -180,16 +182,16 @@ contract AutomatedVoting is IAutomatedVoting {
         string memory electionType = elections[_election].electionType;
         if(keccak256(abi.encodePacked(electionType)) == keccak256("full")){
             /// @dev this is for a full election
-            (address[] memory winners, ) = _getWinners(_election, 5);
-            elections[_election].nominatedCandidates = winners;
+            (address[] memory winners, ) = getWinners(_election, 5);
+            elections[_election].winningCandidates = winners;
         } else {
             /// @dev this is for a single election
-            (address[] memory winners, ) = _getWinners(_election, 1);
-            elections[_election].nominatedCandidates = winners;
+            (address[] memory winners, ) = getWinners(_election, 1);
+            elections[_election].winningCandidates = winners;
         }
     }
 
-    function _getWinners(uint256 electionId, uint256 numberOfWinners) public view returns (address[] memory, uint256[] memory) {
+    function getWinners(uint256 electionId, uint256 numberOfWinners) public view returns (address[] memory, uint256[] memory) {
         require(elections[electionId].isFinalized, "Election not finalized");
 
         address[] memory winners = new address[](numberOfWinners);
