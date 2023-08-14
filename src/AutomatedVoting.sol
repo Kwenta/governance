@@ -95,7 +95,7 @@ contract AutomatedVoting is IAutomatedVoting {
             elections[electionNumber].startTime = block.timestamp;
             elections[electionNumber].endTime = block.timestamp + 2 weeks;
             elections[electionNumber].isFinalized = false;
-            elections[electionNumber].electionType = "scheduled";
+            elections[electionNumber].electionType = "full";
         }
     }
 
@@ -177,6 +177,42 @@ contract AutomatedVoting is IAutomatedVoting {
 
     function _finalizeElection(uint256 _election) internal {
         elections[_election].isFinalized = true;
+        //get winner
+        //write winner into election
+    }
+
+    function _getWinners(uint256 electionId, uint256 numberOfWinners) public view returns (address[] memory, uint256[] memory) {
+        require(elections[electionId].isFinalized, "Election not finalized");
+
+        address[] memory winners = new address[](numberOfWinners);
+        uint256[] memory voteCountsOfWinners = new uint256[](numberOfWinners);
+
+        for (uint256 i = 0; i < numberOfWinners; i++) {
+            address bestCandidate;
+            uint256 maxVotes = 0;
+
+            for (uint256 j = 0; j < elections[electionId].candidateAddresses.length; j++) {
+                address candidate = elections[electionId].candidateAddresses[j];
+                if (voteCounts[electionId][candidate] > maxVotes && !isWinner(candidate, winners, i)) {
+                    maxVotes = voteCounts[electionId][candidate];
+                    bestCandidate = candidate;
+                }
+            }
+
+            winners[i] = bestCandidate;
+            voteCountsOfWinners[i] = maxVotes;
+        }
+
+        return (winners, voteCountsOfWinners);
+    }
+
+    function isWinner(address candidate, address[] memory winners, uint256 upToIndex) internal pure returns (bool) {
+        for (uint256 i = 0; i <= upToIndex; i++) {
+            if (candidate == winners[i]) {
+                return true;
+            }
+        }
+        return false;
     }
 
     //todo: special functionality to boot someone off
