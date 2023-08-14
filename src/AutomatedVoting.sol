@@ -89,7 +89,13 @@ contract AutomatedVoting is IAutomatedVoting {
         if (block.timestamp < lastScheduledElection + 24 weeks) {
             revert ElectionNotReadyToBeStarted();
         } else {
-            _recordElectionState();
+            lastScheduledElection = block.timestamp;
+            uint256 electionNumber = electionNumbers.length;
+            electionNumbers.push(electionNumber);
+            elections[electionNumber].startTime = block.timestamp;
+            elections[electionNumber].endTime = block.timestamp + 2 weeks;
+            elections[electionNumber].isFinalized = false;
+            elections[electionNumber].electionType = "scheduled";
         }
     }
 
@@ -101,7 +107,7 @@ contract AutomatedVoting is IAutomatedVoting {
 
     function stepDown() public override {
         //todo: burn msg.sender rights
-        _recordElectionState();
+        //todo: start election state
     }
 
     function finalizeElection(uint256 _election) public override {
@@ -141,16 +147,6 @@ contract AutomatedVoting is IAutomatedVoting {
             address candidate = candidates[i];
             voteCounts[_election][candidate]++;
         }
-    }
-
-    /// @dev this likely needs refactoring/changing
-    function _recordElectionState() internal {
-        lastScheduledElection = block.timestamp;
-        uint256 electionNumber = electionNumbers.length;
-        electionNumbers.push(electionNumber);
-        elections[electionNumber].startTime = block.timestamp;
-        elections[electionNumber].endTime = block.timestamp + 2 weeks;
-        elections[electionNumber].isFinalized = false;
     }
 
     function _isCouncilMember(
