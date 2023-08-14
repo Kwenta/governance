@@ -31,6 +31,9 @@ interface IAutomatedVoting {
     /// @notice emitted when the election is not ready to be finalized
     error ElectionNotReadyToBeFinalized();
 
+    /// @notice emitted when the election is already finalized
+    error ElectionAlreadyFinalized();
+
     /// @notice emitted when the election is not ready to be started
     error ElectionNotReadyToBeStarted();
 
