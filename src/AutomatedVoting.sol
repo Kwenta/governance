@@ -7,6 +7,7 @@ import "../lib/token/contracts/interfaces/IStakingRewards.sol";
 contract AutomatedVoting is IAutomatedVoting {
     address[] public council;
     mapping(uint256 => election) elections;
+    mapping(uint256 => mapping(address => uint256)) public voteCounts;
     mapping(address => mapping(uint256 => bool)) hasVoted;
     uint256[] public electionNumbers;
     uint256 lastScheduledElection;
@@ -17,6 +18,7 @@ contract AutomatedVoting is IAutomatedVoting {
         uint256 endTime;
         bool isFinalized;
         //todo: type of election single or full
+        address[] candidateAddresses; // Array of candidate addresses for this election
     }
 
     modifier onlyCouncil() {
@@ -33,6 +35,15 @@ contract AutomatedVoting is IAutomatedVoting {
         } else {
             revert CallerNotStaked();
         }
+    }
+
+    modifier onlyDuringElection(uint256 _election) {
+        require(
+            block.timestamp >= elections[_election].startTime &&
+            block.timestamp <= elections[_election].endTime,
+            "Election not active"
+        );
+        _;
     }
 
     constructor(address[] memory _council, address _stakingRewards) {
@@ -117,12 +128,18 @@ contract AutomatedVoting is IAutomatedVoting {
     function voteInFullElection(
         uint256 _election,
         address[] calldata candidates
-    ) public override onlyStaker {
+    ) public override onlyStaker onlyDuringElection(_election) {
+        if(isElectionFinalized(_election)){
+            revert ElectionAlreadyFinalized();
+        }
         if (hasVoted[msg.sender][_election]) {
             revert AlreadyVoted();
         }
         hasVoted[msg.sender][_election] = true;
-        //todo: voting
+        for (uint256 i = 0; i < candidates.length; i++) {
+            address candidate = candidates[i];
+            voteCounts[_election][candidate]++;
+        }
     }
 
     /// @dev this likely needs refactoring/changing
