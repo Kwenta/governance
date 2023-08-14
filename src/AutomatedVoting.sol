@@ -177,8 +177,16 @@ contract AutomatedVoting is IAutomatedVoting {
 
     function _finalizeElection(uint256 _election) internal {
         elections[_election].isFinalized = true;
-        //get winner
-        //write winner into election
+        string memory electionType = elections[_election].electionType;
+        if(keccak256(abi.encodePacked(electionType)) == keccak256("full")){
+            /// @dev this is for a full election
+            (address[] memory winners, ) = _getWinners(_election, 5);
+            elections[_election].nominatedCandidates = winners;
+        } else {
+            /// @dev this is for a single election
+            (address[] memory winners, ) = _getWinners(_election, 1);
+            elections[_election].nominatedCandidates = winners;
+        }
     }
 
     function _getWinners(uint256 electionId, uint256 numberOfWinners) public view returns (address[] memory, uint256[] memory) {
