@@ -3,14 +3,17 @@ pragma solidity 0.8.19;
 
 import "forge-std/Test.sol";
 import "../src/AutomatedVoting.sol";
+import "../lib/token/contracts/StakingRewards.sol";
 
 contract CounterTest is Test {
     AutomatedVoting public automatedVoting;
+    StakingRewards public stakingRewards;
 
     function setUp() public {
+        stakingRewards = new StakingRewards();
         address[] memory council = new address[](1);
         council[0] = address(0x1);
-        automatedVoting = new AutomatedVoting(council);
+        automatedVoting = new AutomatedVoting(council, address(stakingRewards));
     }
 
     function testGetCouncil() public {
