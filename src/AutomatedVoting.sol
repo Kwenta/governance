@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.19;
+pragma solidity ^0.8.19;
 
-import "./interfaces/IAutomatedVoting.sol";
-import "../lib/token/contracts/interfaces/IStakingRewards.sol";
+import {IAutomatedVoting} from "./interfaces/IAutomatedVoting.sol";
+import {IStakingRewards} from "../lib/token/contracts/interfaces/IStakingRewards.sol";
 
 contract AutomatedVoting is IAutomatedVoting {
     address[] public council;

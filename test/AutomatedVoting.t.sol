@@ -1,16 +1,31 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.19;
+pragma solidity ^0.8.19;
 
-import "forge-std/Test.sol";
-import "../src/AutomatedVoting.sol";
-import "../lib/token/contracts/StakingRewards.sol";
+import {Test} from "forge-std/Test.sol";
+import {AutomatedVoting} from "../src/AutomatedVoting.sol";
+import {StakingRewards} from "../lib/token/contracts/StakingRewards.sol";
+import {Kwenta} from "../lib/token/contracts/Kwenta.sol";
+import {RewardEscrow} from "../lib/token/contracts/RewardEscrow.sol";
 
 contract AutomatedVotingTest is Test {
     AutomatedVoting public automatedVoting;
     StakingRewards public stakingRewards;
+    Kwenta public kwenta;
+    RewardEscrow public rewardEscrow;
+    address public admin;
+    uint256 public userNonce;
 
     function setUp() public {
-        stakingRewards = new StakingRewards();
+        admin = createUser();
+        kwenta = new Kwenta(
+            "Kwenta",
+            "Kwe",
+            100_000,
+            admin,
+            address(this)
+        );
+        rewardEscrow = new RewardEscrow(admin, address(kwenta));
+        stakingRewards = new StakingRewards(address(kwenta), address(rewardEscrow), address(this));
         address[] memory council = new address[](1);
         council[0] = address(0x1);
         automatedVoting = new AutomatedVoting(council, address(stakingRewards));
@@ -23,4 +38,10 @@ contract AutomatedVotingTest is Test {
     }
 
     //todo: test everything with when a non-existent election is put in
+
+    /// @dev create a new user address
+    function createUser() public returns (address) {
+        userNonce++;
+        return vm.addr(userNonce);
+    }
 }
