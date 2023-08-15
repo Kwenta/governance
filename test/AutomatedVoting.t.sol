@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import "../src/AutomatedVoting.sol";
 import "../lib/token/contracts/StakingRewards.sol";
 
-contract CounterTest is Test {
+contract AutomatedVotingTest is Test {
     AutomatedVoting public automatedVoting;
     StakingRewards public stakingRewards;
 
