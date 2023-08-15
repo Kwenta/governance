@@ -40,12 +40,18 @@ contract AutomatedVotingTest is Test {
     }
 
     function testTimeUntilNextScheduledElection() public {
-        assertEq(automatedVoting.timeUntilNextScheduledElection(), 24 weeks + startTime);
+        assertEq(automatedVoting.timeUntilNextScheduledElection(), 24 weeks - startTime);
     }
 
     function testTimeUntilNextScheduledElectionOverdue() public {
         vm.warp(block.timestamp + 24 weeks);
         assertEq(automatedVoting.timeUntilNextScheduledElection(), 0);
+    }
+
+    function testFuzzTimeUntilNextScheduledElection(uint128 time) public {
+        vm.assume(time < 24 weeks);
+        vm.warp(block.timestamp + time);
+        assertEq(automatedVoting.timeUntilNextScheduledElection(), 24 weeks - startTime - time);
     }
 
     //todo: test everything with when a non-existent election is put in
