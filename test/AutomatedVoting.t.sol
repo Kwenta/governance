@@ -14,8 +14,10 @@ contract AutomatedVotingTest is Test {
     RewardEscrow public rewardEscrow;
     address public admin;
     uint256 public userNonce;
+    uint256 public startTime;
 
     function setUp() public {
+        startTime = block.timestamp;
         admin = createUser();
         kwenta = new Kwenta(
             "Kwenta",
@@ -35,6 +37,10 @@ contract AutomatedVotingTest is Test {
         address[] memory result = automatedVoting.getCouncil();
         assertEq(result.length, 1, "Council should have 1 member");
         assertEq(result[0], address(0x1), "Council member should be 0x1");
+    }
+
+    function testTimeUntilNextScheduledElection() public {
+        assertEq(automatedVoting.timeUntilNextScheduledElection(), 24 weeks + startTime);
     }
 
     //todo: test everything with when a non-existent election is put in
