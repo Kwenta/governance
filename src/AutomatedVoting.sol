@@ -61,7 +61,7 @@ contract AutomatedVoting is IAutomatedVoting {
         if (block.timestamp > lastScheduledElection + 24 weeks) {
             return 0;
         } else {
-            return block.timestamp + 24 weeks - lastScheduledElection;
+            return 24 weeks - block.timestamp - lastScheduledElection;
         }
     }
 
