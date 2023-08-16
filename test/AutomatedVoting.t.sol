@@ -155,6 +155,36 @@ contract AutomatedVotingTest is Test {
 
     // finalizeElection()
 
+    function testFinalizeElectionAlreadyFinalized() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        vm.warp(block.timestamp + 2 weeks + 1);
+        automatedVoting.finalizeElection(0);
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.ElectionAlreadyFinalized.selector)
+        );
+        automatedVoting.finalizeElection(0);
+    }
+
+    function testFinalizeElection() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        vm.warp(block.timestamp + 2 weeks + 1);
+        automatedVoting.finalizeElection(0);
+        assertEq(automatedVoting.isElectionFinalized(0), true);
+    }
+
+    function testFuzzFinalizeElectionNotReady(uint128 time) public {
+        vm.assume(time < 2 weeks);
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        vm.warp(block.timestamp + time);
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.ElectionNotReadyToBeFinalized.selector)
+        );
+        automatedVoting.finalizeElection(0);
+    }
+
     //todo: test everything with when a non-existent election is put in
 
     /// @dev create a new user address
