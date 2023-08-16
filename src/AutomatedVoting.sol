@@ -68,8 +68,8 @@ contract AutomatedVoting is IAutomatedVoting {
     function timeUntilElectionStateEnd(
         uint256 _election
     ) public view override returns (uint256) {
-        /// @dev if the election is finalized or the election number is greater than the number of elections, return 0
-        if (elections[_election].isFinalized || _election >= electionNumbers.length) {
+        /// @dev if the election is over or the election number is greater than the number of elections, return 0
+        if (elections[_election].endTime > block.timestamp + 2 weeks || _election >= electionNumbers.length) {
             return 0;
         } else {
             return elections[_election].endTime - block.timestamp;
