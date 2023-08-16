@@ -44,6 +44,9 @@ interface IAutomatedVoting {
     /// @notice emitted when the caller has already voted for this election
     error AlreadyVoted();
 
+    /// @notice emitted when the caller votes for too many candidates
+    error TooManyCandidates();
+
     // View Functions
 
     /// @notice returns the last scheduled election

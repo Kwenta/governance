@@ -137,6 +137,9 @@ contract AutomatedVoting is IAutomatedVoting {
         uint256 _election,
         address[] calldata candidates
     ) public override onlyStaker onlyDuringElection(_election) {
+        if(candidates.length > 5){
+            revert TooManyCandidates();
+        }
         if(isElectionFinalized(_election)){
             revert ElectionAlreadyFinalized();
         }
