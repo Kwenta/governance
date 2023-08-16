@@ -147,6 +147,14 @@ contract AutomatedVotingTest is Test {
         assertEq(electionType, "full");
     }
 
+    // startCouncilElection()
+
+    // startCKIPelection()
+
+    // stepDown()
+
+    // finalizeElection()
+
     //todo: test everything with when a non-existent election is put in
 
     /// @dev create a new user address
