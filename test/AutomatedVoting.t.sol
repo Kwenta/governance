@@ -23,21 +23,29 @@ contract AutomatedVotingTest is Test {
     Kwenta public kwenta;
     RewardEscrow public rewardEscrow;
     address public admin;
+    address public user1;
+    address public user2;
+    address public user3;
+    address public user4;
+    address public user5;
     uint256 public userNonce;
     uint256 public startTime;
 
     function setUp() public {
         startTime = block.timestamp;
         admin = createUser();
-        kwenta = new Kwenta(
-            "Kwenta",
-            "Kwe",
-            100_000,
-            admin,
+        user1 = createUser();
+        user2 = createUser();
+        user3 = createUser();
+        user4 = createUser();
+        user5 = createUser();
+        kwenta = new Kwenta("Kwenta", "Kwe", 100_000, admin, address(this));
+        rewardEscrow = new RewardEscrow(admin, address(kwenta));
+        stakingRewards = new StakingRewards(
+            address(kwenta),
+            address(rewardEscrow),
             address(this)
         );
-        rewardEscrow = new RewardEscrow(admin, address(kwenta));
-        stakingRewards = new StakingRewards(address(kwenta), address(rewardEscrow), address(this));
         address[] memory council = new address[](1);
         council[0] = address(0x1);
         automatedVoting = new AutomatedVoting(council, address(stakingRewards));
@@ -54,7 +62,10 @@ contract AutomatedVotingTest is Test {
     // timeUntilNextScheduledElection()
 
     function testTimeUntilNextScheduledElection() public {
-        assertEq(automatedVoting.timeUntilNextScheduledElection(), 24 weeks - startTime);
+        assertEq(
+            automatedVoting.timeUntilNextScheduledElection(),
+            24 weeks - startTime
+        );
     }
 
     function testTimeUntilNextScheduledElectionOverdue() public {
@@ -65,7 +76,10 @@ contract AutomatedVotingTest is Test {
     function testFuzzTimeUntilNextScheduledElection(uint128 time) public {
         vm.assume(time < 24 weeks);
         vm.warp(block.timestamp + time);
-        assertEq(automatedVoting.timeUntilNextScheduledElection(), 24 weeks - startTime - time);
+        assertEq(
+            automatedVoting.timeUntilNextScheduledElection(),
+            24 weeks - startTime - time
+        );
     }
 
     // timeUntilElectionStateEnd()
@@ -93,7 +107,9 @@ contract AutomatedVotingTest is Test {
         //todo: test other election states
     }
 
-    function testFuzzTimeUntilElectionStateEndNewScheduledElection(uint128 time) public {
+    function testFuzzTimeUntilElectionStateEndNewScheduledElection(
+        uint128 time
+    ) public {
         vm.assume(time < 2 weeks);
         vm.warp(block.timestamp + 24 weeks);
         automatedVoting.startScheduledElection();
@@ -129,7 +145,9 @@ contract AutomatedVotingTest is Test {
         vm.assume(time < 24 weeks);
         vm.warp(block.timestamp + time - startTime);
         vm.expectRevert(
-            abi.encodeWithSelector(IAutomatedVoting.ElectionNotReadyToBeStarted.selector)
+            abi.encodeWithSelector(
+                IAutomatedVoting.ElectionNotReadyToBeStarted.selector
+            )
         );
         automatedVoting.startScheduledElection();
     }
@@ -140,7 +158,12 @@ contract AutomatedVotingTest is Test {
         assertEq(automatedVoting.timeUntilElectionStateEnd(0), 2 weeks);
         assertEq(automatedVoting.lastScheduledElection(), block.timestamp);
         assertEq(automatedVoting.electionNumbers(0), 0);
-        (uint256 electionStartTime, uint256 endTime, bool isFinalized, string memory electionType) = automatedVoting.elections(0);
+        (
+            uint256 electionStartTime,
+            uint256 endTime,
+            bool isFinalized,
+            string memory electionType
+        ) = automatedVoting.elections(0);
         assertEq(electionStartTime, block.timestamp);
         assertEq(endTime, block.timestamp + 2 weeks);
         assertEq(isFinalized, false);
@@ -161,7 +184,9 @@ contract AutomatedVotingTest is Test {
         vm.warp(block.timestamp + 2 weeks + 1);
         automatedVoting.finalizeElection(0);
         vm.expectRevert(
-            abi.encodeWithSelector(IAutomatedVoting.ElectionAlreadyFinalized.selector)
+            abi.encodeWithSelector(
+                IAutomatedVoting.ElectionAlreadyFinalized.selector
+            )
         );
         automatedVoting.finalizeElection(0);
     }
@@ -180,9 +205,45 @@ contract AutomatedVotingTest is Test {
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + time);
         vm.expectRevert(
-            abi.encodeWithSelector(IAutomatedVoting.ElectionNotReadyToBeFinalized.selector)
+            abi.encodeWithSelector(
+                IAutomatedVoting.ElectionNotReadyToBeFinalized.selector
+            )
         );
         automatedVoting.finalizeElection(0);
+    }
+
+    // voteInSingleElection()
+
+    // voteInFullElection()
+
+    function testVoteInFullElectionSuccess() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        address[] memory candidates = new address[](5);
+        candidates[0] = user1;
+        candidates[1] = user2;
+        candidates[2] = user3;
+        candidates[3] = user4;
+        candidates[4] = user5;
+        automatedVoting.voteInFullElection(0, candidates);
+
+        //todo: check the candidateAddresses array
+        uint user1Votes = automatedVoting.voteCounts(0, user1);
+        assertEq(user1Votes, 1);
+        uint user2Votes = automatedVoting.voteCounts(0, user2);
+        assertEq(user2Votes, 1);
+        uint user3Votes = automatedVoting.voteCounts(0, user3);
+        assertEq(user3Votes, 1);
+        uint user4Votes = automatedVoting.voteCounts(0, user4);
+        assertEq(user4Votes, 1);
+        uint user5Votes = automatedVoting.voteCounts(0, user5);
+        assertEq(user5Votes, 1);
+        uint adminVotes = automatedVoting.voteCounts(0, admin);
+        assertEq(adminVotes, 0);
     }
 
     //todo: test everything with when a non-existent election is put in
