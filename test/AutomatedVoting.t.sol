@@ -33,11 +33,15 @@ contract AutomatedVotingTest is Test {
         automatedVoting = new AutomatedVoting(council, address(stakingRewards));
     }
 
+    // getCouncil()
+
     function testGetCouncil() public {
         address[] memory result = automatedVoting.getCouncil();
         assertEq(result.length, 1, "Council should have 1 member");
         assertEq(result[0], address(0x1), "Council member should be 0x1");
     }
+
+    // timeUntilNextScheduledElection()
 
     function testTimeUntilNextScheduledElection() public {
         assertEq(automatedVoting.timeUntilNextScheduledElection(), 24 weeks - startTime);
@@ -53,6 +57,8 @@ contract AutomatedVotingTest is Test {
         vm.warp(block.timestamp + time);
         assertEq(automatedVoting.timeUntilNextScheduledElection(), 24 weeks - startTime - time);
     }
+
+    // timeUntilElectionStateEnd()
 
     function testTimeUntilElectionStateEndNoElection() public {
         assertEq(automatedVoting.timeUntilElectionStateEnd(0), 0);
@@ -84,6 +90,8 @@ contract AutomatedVotingTest is Test {
         vm.warp(block.timestamp + time);
         assertEq(automatedVoting.timeUntilElectionStateEnd(0), 2 weeks - time);
     }
+
+    // isElectionFinalized()
 
     //todo: test everything with when a non-existent election is put in
 
