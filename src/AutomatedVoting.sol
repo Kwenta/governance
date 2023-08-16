@@ -140,9 +140,6 @@ contract AutomatedVoting is IAutomatedVoting {
         if(candidates.length > 5){
             revert TooManyCandidates();
         }
-        if(isElectionFinalized(_election)){
-            revert ElectionAlreadyFinalized();
-        }
         if (hasVoted[msg.sender][_election]) {
             revert AlreadyVoted();
         }
