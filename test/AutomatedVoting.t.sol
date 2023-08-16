@@ -93,6 +93,26 @@ contract AutomatedVotingTest is Test {
 
     // isElectionFinalized()
 
+    function testIsElectionFinalizedNoElection() public {
+        assertEq(automatedVoting.isElectionFinalized(0), false);
+    }
+
+    function testIsElectionFinalizedNewElection() public {
+        /// @dev warp forward 24 weeks to get past the cooldown
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        assertEq(automatedVoting.isElectionFinalized(0), false);
+    }
+
+    function testIsElectionFinalizedFinishedElection() public {
+        /// @dev warp forward 24 weeks to get past the cooldown
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        vm.warp(block.timestamp + 2 weeks + 1);
+        automatedVoting.finalizeElection(0);
+        assertEq(automatedVoting.isElectionFinalized(0), true);
+    }
+
     //todo: test everything with when a non-existent election is put in
 
     /// @dev create a new user address
