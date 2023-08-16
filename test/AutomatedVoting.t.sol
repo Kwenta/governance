@@ -9,6 +9,15 @@ import {Kwenta} from "../lib/token/contracts/Kwenta.sol";
 import {RewardEscrow} from "../lib/token/contracts/RewardEscrow.sol";
 
 contract AutomatedVotingTest is Test {
+    struct election {
+        uint256 startTime;
+        uint256 endTime;
+        bool isFinalized;
+        string electionType;
+        address[] candidateAddresses; // Array of candidate addresses for this election
+        address[] winningCandidates; // Array of candidates that won
+    }
+
     AutomatedVoting public automatedVoting;
     StakingRewards public stakingRewards;
     Kwenta public kwenta;
@@ -129,6 +138,13 @@ contract AutomatedVotingTest is Test {
         vm.warp(block.timestamp + 24 weeks - startTime);
         automatedVoting.startScheduledElection();
         assertEq(automatedVoting.timeUntilElectionStateEnd(0), 2 weeks);
+        assertEq(automatedVoting.lastScheduledElection(), block.timestamp);
+        assertEq(automatedVoting.electionNumbers(0), 0);
+        (uint256 electionStartTime, uint256 endTime, bool isFinalized, string memory electionType) = automatedVoting.elections(0);
+        assertEq(electionStartTime, block.timestamp);
+        assertEq(endTime, block.timestamp + 2 weeks);
+        assertEq(isFinalized, false);
+        assertEq(electionType, "full");
     }
 
     //todo: test everything with when a non-existent election is put in
