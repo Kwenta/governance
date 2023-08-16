@@ -264,7 +264,21 @@ contract AutomatedVotingTest is Test {
         automatedVoting.voteInFullElection(0, candidates);
     }
 
+    function testVoteInFullElectionNotElection() public {
+        vm.warp(block.timestamp + 24 weeks);
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        vm.expectRevert(
+            "Election not active"
+        );
+        automatedVoting.voteInFullElection(0, new address[](5));
+    }
+
     //todo: test everything with when a non-existent election is put in
+
+    //todo: test modifiers like onlyDuringElection
 
     /// @dev create a new user address
     function createUser() public returns (address) {
