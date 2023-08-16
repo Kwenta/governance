@@ -246,6 +246,24 @@ contract AutomatedVotingTest is Test {
         assertEq(adminVotes, 0);
     }
 
+    function testVoteInFullElectionNotStaked() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        address[] memory candidates = new address[](5);
+        candidates[0] = user1;
+        candidates[1] = user2;
+        candidates[2] = user3;
+        candidates[3] = user4;
+        candidates[4] = user5;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAutomatedVoting.CallerNotStaked.selector
+            )
+        );
+        vm.startPrank(user1);
+        automatedVoting.voteInFullElection(0, candidates);
+    }
+
     //todo: test everything with when a non-existent election is put in
 
     /// @dev create a new user address
