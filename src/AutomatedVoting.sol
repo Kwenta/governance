@@ -6,11 +6,11 @@ import {IStakingRewards} from "../lib/token/contracts/interfaces/IStakingRewards
 
 contract AutomatedVoting is IAutomatedVoting {
     address[] public council;
-    mapping(uint256 => election) elections;
+    mapping(uint256 => election) public elections;
     mapping(uint256 => mapping(address => uint256)) public voteCounts;
     mapping(address => mapping(uint256 => bool)) hasVoted;
     uint256[] public electionNumbers;
-    uint256 lastScheduledElection;
+    uint256 public lastScheduledElection;
     IStakingRewards public stakingRewards;
 
     struct election {
