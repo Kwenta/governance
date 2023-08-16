@@ -276,6 +276,28 @@ contract AutomatedVotingTest is Test {
         automatedVoting.voteInFullElection(0, new address[](5));
     }
 
+    function testVoteInFullElectionTooManyCandidates() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        address[] memory candidates = new address[](6);
+        candidates[0] = user1;
+        candidates[1] = user2;
+        candidates[2] = user3;
+        candidates[3] = user4;
+        candidates[4] = user5;
+        candidates[5] = admin;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAutomatedVoting.TooManyCandidates.selector
+            )
+        );
+        automatedVoting.voteInFullElection(0, candidates);
+    }
+
     //todo: test everything with when a non-existent election is put in
 
     //todo: test modifiers like onlyDuringElection
