@@ -334,6 +334,18 @@ contract AutomatedVotingTest is Test {
         automatedVoting.voteInFullElection(0, candidates);
     }
 
+    // _isCouncilMember()
+
+    // _isStaker()
+
+    // _checkIfQuorumReached()
+
+    // _finalizeElection()
+
+    // getWinners()
+
+    // isWinner()
+
     //todo: test everything with when a non-existent election is put in
 
     //todo: test modifiers like onlyDuringElection
