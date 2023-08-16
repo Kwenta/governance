@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {AutomatedVoting} from "../src/AutomatedVoting.sol";
+import {IAutomatedVoting} from "../src/interfaces/IAutomatedVoting.sol";
 import {StakingRewards} from "../lib/token/contracts/StakingRewards.sol";
 import {Kwenta} from "../lib/token/contracts/Kwenta.sol";
 import {RewardEscrow} from "../lib/token/contracts/RewardEscrow.sol";
@@ -111,6 +112,23 @@ contract AutomatedVotingTest is Test {
         vm.warp(block.timestamp + 2 weeks + 1);
         automatedVoting.finalizeElection(0);
         assertEq(automatedVoting.isElectionFinalized(0), true);
+    }
+
+    // startScheduledElection()
+
+    function testFuzzStartScheduledElectionNotReady(uint128 time) public {
+        vm.assume(time < 24 weeks);
+        vm.warp(block.timestamp + time - startTime);
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.ElectionNotReadyToBeStarted.selector)
+        );
+        automatedVoting.startScheduledElection();
+    }
+
+    function testStartScheduledElectionReady() public {
+        vm.warp(block.timestamp + 24 weeks - startTime);
+        automatedVoting.startScheduledElection();
+        assertEq(automatedVoting.timeUntilElectionStateEnd(0), 2 weeks);
     }
 
     //todo: test everything with when a non-existent election is put in
