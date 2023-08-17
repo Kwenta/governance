@@ -173,7 +173,7 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    function _checkIfQuorumReached(uint256 _election) internal {
+    function _checkIfQuorumReached(uint256 _election) internal returns (bool) {
         //todo: check if quorum reached
         //todo: if quorum reached, finalize election _finalizeElection(_election)
     }
