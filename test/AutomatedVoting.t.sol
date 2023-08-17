@@ -372,6 +372,20 @@ contract AutomatedVotingTest is Test {
 
     // isWinner()
 
+    function testIsWinner() public {
+        address[] memory winners = new address[](1);
+        winners[0] = user1;
+        assertEq(automatedVotingInternals.isWinnerInternal(user1, winners, 1), true);
+    }
+
+    function testIsNotWinner() public {
+        address[] memory winners = new address[](1);
+        winners[0] = user1;
+        assertEq(automatedVotingInternals.isWinnerInternal(user2, winners, 1), false);
+    }
+
+    //todo: test isWinner for the < upToIndex change
+
     //todo: test everything with when a non-existent election is put in
 
     //todo: test modifiers like onlyDuringElection
