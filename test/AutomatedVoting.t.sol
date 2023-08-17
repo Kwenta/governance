@@ -7,6 +7,7 @@ import {IAutomatedVoting} from "../src/interfaces/IAutomatedVoting.sol";
 import {StakingRewards} from "../lib/token/contracts/StakingRewards.sol";
 import {Kwenta} from "../lib/token/contracts/Kwenta.sol";
 import {RewardEscrow} from "../lib/token/contracts/RewardEscrow.sol";
+import {AutomatedVotingInternals} from "./AutomatedVotingInternals.sol";
 
 contract AutomatedVotingTest is Test {
     struct election {
@@ -19,6 +20,7 @@ contract AutomatedVotingTest is Test {
     }
 
     AutomatedVoting public automatedVoting;
+    AutomatedVotingInternals public automatedVotingInternals;
     StakingRewards public stakingRewards;
     Kwenta public kwenta;
     RewardEscrow public rewardEscrow;
@@ -49,6 +51,10 @@ contract AutomatedVotingTest is Test {
         address[] memory council = new address[](1);
         council[0] = address(0x1);
         automatedVoting = new AutomatedVoting(council, address(stakingRewards));
+        automatedVotingInternals = new AutomatedVotingInternals(
+            council,
+            address(stakingRewards)
+        );
     }
 
     // getCouncil()
