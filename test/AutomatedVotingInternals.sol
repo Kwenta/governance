@@ -4,8 +4,10 @@ pragma solidity ^0.8.19;
 import {AutomatedVoting} from "../src/AutomatedVoting.sol";
 
 contract AutomatedVotingInternals is AutomatedVoting {
-
-    constructor(address[] memory _council, address _stakingRewards) AutomatedVoting(_council, _stakingRewards) {}
+    constructor(
+        address[] memory _council,
+        address _stakingRewards
+    ) AutomatedVoting(_council, _stakingRewards) {}
 
     function isCouncilMember(address voter) public view returns (bool) {
         return _isCouncilMember(voter);
@@ -23,8 +25,11 @@ contract AutomatedVotingInternals is AutomatedVoting {
         _finalizeElection(_election);
     }
 
-    function isWinnerInternal(address candidate, address[] memory winners, uint256 upToIndex) public pure returns (bool) {
+    function isWinnerInternal(
+        address candidate,
+        address[] memory winners,
+        uint256 upToIndex
+    ) public pure returns (bool) {
         return isWinner(candidate, winners, upToIndex);
     }
-
 }

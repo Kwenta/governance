@@ -262,9 +262,7 @@ contract AutomatedVotingTest is Test {
         candidates[3] = user4;
         candidates[4] = user5;
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IAutomatedVoting.CallerNotStaked.selector
-            )
+            abi.encodeWithSelector(IAutomatedVoting.CallerNotStaked.selector)
         );
         vm.startPrank(user1);
         automatedVoting.voteInFullElection(0, candidates);
@@ -276,9 +274,7 @@ contract AutomatedVotingTest is Test {
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        vm.expectRevert(
-            "Election not active"
-        );
+        vm.expectRevert("Election not active");
         automatedVoting.voteInFullElection(0, new address[](5));
     }
 
@@ -290,9 +286,7 @@ contract AutomatedVotingTest is Test {
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        vm.expectRevert(
-            "Election not active"
-        );
+        vm.expectRevert("Election not active");
         automatedVoting.voteInFullElection(0, new address[](5));
     }
 
@@ -311,9 +305,7 @@ contract AutomatedVotingTest is Test {
         candidates[4] = user5;
         candidates[5] = admin;
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IAutomatedVoting.TooManyCandidates.selector
-            )
+            abi.encodeWithSelector(IAutomatedVoting.TooManyCandidates.selector)
         );
         automatedVoting.voteInFullElection(0, candidates);
     }
@@ -333,9 +325,7 @@ contract AutomatedVotingTest is Test {
         candidates[4] = user5;
         automatedVoting.voteInFullElection(0, candidates);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IAutomatedVoting.AlreadyVoted.selector
-            )
+            abi.encodeWithSelector(IAutomatedVoting.AlreadyVoted.selector)
         );
         automatedVoting.voteInFullElection(0, candidates);
     }

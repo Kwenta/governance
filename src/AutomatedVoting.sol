@@ -41,7 +41,7 @@ contract AutomatedVoting is IAutomatedVoting {
     modifier onlyDuringElection(uint256 _election) {
         require(
             block.timestamp >= elections[_election].startTime &&
-            block.timestamp <= elections[_election].endTime,
+                block.timestamp <= elections[_election].endTime,
             "Election not active"
         );
         _;
@@ -69,7 +69,10 @@ contract AutomatedVoting is IAutomatedVoting {
         uint256 _election
     ) public view override returns (uint256) {
         /// @dev if the election is over or the election number is greater than the number of elections, return 0
-        if (elections[_election].endTime > block.timestamp + 2 weeks || _election >= electionNumbers.length) {
+        if (
+            elections[_election].endTime > block.timestamp + 2 weeks ||
+            _election >= electionNumbers.length
+        ) {
             return 0;
         } else {
             return elections[_election].endTime - block.timestamp;
@@ -114,8 +117,7 @@ contract AutomatedVoting is IAutomatedVoting {
     function finalizeElection(uint256 _election) public override {
         if (elections[_election].isFinalized) {
             revert ElectionAlreadyFinalized();
-        }
-        else if (block.timestamp > elections[_election].endTime) {
+        } else if (block.timestamp > elections[_election].endTime) {
             _finalizeElection(_election);
         } else {
             revert ElectionNotReadyToBeFinalized();
@@ -137,7 +139,7 @@ contract AutomatedVoting is IAutomatedVoting {
         uint256 _election,
         address[] calldata candidates
     ) public override onlyStaker onlyDuringElection(_election) {
-        if(candidates.length > 5){
+        if (candidates.length > 5) {
             revert TooManyCandidates();
         }
         if (hasVoted[msg.sender][_election]) {
@@ -181,7 +183,7 @@ contract AutomatedVoting is IAutomatedVoting {
     function _finalizeElection(uint256 _election) internal {
         elections[_election].isFinalized = true;
         string memory electionType = elections[_election].electionType;
-        if(keccak256(abi.encodePacked(electionType)) == keccak256("full")){
+        if (keccak256(abi.encodePacked(electionType)) == keccak256("full")) {
             /// @dev this is for a full election
             (address[] memory winners, ) = getWinners(_election, 5);
             elections[_election].winningCandidates = winners;
@@ -192,7 +194,10 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    function getWinners(uint256 electionId, uint256 numberOfWinners) public view returns (address[] memory, uint256[] memory) {
+    function getWinners(
+        uint256 electionId,
+        uint256 numberOfWinners
+    ) public view returns (address[] memory, uint256[] memory) {
         require(elections[electionId].isFinalized, "Election not finalized");
 
         address[] memory winners = new address[](numberOfWinners);
@@ -202,9 +207,16 @@ contract AutomatedVoting is IAutomatedVoting {
             address bestCandidate;
             uint256 maxVotes = 0;
 
-            for (uint256 j = 0; j < elections[electionId].candidateAddresses.length; j++) {
+            for (
+                uint256 j = 0;
+                j < elections[electionId].candidateAddresses.length;
+                j++
+            ) {
                 address candidate = elections[electionId].candidateAddresses[j];
-                if (voteCounts[electionId][candidate] > maxVotes && !isWinner(candidate, winners, i)) {
+                if (
+                    voteCounts[electionId][candidate] > maxVotes &&
+                    !isWinner(candidate, winners, i)
+                ) {
                     maxVotes = voteCounts[electionId][candidate];
                     bestCandidate = candidate;
                 }
@@ -217,7 +229,11 @@ contract AutomatedVoting is IAutomatedVoting {
         return (winners, voteCountsOfWinners);
     }
 
-    function isWinner(address candidate, address[] memory winners, uint256 upToIndex) internal pure returns (bool) {
+    function isWinner(
+        address candidate,
+        address[] memory winners,
+        uint256 upToIndex
+    ) internal pure returns (bool) {
         for (uint256 i = 0; i <= upToIndex; i++) {
             if (candidate == winners[i]) {
                 return true;
