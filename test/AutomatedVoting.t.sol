@@ -340,6 +340,36 @@ contract AutomatedVotingTest is Test {
 
     // getWinners()
 
+    function testGetWinners() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        address[] memory candidates = new address[](5);
+        candidates[0] = user1;
+        candidates[1] = user2;
+        candidates[2] = user3;
+        candidates[3] = user4;
+        candidates[4] = user5;
+        automatedVoting.voteInFullElection(0, candidates);
+        vm.warp(block.timestamp + 2 weeks + 1);
+        automatedVoting.finalizeElection(0);
+
+        (address[] memory winners, uint256[] memory votes) =
+            automatedVoting.getWinners(0, 5);
+        assertEq(winners.length, 5);
+        assertEq(votes.length, 5);
+        assertEq(winners[0], user1);
+        assertEq(winners[1], user2);
+        assertEq(winners[2], user3);
+        assertEq(winners[3], user4);
+        assertEq(winners[4], user5);
+    }
+
+    //todo: test getWinners more
+
     // isWinner()
 
     //todo: test everything with when a non-existent election is put in
