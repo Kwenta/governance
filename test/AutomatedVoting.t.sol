@@ -332,6 +332,14 @@ contract AutomatedVotingTest is Test {
 
     // _isCouncilMember()
 
+    function testIsCouncilMember() public {
+        assertEq(automatedVotingInternals.isCouncilMember(address(0x1)), true);
+    }
+
+    function testIsNotCouncilMember() public {
+        assertEq(automatedVotingInternals.isCouncilMember(address(0x2)), false);
+    }
+
     // _isStaker()
 
     // _checkIfQuorumReached()
