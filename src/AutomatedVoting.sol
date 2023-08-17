@@ -234,7 +234,7 @@ contract AutomatedVoting is IAutomatedVoting {
         address[] memory winners,
         uint256 upToIndex
     ) internal pure returns (bool) {
-        for (uint256 i = 0; i <= upToIndex; i++) {
+        for (uint256 i = 0; i < upToIndex; i++) {
             if (candidate == winners[i]) {
                 return true;
             }
