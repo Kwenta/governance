@@ -187,6 +187,7 @@ contract AutomatedVoting is IAutomatedVoting {
             /// @dev this is for a full election
             (address[] memory winners, ) = getWinners(_election, 5);
             elections[_election].winningCandidates = winners;
+            council = winners;
         } else {
             /// @dev this is for a single election
             (address[] memory winners, ) = getWinners(_election, 1);

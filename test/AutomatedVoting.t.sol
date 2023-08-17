@@ -338,6 +338,28 @@ contract AutomatedVotingTest is Test {
 
     // _finalizeElection()
 
+    function testFinalizeElectionInternal() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVotingInternals.startScheduledElection();
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        address[] memory candidates = new address[](5);
+        candidates[0] = user1;
+        candidates[1] = user2;
+        candidates[2] = user3;
+        candidates[3] = user4;
+        candidates[4] = user5;
+        automatedVotingInternals.voteInFullElection(0, candidates);
+        vm.warp(block.timestamp + 2 weeks + 1);
+        automatedVotingInternals.finalizeElectionInternal(0);
+        assertEq(automatedVotingInternals.isElectionFinalized(0), true);
+
+        /// @dev check if the council changed
+        assertEq(automatedVotingInternals.getCouncil(), candidates);
+    }
+
     // getWinners()
 
     function testGetWinners() public {
