@@ -8,16 +8,9 @@ import {StakingRewards} from "../lib/token/contracts/StakingRewards.sol";
 import {Kwenta} from "../lib/token/contracts/Kwenta.sol";
 import {RewardEscrow} from "../lib/token/contracts/RewardEscrow.sol";
 import {AutomatedVotingInternals} from "./AutomatedVotingInternals.sol";
+import {Enums} from "../src/enums.sol";
 
 contract AutomatedVotingTest is Test {
-    struct election {
-        uint256 startTime;
-        uint256 endTime;
-        bool isFinalized;
-        string electionType;
-        address[] candidateAddresses; // Array of candidate addresses for this election
-        address[] winningCandidates; // Array of candidates that won
-    }
 
     AutomatedVoting public automatedVoting;
     AutomatedVotingInternals public automatedVotingInternals;
@@ -168,12 +161,12 @@ contract AutomatedVotingTest is Test {
             uint256 electionStartTime,
             uint256 endTime,
             bool isFinalized,
-            string memory electionType
+            Enums.electionType theElectionType
         ) = automatedVoting.elections(0);
         assertEq(electionStartTime, block.timestamp);
         assertEq(endTime, block.timestamp + 2 weeks);
         assertEq(isFinalized, false);
-        assertEq(electionType, "full");
+        assertTrue(theElectionType == Enums.electionType.full);
     }
 
     // startCouncilElection()

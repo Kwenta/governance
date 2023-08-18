@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 import {IAutomatedVoting} from "./interfaces/IAutomatedVoting.sol";
 import {IStakingRewards} from "../lib/token/contracts/interfaces/IStakingRewards.sol";
+import {Enums} from "./enums.sol";
 
 contract AutomatedVoting is IAutomatedVoting {
     address[] public council;
@@ -17,7 +18,7 @@ contract AutomatedVoting is IAutomatedVoting {
         uint256 startTime;
         uint256 endTime;
         bool isFinalized;
-        string electionType;
+        Enums.electionType theElectionType;
         address[] candidateAddresses; // Array of candidate addresses for this election
         address[] winningCandidates; // Array of candidates that won
     }
@@ -99,7 +100,7 @@ contract AutomatedVoting is IAutomatedVoting {
             elections[electionNumber].startTime = block.timestamp;
             elections[electionNumber].endTime = block.timestamp + 2 weeks;
             elections[electionNumber].isFinalized = false;
-            elections[electionNumber].electionType = "full";
+            elections[electionNumber].theElectionType = Enums.electionType.full;
         }
     }
 
@@ -182,8 +183,7 @@ contract AutomatedVoting is IAutomatedVoting {
 
     function _finalizeElection(uint256 _election) internal {
         elections[_election].isFinalized = true;
-        string memory electionType = elections[_election].electionType;
-        if (keccak256(abi.encodePacked(electionType)) == keccak256("full")) {
+        if (elections[_election].theElectionType == Enums.electionType.full) {
             /// @dev this is for a full election
             (address[] memory winners, ) = getWinners(_election, 5);
             elections[_election].winningCandidates = winners;
