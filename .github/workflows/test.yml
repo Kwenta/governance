@@ -52,6 +52,9 @@ jobs:
           cd vertigo-rs
           python setup.py develop
           cd ..
+
+      - name: Run Vertigo
+        run: |
           python vertigo-rs/vertigo.py run
       
 
