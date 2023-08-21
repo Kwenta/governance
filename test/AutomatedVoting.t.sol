@@ -8,7 +8,7 @@ import {StakingRewards} from "../lib/token/contracts/StakingRewards.sol";
 import {Kwenta} from "../lib/token/contracts/Kwenta.sol";
 import {RewardEscrow} from "../lib/token/contracts/RewardEscrow.sol";
 import {AutomatedVotingInternals} from "./AutomatedVotingInternals.sol";
-import {Enums} from "../src/enums.sol";
+import {Enums} from "../src/Enums.sol";
 
 contract AutomatedVotingTest is Test {
 
