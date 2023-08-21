@@ -10,6 +10,7 @@ contract AutomatedVoting is IAutomatedVoting {
     mapping(uint256 => election) public elections;
     mapping(uint256 => mapping(address => uint256)) public voteCounts;
     mapping(address => mapping(uint256 => bool)) hasVoted;
+    mapping(uint256 => mapping(address => bool)) public isNominated;
     uint256[] public electionNumbers;
     uint256 public lastScheduledElection;
     IStakingRewards public stakingRewards;
@@ -150,7 +151,9 @@ contract AutomatedVoting is IAutomatedVoting {
         address[] calldata candidates
     ) public override onlyStaker onlyDuringNomination(_election) {
         for (uint256 i = 0; i < candidates.length; i++) {
+            //todo: optimize this to not repeat the same candidates
             elections[_election].candidateAddresses.push(candidates[i]);
+            isNominated[_election][candidates[i]] = true;
         }
     }
 
@@ -164,13 +167,26 @@ contract AutomatedVoting is IAutomatedVoting {
         if (hasVoted[msg.sender][_election]) {
             revert AlreadyVoted();
         }
+        if (!_candidatesAreNominated(_election, candidates)) {
+            revert CandidateNotNominated();
+        }
         hasVoted[msg.sender][_election] = true;
         for (uint256 i = 0; i < candidates.length; i++) {
-            //todo: optimize this to not repeat the same candidates
-            elections[_election].candidateAddresses.push(candidates[i]);
-            address candidate = candidates[i];
-            voteCounts[_election][candidate]++;
+            voteCounts[_election][candidates[i]]++;
         }
+    }
+
+    function _candidatesAreNominated(uint256 _election, address[] memory candidates)
+        internal
+        view
+        returns (bool)
+    {
+        for (uint256 i = 0; i < candidates.length; i++) {
+            if (isNominated[_election][candidates[i]] == false) {
+                return false;
+            }
+        }
+        return true;
     }
 
     function _isCouncilMember(
