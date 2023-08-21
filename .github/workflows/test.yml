@@ -29,6 +29,32 @@ jobs:
           forge test -vvv
         id: test
 
+  Mutation_Testing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Vertigo
+        run: |
+          git clone https://github.com/RareSkills/vertigo-rs
+          cd vertigo-rs
+          python setup.py develop
+          cd ..
+          python vertigo-rs/vertigo.py run
+      
+
   Coverage:
     runs-on: ubuntu-latest
     steps:
