@@ -91,6 +91,14 @@ interface IAutomatedVoting {
     /// @param election the election to finalize
     function finalizeElection(uint256 election) external;
 
+    /// @notice nominate people in a full election
+    /// @param _election the election to nominate in
+    /// @param candidates the nominee to nominate
+    function nominateInFullElection(
+        uint256 _election,
+        address[] memory candidates
+    ) external;
+
     /// @notice vote for a nominee in a single election
     /// @param _election the election to vote in
     /// @param candidate the nominee to vote for
