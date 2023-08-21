@@ -39,6 +39,15 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    modifier onlyDuringNomination(uint256 _election) {
+        require(
+            block.timestamp >= elections[_election].startTime &&
+                block.timestamp <= elections[_election].startTime + 1 weeks,
+            "Election not in nomination state"
+        );
+        _;
+    }
+
     modifier onlyDuringElection(uint256 _election) {
         require(
             block.timestamp >= elections[_election].startTime &&
@@ -98,7 +107,7 @@ contract AutomatedVoting is IAutomatedVoting {
             uint256 electionNumber = electionNumbers.length;
             electionNumbers.push(electionNumber);
             elections[electionNumber].startTime = block.timestamp;
-            elections[electionNumber].endTime = block.timestamp + 2 weeks;
+            elections[electionNumber].endTime = block.timestamp + 3 weeks;
             elections[electionNumber].isFinalized = false;
             elections[electionNumber].theElectionType = Enums.electionType.full;
         }
@@ -134,6 +143,15 @@ contract AutomatedVoting is IAutomatedVoting {
         }
         hasVoted[msg.sender][_election] = true;
         //todo: voting
+    }
+
+    function nominateInFullElection(
+        uint256 _election,
+        address[] calldata candidates
+    ) public override onlyStaker onlyDuringNomination(_election) {
+        for (uint256 i = 0; i < candidates.length; i++) {
+            elections[_election].candidateAddresses.push(candidates[i]);
+        }
     }
 
     function voteInFullElection(
