@@ -57,6 +57,18 @@ jobs:
         run: |
           python vertigo-rs/vertigo.py run
       
+  Invariant_Testing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Echidna
+        run: brew install echidna
+
+      - name: Run Echidna
+        run: echidna test/Echidna.t.sol --config echidna.yaml --contract EchidnaTest
 
   Coverage:
     runs-on: ubuntu-latest
