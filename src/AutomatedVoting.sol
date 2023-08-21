@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import {IAutomatedVoting} from "./interfaces/IAutomatedVoting.sol";
 import {IStakingRewards} from "../lib/token/contracts/interfaces/IStakingRewards.sol";
-import {Enums} from "./enums.sol";
+import {Enums} from "./Enums.sol";
 
 contract AutomatedVoting is IAutomatedVoting {
     address[] public council;
