@@ -129,6 +129,68 @@ contract AutomatedVotingTest is Test {
         automatedVoting.voteInFullElection(0, new address[](5));
     }
 
+    function testFuzzOnlyDuringVoting(uint128 time) public {
+        vm.assume(time <= 2 weeks);
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        vm.warp(block.timestamp + 1 weeks);
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+
+        automatedVoting.nominateInFullElection(0, new address[](5));
+        vm.warp(block.timestamp + time);
+        automatedVoting.voteInFullElection(0, new address[](5));
+    }
+
+    function testOnlyDuringVotingLastSecond() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        vm.warp(block.timestamp + 1 weeks);
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+
+        automatedVoting.nominateInFullElection(0, new address[](5));
+        vm.warp(block.timestamp + 2 weeks);
+        automatedVoting.voteInFullElection(0, new address[](5));
+    }
+
+    function testOnlyDuringVotingPassed() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+
+        vm.warp(block.timestamp + 1 weeks);
+        automatedVoting.nominateInFullElection(0, new address[](5));
+        vm.warp(block.timestamp + 2 weeks + 1);
+        vm.expectRevert(
+            "Election not in voting state"
+        );
+        automatedVoting.voteInFullElection(0, new address[](5));
+    }
+
+    function testOnlyDuringVotingNotVotingYet() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+
+        automatedVoting.nominateInFullElection(0, new address[](5));
+        vm.warp(block.timestamp + 1 weeks - 1);
+        vm.expectRevert(
+            "Election not in voting state"
+        );
+        automatedVoting.voteInFullElection(0, new address[](5));
+    }
+
     // getCouncil()
 
     function testGetCouncil() public {
