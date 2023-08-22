@@ -211,8 +211,16 @@ contract AutomatedVotingTest is Test {
     }
 
     function testTimeUntilNextScheduledElectionOverdue() public {
-        vm.warp(block.timestamp + 24 weeks + 1);
+        vm.warp(block.timestamp + 24 weeks);
         assertEq(automatedVoting.timeUntilNextScheduledElection(), 0);
+    }
+
+    function testTimeUntilNextScheduledElectionRightBeforeOverdue() public {
+        vm.warp(block.timestamp + 24 weeks - 1);
+        assertEq(
+            automatedVoting.timeUntilNextScheduledElection(),
+            1
+        );
     }
 
     function testFuzzTimeUntilNextScheduledElection(uint128 time) public {
