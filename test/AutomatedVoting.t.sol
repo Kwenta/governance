@@ -239,6 +239,21 @@ contract AutomatedVotingTest is Test {
 
     }
 
+    function testNominateInFullElectionNotStaked() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        address[] memory candidates = new address[](5);
+        candidates[0] = user1;
+        candidates[1] = user2;
+        candidates[2] = user3;
+        candidates[3] = user4;
+        candidates[4] = user5;
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.CallerNotStaked.selector)
+        );
+        automatedVoting.nominateInFullElection(0, candidates);
+    }
+
     // voteInFullElection()
 
     function testVoteInFullElectionSuccess() public {
