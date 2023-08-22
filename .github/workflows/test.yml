@@ -68,6 +68,9 @@ jobs:
         run: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
+      - name: Add Homebrew to PATH
+        run: echo 'eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> $GITHUB_ENV
+
       - name: Install Slither
         run: pip3 install slither-analyzer --user
 
