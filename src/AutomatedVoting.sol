@@ -129,7 +129,7 @@ contract AutomatedVoting is IAutomatedVoting {
     function finalizeElection(uint256 _election) public override {
         if (elections[_election].isFinalized) {
             revert ElectionAlreadyFinalized();
-        } else if (block.timestamp > elections[_election].endTime) {
+        } else if (block.timestamp >= elections[_election].endTime) {
             _finalizeElection(_election);
         } else {
             revert ElectionNotReadyToBeFinalized();

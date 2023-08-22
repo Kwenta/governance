@@ -338,7 +338,7 @@ contract AutomatedVotingTest is Test {
     function testFinalizeElectionAlreadyFinalized() public {
         vm.warp(block.timestamp + 24 weeks);
         automatedVoting.startScheduledElection();
-        vm.warp(block.timestamp + 3 weeks + 1);
+        vm.warp(block.timestamp + 3 weeks);
         automatedVoting.finalizeElection(0);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -351,16 +351,28 @@ contract AutomatedVotingTest is Test {
     function testFinalizeElection() public {
         vm.warp(block.timestamp + 24 weeks);
         automatedVoting.startScheduledElection();
-        vm.warp(block.timestamp + 3 weeks + 1);
+        vm.warp(block.timestamp + 3 weeks);
         automatedVoting.finalizeElection(0);
         assertEq(automatedVoting.isElectionFinalized(0), true);
     }
 
     function testFuzzFinalizeElectionNotReady(uint128 time) public {
-        vm.assume(time < 2 weeks);
+        vm.assume(time < 3 weeks);
         vm.warp(block.timestamp + 24 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + time);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAutomatedVoting.ElectionNotReadyToBeFinalized.selector
+            )
+        );
+        automatedVoting.finalizeElection(0);
+    }
+
+    function testFinalizeElectionNotReady() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        vm.warp(block.timestamp + 3 weeks - 1);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAutomatedVoting.ElectionNotReadyToBeFinalized.selector
