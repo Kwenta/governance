@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
+import {console} from "forge-std/console.sol";
 import {AutomatedVoting} from "../src/AutomatedVoting.sol";
 import {IAutomatedVoting} from "../src/interfaces/IAutomatedVoting.sol";
 import {StakingRewards} from "../lib/token/contracts/StakingRewards.sol";
@@ -27,7 +28,8 @@ contract AutomatedVotingTest is Test {
     uint256 public startTime;
 
     function setUp() public {
-        startTime = block.timestamp;
+        /// @dev this is so the time of lastScheduledElection is != 0
+        vm.warp(block.timestamp + 1 weeks);
         admin = createUser();
         user1 = createUser();
         user2 = createUser();
@@ -204,12 +206,12 @@ contract AutomatedVotingTest is Test {
     function testTimeUntilNextScheduledElection() public {
         assertEq(
             automatedVoting.timeUntilNextScheduledElection(),
-            24 weeks - startTime
+            24 weeks
         );
     }
 
     function testTimeUntilNextScheduledElectionOverdue() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 24 weeks + 1);
         assertEq(automatedVoting.timeUntilNextScheduledElection(), 0);
     }
 
@@ -218,7 +220,7 @@ contract AutomatedVotingTest is Test {
         vm.warp(block.timestamp + time);
         assertEq(
             automatedVoting.timeUntilNextScheduledElection(),
-            24 weeks - startTime - time
+            24 weeks - time
         );
     }
 
@@ -283,7 +285,7 @@ contract AutomatedVotingTest is Test {
 
     function testFuzzStartScheduledElectionNotReady(uint128 time) public {
         vm.assume(time < 24 weeks);
-        vm.warp(block.timestamp + time - startTime);
+        vm.warp(block.timestamp + time);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAutomatedVoting.ElectionNotReadyToBeStarted.selector
@@ -293,7 +295,7 @@ contract AutomatedVotingTest is Test {
     }
 
     function testStartScheduledElectionReady() public {
-        vm.warp(block.timestamp + 24 weeks - startTime);
+        vm.warp(block.timestamp + 24 weeks);
         automatedVoting.startScheduledElection();
         assertEq(automatedVoting.timeUntilElectionStateEnd(0), 3 weeks);
         assertEq(automatedVoting.lastScheduledElection(), block.timestamp);
