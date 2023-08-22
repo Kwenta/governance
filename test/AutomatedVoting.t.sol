@@ -253,8 +253,15 @@ contract AutomatedVotingTest is Test {
         assertEq(automatedVoting.timeUntilElectionStateEnd(0), 0);
     }
 
-    function testTimeUntilElectionStateEndOtherElections() public {
-        //todo: test other election states
+    function testTimeUntilElectionStateEndRightBeforeFinish() public {
+        /// @dev warp forward 24 weeks to get past the cooldown
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        vm.warp(block.timestamp + 3 weeks - 1);
+        assertEq(
+            automatedVoting.timeUntilElectionStateEnd(0),
+            1
+        );
     }
 
     function testFuzzTimeUntilElectionStateEndNewScheduledElection(
