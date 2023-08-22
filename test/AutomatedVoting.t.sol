@@ -254,6 +254,16 @@ contract AutomatedVotingTest is Test {
         automatedVoting.nominateInFullElection(0, candidates);
     }
 
+    function testNominateInFullElectionNotElection() public {
+        vm.warp(block.timestamp + 23 weeks);
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        vm.expectRevert("Election not in nomination state");
+        automatedVoting.nominateInFullElection(0, new address[](5));
+    }
+
     // voteInFullElection()
 
     function testVoteInFullElectionSuccess() public {
