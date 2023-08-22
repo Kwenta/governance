@@ -115,7 +115,19 @@ contract AutomatedVotingTest is Test {
         automatedVoting.nominateInFullElection(0, new address[](5));
     }
 
-    // onlyDuringElection()
+    // onlyDuringVoting()
+
+    function testOnlyDuringVotingAtStart() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        automatedVoting.nominateInFullElection(0, new address[](5));
+        vm.warp(block.timestamp + 1 weeks);
+        automatedVoting.voteInFullElection(0, new address[](5));
+    }
 
     // getCouncil()
 
@@ -359,6 +371,7 @@ contract AutomatedVotingTest is Test {
         candidates[3] = user4;
         candidates[4] = user5;
         automatedVoting.nominateInFullElection(0, candidates);
+        vm.warp(block.timestamp + 1 weeks);
         automatedVoting.voteInFullElection(0, candidates);
 
         //todo: check the candidateAddresses array
@@ -398,7 +411,7 @@ contract AutomatedVotingTest is Test {
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        vm.expectRevert("Election not active");
+        vm.expectRevert("Election not in voting state");
         automatedVoting.voteInFullElection(0, new address[](5));
     }
 
@@ -410,7 +423,7 @@ contract AutomatedVotingTest is Test {
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        vm.expectRevert("Election not active");
+        vm.expectRevert("Election not in voting state");
         automatedVoting.voteInFullElection(0, new address[](5));
     }
 
@@ -428,6 +441,7 @@ contract AutomatedVotingTest is Test {
         candidates[3] = user4;
         candidates[4] = user5;
         candidates[5] = admin;
+        vm.warp(block.timestamp + 1 weeks);
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.TooManyCandidates.selector)
         );
@@ -448,6 +462,7 @@ contract AutomatedVotingTest is Test {
         candidates[3] = user4;
         candidates[4] = user5;
         automatedVoting.nominateInFullElection(0, candidates);
+        vm.warp(block.timestamp + 1 weeks);
         automatedVoting.voteInFullElection(0, candidates);
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.AlreadyVoted.selector)
@@ -485,6 +500,7 @@ contract AutomatedVotingTest is Test {
         candidates[3] = user4;
         candidates[4] = user5;
         automatedVotingInternals.nominateInFullElection(0, candidates);
+        vm.warp(block.timestamp + 1 weeks);
         automatedVotingInternals.voteInFullElection(0, candidates);
         vm.warp(block.timestamp + 3 weeks + 1);
         automatedVotingInternals.finalizeElectionInternal(0);
@@ -510,6 +526,7 @@ contract AutomatedVotingTest is Test {
         candidates[3] = user4;
         candidates[4] = user5;
         automatedVoting.nominateInFullElection(0, candidates);
+        vm.warp(block.timestamp + 1 weeks);
         automatedVoting.voteInFullElection(0, candidates);
         vm.warp(block.timestamp + 3 weeks + 1);
         automatedVoting.finalizeElection(0);
