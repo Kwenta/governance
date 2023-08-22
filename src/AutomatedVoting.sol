@@ -61,6 +61,7 @@ contract AutomatedVoting is IAutomatedVoting {
     constructor(address[] memory _council, address _stakingRewards) {
         council = _council;
         stakingRewards = IStakingRewards(_stakingRewards);
+        lastScheduledElection = block.timestamp;
     }
 
     function timeUntilNextScheduledElection()
@@ -72,7 +73,7 @@ contract AutomatedVoting is IAutomatedVoting {
         if (block.timestamp > lastScheduledElection + 24 weeks) {
             return 0;
         } else {
-            return 24 weeks - block.timestamp - lastScheduledElection;
+            return 24 weeks - (block.timestamp - lastScheduledElection);
         }
     }
 
