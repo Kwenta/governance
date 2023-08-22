@@ -82,7 +82,7 @@ contract AutomatedVoting is IAutomatedVoting {
     ) public view override returns (uint256) {
         /// @dev if the election is over or the election number is greater than the number of elections, return 0
         if (
-            elections[_election].endTime < block.timestamp ||
+            elections[_election].endTime <= block.timestamp ||
             _election >= electionNumbers.length
         ) {
             return 0;
