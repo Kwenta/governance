@@ -64,16 +64,17 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install Homebrew, Slither, and Echidna
+      - name: Install Echidna
         run: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          echo 'export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"' >> $GITHUB_ENV
-          source $HOME/.bashrc
-          brew install echidna
-          pip3 install slither-analyzer --user
+          wget https://github.com/trailofbits/echidna/releases/download/v2.5.0/echidna-linux -O echidna
+          chmod +x echidna
+          sudo mv echidna /usr/local/bin/
+
+      - name: Install Slither
+        run: pip3 install slither-analyzer --user
 
       - name: Run Echidna
-        run: /home/linuxbrew/.linuxbrew/bin/echidna test/Echidna.t.sol --config echidna.yaml --contract EchidnaTest
+        run: echidna test/Echidna.t.sol --config echidna.yaml --contract EchidnaTest
 
 
   Coverage:
