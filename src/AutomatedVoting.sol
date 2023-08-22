@@ -49,11 +49,11 @@ contract AutomatedVoting is IAutomatedVoting {
         _;
     }
 
-    modifier onlyDuringElection(uint256 _election) {
+    modifier onlyDuringVoting(uint256 _election) {
         require(
-            block.timestamp >= elections[_election].startTime &&
+            block.timestamp >= elections[_election].startTime + 1 weeks &&
                 block.timestamp <= elections[_election].endTime,
-            "Election not active"
+            "Election not in voting state"
         );
         _;
     }
@@ -160,7 +160,7 @@ contract AutomatedVoting is IAutomatedVoting {
     function voteInFullElection(
         uint256 _election,
         address[] calldata candidates
-    ) public override onlyStaker onlyDuringElection(_election) {
+    ) public override onlyStaker onlyDuringVoting(_election) {
         if (candidates.length > 5) {
             revert TooManyCandidates();
         }
