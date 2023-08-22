@@ -228,6 +228,7 @@ contract AutomatedVotingTest is Test {
         candidates[2] = user3;
         candidates[3] = user4;
         candidates[4] = user5;
+        automatedVoting.nominateInFullElection(0, candidates);
         automatedVoting.voteInFullElection(0, candidates);
 
         //todo: check the candidateAddresses array
@@ -316,6 +317,7 @@ contract AutomatedVotingTest is Test {
         candidates[2] = user3;
         candidates[3] = user4;
         candidates[4] = user5;
+        automatedVoting.nominateInFullElection(0, candidates);
         automatedVoting.voteInFullElection(0, candidates);
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.AlreadyVoted.selector)
@@ -352,6 +354,7 @@ contract AutomatedVotingTest is Test {
         candidates[2] = user3;
         candidates[3] = user4;
         candidates[4] = user5;
+        automatedVotingInternals.nominateInFullElection(0, candidates);
         automatedVotingInternals.voteInFullElection(0, candidates);
         vm.warp(block.timestamp + 3 weeks + 1);
         automatedVotingInternals.finalizeElectionInternal(0);
@@ -376,6 +379,7 @@ contract AutomatedVotingTest is Test {
         candidates[2] = user3;
         candidates[3] = user4;
         candidates[4] = user5;
+        automatedVoting.nominateInFullElection(0, candidates);
         automatedVoting.voteInFullElection(0, candidates);
         vm.warp(block.timestamp + 3 weeks + 1);
         automatedVoting.finalizeElection(0);
