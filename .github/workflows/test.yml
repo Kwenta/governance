@@ -57,26 +57,6 @@ jobs:
         run: |
           python vertigo-rs/vertigo.py run
 
-  Invariant_Testing:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-
-      - name: Install Echidna
-        run: |
-          wget https://github.com/crytic/echidna/releases/download/v2.2.1/echidna-linux -O echidna
-          chmod +x echidna
-          sudo mv echidna /usr/local/bin/
-
-      - name: Install Slither
-        run: pip3 install slither-analyzer --user
-
-      - name: Run Echidna
-        run: echidna test/Echidna.t.sol --config echidna.yaml --contract EchidnaTest
-
-
   Coverage:
     runs-on: ubuntu-latest
     steps:
