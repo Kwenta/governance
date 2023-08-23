@@ -64,14 +64,12 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Install Homebrew, Slither, and Echidna
-        run: |
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          /home/linuxbrew/.linuxbrew/bin/brew install echidna
-          pip3 install slither-analyzer --user
-
       - name: Run Echidna
-        run: echidna test/Echidna.t.sol --config echidna.yaml --contract EchidnaTest
+      uses: crytic/echidna-action@v2
+      with:
+        files: .
+        contract: EchidnaTest
+        crytic-args: --ignore-compile
 
   Coverage:
     runs-on: ubuntu-latest
