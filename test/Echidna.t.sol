@@ -36,4 +36,8 @@ contract EchidnaTest is AutomatedVoting {
         return timeUntilElectionStateEnd(0) <= 3 weeks;
     }
 
+    function echidna_this_should_fail() public view returns (bool) {
+        return false;
+    }
+
 }
