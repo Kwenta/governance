@@ -132,9 +132,25 @@ contract AutomatedVoting is IAutomatedVoting {
 
     function startCKIPElection(address _council) public override onlyStaker {}
 
-    function stepDown() public override {
-        //todo: burn msg.sender rights
-        //todo: start election state
+    function stepDown() public override onlyCouncil() {
+        uint councilMemberCount = 0;
+        for(uint i = 0; i < council.length; i++) {
+            if (council[i] != address(0)) {
+                councilMemberCount++;
+            }
+        }
+        // make sure there is at least one council member
+        if (councilMemberCount <= 1) {
+            revert CouncilMemberCannotStepDown();
+        }
+        // burn msg.sender rights
+        for(uint i = 0; i < council.length; i++) {
+            if (council[i] == msg.sender) {
+                delete council[i];
+            }
+        }
+        // start election state
+        _startSingleElection();
     }
 
     function finalizeElection(uint256 _election) public override {
@@ -269,6 +285,7 @@ contract AutomatedVoting is IAutomatedVoting {
             /// @dev this is for a single election
             (address[] memory winners, ) = getWinners(_election, 1);
             elections[_election].winningCandidates = winners;
+            //todo: figure out how to fill in a slot for a single election
         }
     }
 
@@ -330,4 +347,6 @@ contract AutomatedVoting is IAutomatedVoting {
     //remove hasFinalized
 
     //removing council member has quorum
+
+    //todo: make sure someone can't become a council member twice
 }
