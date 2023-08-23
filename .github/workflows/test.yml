@@ -64,12 +64,21 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Compile contracts
+        run: |
+          forge build --build-info
+
       - name: Run Echidna
         uses: crytic/echidna-action@v2
         with:
           files: .
-          contract: EchidnaTest
-          crytic-args:
+          contract: TokenEchidna
+          crytic-args: --ignore-compile
 
   Coverage:
     runs-on: ubuntu-latest
