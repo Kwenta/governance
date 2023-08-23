@@ -122,12 +122,7 @@ contract AutomatedVoting is IAutomatedVoting {
             revert ElectionNotReadyToBeStarted();
         } else {
             lastScheduledElection = block.timestamp;
-            uint256 electionNumber = electionNumbers.length;
-            electionNumbers.push(electionNumber);
-            elections[electionNumber].startTime = block.timestamp;
-            elections[electionNumber].endTime = block.timestamp + 3 weeks;
-            elections[electionNumber].isFinalized = false;
-            elections[electionNumber].theElectionType = Enums.electionType.full;
+            _startFullElection();
         }
     }
 
@@ -204,6 +199,15 @@ contract AutomatedVoting is IAutomatedVoting {
         for (uint256 i = 0; i < candidates.length; i++) {
             voteCounts[_election][candidates[i]]++;
         }
+    }
+
+    function _startFullElection() internal {
+        uint256 electionNumber = electionNumbers.length;
+        electionNumbers.push(electionNumber);
+        elections[electionNumber].startTime = block.timestamp;
+        elections[electionNumber].endTime = block.timestamp + 3 weeks;
+        elections[electionNumber].isFinalized = false;
+        elections[electionNumber].theElectionType = Enums.electionType.full;
     }
 
     function _candidatesAreNominated(uint256 _election, address[] memory candidates)
