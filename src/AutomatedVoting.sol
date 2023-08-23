@@ -58,6 +58,14 @@ contract AutomatedVoting is IAutomatedVoting {
         _;
     }
 
+    modifier onlySingleElection(uint256 _election) {
+        require(
+            elections[_election].theElectionType == Enums.electionType.single,
+            "Election not a single election"
+        );
+        _;
+    }
+
     modifier onlyFullElection(uint256 _election) {
         require(
             elections[_election].theElectionType == Enums.electionType.full,
@@ -144,15 +152,28 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    function nominateInSingleElection(
+        uint256 _election,
+        address candidate
+    ) public override onlyStaker onlyDuringNomination(_election) onlySingleElection(_election) {
+        elections[_election].candidateAddresses.push(candidate);
+        isNominated[_election][candidate] = true;
+    }
+
     function voteInSingleElection(
         uint256 _election,
         address candidate
-    ) public override onlyStaker {
+    ) public override onlyStaker onlyDuringVoting(_election) onlySingleElection(_election) {
         if (hasVoted[msg.sender][_election]) {
             revert AlreadyVoted();
         }
+        address[] memory candidates = new address[](1);
+        candidates[0] = candidate;
+        if (!_candidatesAreNominated(_election, candidates)) {
+            revert CandidateNotNominated();
+        }
         hasVoted[msg.sender][_election] = true;
-        //todo: voting
+        voteCounts[_election][candidate]++;
     }
 
     function nominateInFullElection(
