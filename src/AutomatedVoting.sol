@@ -58,6 +58,14 @@ contract AutomatedVoting is IAutomatedVoting {
         _;
     }
 
+    modifier onlySingleElection(uint256 _election) {
+        require(
+            elections[_election].theElectionType == Enums.electionType.single,
+            "Election not a single election"
+        );
+        _;
+    }
+
     modifier onlyFullElection(uint256 _election) {
         require(
             elections[_election].theElectionType == Enums.electionType.full,
