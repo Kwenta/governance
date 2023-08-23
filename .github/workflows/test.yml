@@ -65,11 +65,11 @@ jobs:
           submodules: recursive
 
       - name: Run Echidna
-      uses: crytic/echidna-action@v2
-      with:
-        files: .
-        contract: EchidnaTest
-        crytic-args: --ignore-compile
+        uses: crytic/echidna-action@v2
+        with:
+          files: .
+          contract: EchidnaTest
+          crytic-args: --ignore-compile
 
   Coverage:
     runs-on: ubuntu-latest
