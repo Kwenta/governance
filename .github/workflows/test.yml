@@ -57,6 +57,22 @@ jobs:
         run: |
           python vertigo-rs/vertigo.py run
 
+  Invariant_Testing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Homebrew, Slither, and Echidna
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          /home/linuxbrew/.linuxbrew/bin/brew install echidna
+          pip3 install slither-analyzer --user
+
+      - name: Run Echidna
+        run: echidna test/Echidna.t.sol --config echidna.yaml --contract EchidnaTest
+
   Coverage:
     runs-on: ubuntu-latest
     steps:
