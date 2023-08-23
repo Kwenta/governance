@@ -155,12 +155,17 @@ contract AutomatedVoting is IAutomatedVoting {
     function voteInSingleElection(
         uint256 _election,
         address candidate
-    ) public override onlyStaker {
+    ) public override onlyStaker onlyDuringVoting(_election) onlySingleElection(_election) {
         if (hasVoted[msg.sender][_election]) {
             revert AlreadyVoted();
         }
+        address[] memory candidates = new address[](1);
+        candidates[0] = candidate;
+        if (!_candidatesAreNominated(_election, candidates)) {
+            revert CandidateNotNominated();
+        }
         hasVoted[msg.sender][_election] = true;
-        //todo: voting
+        voteCounts[_election][candidate]++;
     }
 
     function nominateInFullElection(
