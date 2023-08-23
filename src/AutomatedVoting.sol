@@ -152,6 +152,14 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    function nominateInSingleElection(
+        uint256 _election,
+        address candidate
+    ) public override onlyStaker onlyDuringNomination(_election) onlySingleElection(_election) {
+        elections[_election].candidateAddresses.push(candidate);
+        isNominated[_election][candidate] = true;
+    }
+
     function voteInSingleElection(
         uint256 _election,
         address candidate
