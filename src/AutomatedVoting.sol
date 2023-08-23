@@ -58,6 +58,14 @@ contract AutomatedVoting is IAutomatedVoting {
         _;
     }
 
+    modifier onlyFullElection(uint256 _election) {
+        require(
+            elections[_election].theElectionType == Enums.electionType.full,
+            "Election not a full election"
+        );
+        _;
+    }
+
     constructor(address[] memory _council, address _stakingRewards) {
         council = _council;
         stakingRewards = IStakingRewards(_stakingRewards);
@@ -150,7 +158,7 @@ contract AutomatedVoting is IAutomatedVoting {
     function nominateInFullElection(
         uint256 _election,
         address[] calldata candidates
-    ) public override onlyStaker onlyDuringNomination(_election) {
+    ) public override onlyStaker onlyDuringNomination(_election) onlyFullElection(_election) {
         for (uint256 i = 0; i < candidates.length; i++) {
             //todo: optimize this to not repeat the same candidates
             elections[_election].candidateAddresses.push(candidates[i]);
@@ -161,7 +169,7 @@ contract AutomatedVoting is IAutomatedVoting {
     function voteInFullElection(
         uint256 _election,
         address[] calldata candidates
-    ) public override onlyStaker onlyDuringVoting(_election) {
+    ) public override onlyStaker onlyDuringVoting(_election) onlyFullElection(_election) {
         if (candidates.length > 5) {
             revert TooManyCandidates();
         }

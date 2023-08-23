@@ -653,7 +653,7 @@ contract AutomatedVotingTest is Test {
 
     //todo: test everything with when a non-existent election is put in
 
-    //todo: test modifiers like onlyDuringElection
+    //todo: test onlyFullElection
 
     /// @dev create a new user address
     function createUser() public returns (address) {
