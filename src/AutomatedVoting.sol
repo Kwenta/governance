@@ -201,6 +201,15 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    function _startSingleElection() internal {
+        uint256 electionNumber = electionNumbers.length;
+        electionNumbers.push(electionNumber);
+        elections[electionNumber].startTime = block.timestamp;
+        elections[electionNumber].endTime = block.timestamp + 3 weeks;
+        elections[electionNumber].isFinalized = false;
+        elections[electionNumber].theElectionType = Enums.electionType.single;
+    }
+
     function _startFullElection() internal {
         uint256 electionNumber = electionNumbers.length;
         electionNumbers.push(electionNumber);
