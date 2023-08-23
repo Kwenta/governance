@@ -28,6 +28,10 @@ contract EchidnaTest is AutomatedVoting {
         return council.length >= 1;
     }
 
+    function echidna_council_length_always_equal_to_5() public view returns (bool) {
+        return council.length == 5;
+    }
+
     function echidna_next_scheduled_election_always_less_than_24_weeks() public view returns (bool) {
         return timeUntilNextScheduledElection() <= 24 weeks;
     }
