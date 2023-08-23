@@ -69,7 +69,7 @@ jobs:
         with:
           files: .
           contract: EchidnaTest
-          crytic-args: --ignore-compile
+          crytic-args:
 
   Coverage:
     runs-on: ubuntu-latest
