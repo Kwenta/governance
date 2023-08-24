@@ -1,3 +1,28 @@
+# Governance Specification
+
+## Scheduled Elections
+- Scheduled election every 6 months (26 weeks)
+    - Regardless of current epoch situation
+- Takes place over 3 weeks
+    - 1 week for nominations
+    - 2 weeks for voting
+- Cancels any ongoing elections and halts any new elections during the duration of the scheduled election
+- Full Election that replaces all 5 council members
+
+## Council Member Elections
+- Council members require a 3/5 (majority) threshold to boot another council member and trigger an election
+- Council member removal votes reset on any successful election
+  - Prevents edge case of sticky half decisions from prior council
+
+## CKIP Re-Elections
+- CKIP Re-Elections are triggered by a community member
+- A Quorum validates the election at the end of voting. No quorum -> ignored election
+
+## Council Member Steps Down
+- Council member can step down at any time, triggering a single election to replace the member
+- Cannot step down if last member
+
+
 # foundry-scaffold
 
 [![Github Actions][gha-badge]][gha] 
