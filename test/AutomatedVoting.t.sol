@@ -12,7 +12,6 @@ import {AutomatedVotingInternals} from "./AutomatedVotingInternals.sol";
 import {Enums} from "../src/Enums.sol";
 
 contract AutomatedVotingTest is Test {
-
     AutomatedVoting public automatedVoting;
     AutomatedVotingInternals public automatedVotingInternals;
     StakingRewards public stakingRewards;
@@ -112,9 +111,7 @@ contract AutomatedVotingTest is Test {
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        vm.expectRevert(
-            "Election not in nomination state"
-        );
+        vm.expectRevert("Election not in nomination state");
         automatedVoting.nominateInFullElection(0, new address[](5));
     }
 
@@ -124,9 +121,7 @@ contract AutomatedVotingTest is Test {
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        vm.expectRevert(
-            "Election not in nomination state"
-        );
+        vm.expectRevert("Election not in nomination state");
         automatedVoting.nominateInFullElection(0, new address[](5));
     }
 
@@ -184,9 +179,7 @@ contract AutomatedVotingTest is Test {
         vm.warp(block.timestamp + 1 weeks);
         automatedVoting.nominateInFullElection(0, new address[](5));
         vm.warp(block.timestamp + 2 weeks + 1);
-        vm.expectRevert(
-            "Election not in voting state"
-        );
+        vm.expectRevert("Election not in voting state");
         automatedVoting.voteInFullElection(0, new address[](5));
     }
 
@@ -200,9 +193,7 @@ contract AutomatedVotingTest is Test {
 
         automatedVoting.nominateInFullElection(0, new address[](5));
         vm.warp(block.timestamp + 1 weeks - 1);
-        vm.expectRevert(
-            "Election not in voting state"
-        );
+        vm.expectRevert("Election not in voting state");
         automatedVoting.voteInFullElection(0, new address[](5));
     }
 
@@ -217,10 +208,7 @@ contract AutomatedVotingTest is Test {
     // timeUntilNextScheduledElection()
 
     function testTimeUntilNextScheduledElection() public {
-        assertEq(
-            automatedVoting.timeUntilNextScheduledElection(),
-            24 weeks
-        );
+        assertEq(automatedVoting.timeUntilNextScheduledElection(), 24 weeks);
     }
 
     function testTimeUntilNextScheduledElectionOverdue() public {
@@ -230,10 +218,7 @@ contract AutomatedVotingTest is Test {
 
     function testTimeUntilNextScheduledElectionRightBeforeOverdue() public {
         vm.warp(block.timestamp + 24 weeks - 1);
-        assertEq(
-            automatedVoting.timeUntilNextScheduledElection(),
-            1
-        );
+        assertEq(automatedVoting.timeUntilNextScheduledElection(), 1);
     }
 
     function testFuzzTimeUntilNextScheduledElection(uint128 time) public {
@@ -271,10 +256,7 @@ contract AutomatedVotingTest is Test {
         vm.warp(block.timestamp + 24 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 3 weeks - 1);
-        assertEq(
-            automatedVoting.timeUntilElectionStateEnd(0),
-            1
-        );
+        assertEq(automatedVoting.timeUntilElectionStateEnd(0), 1);
     }
 
     function testFuzzTimeUntilElectionStateEndNewScheduledElection(
@@ -377,12 +359,13 @@ contract AutomatedVotingTest is Test {
         automatedVoting.stepDown();
         /// @dev cant step down because they are last member
         vm.expectRevert(
-            abi.encodeWithSelector(IAutomatedVoting.CouncilMemberCannotStepDown.selector)
+            abi.encodeWithSelector(
+                IAutomatedVoting.CouncilMemberCannotStepDown.selector
+            )
         );
         vm.prank(user2);
         automatedVoting.stepDown();
     }
-
 
     // finalizeElection()
 
@@ -459,7 +442,6 @@ contract AutomatedVotingTest is Test {
         assertEq(automatedVoting.isNominated(0, user3), true);
         assertEq(automatedVoting.isNominated(0, user4), true);
         assertEq(automatedVoting.isNominated(0, user5), true);
-
     }
 
     function testNominateInFullElectionNotStaked() public {
@@ -675,8 +657,8 @@ contract AutomatedVotingTest is Test {
         vm.warp(block.timestamp + 3 weeks + 1);
         automatedVoting.finalizeElection(0);
 
-        (address[] memory winners, uint256[] memory votes) =
-            automatedVoting.getWinners(0, 5);
+        (address[] memory winners, uint256[] memory votes) = automatedVoting
+            .getWinners(0, 5);
         assertEq(winners.length, 5);
         assertEq(votes.length, 5);
         assertEq(winners[0], user1);
@@ -693,13 +675,19 @@ contract AutomatedVotingTest is Test {
     function testIsWinner() public {
         address[] memory winners = new address[](1);
         winners[0] = user1;
-        assertEq(automatedVotingInternals.isWinnerInternal(user1, winners, 1), true);
+        assertEq(
+            automatedVotingInternals.isWinnerInternal(user1, winners, 1),
+            true
+        );
     }
 
     function testIsNotWinner() public {
         address[] memory winners = new address[](1);
         winners[0] = user1;
-        assertEq(automatedVotingInternals.isWinnerInternal(user2, winners, 1), false);
+        assertEq(
+            automatedVotingInternals.isWinnerInternal(user2, winners, 1),
+            false
+        );
     }
 
     //todo: test isWinner for the < upToIndex change

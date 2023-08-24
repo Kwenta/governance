@@ -18,7 +18,7 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @dev this is for council removal elections
     mapping(address => uint256) public removalVotes;
     mapping(address => mapping(address => bool)) hasVotedForMemberRemoval;
-    address[] public membersUpForRemoval; 
+    address[] public membersUpForRemoval;
 
     struct election {
         uint256 startTime;
@@ -136,11 +136,11 @@ contract AutomatedVoting is IAutomatedVoting {
         address _memberToRemove
     ) public override onlyCouncil {
         /// @dev if the member to remove is not on the council, revert
-        if(!isCouncilMember(_memberToRemove)){
+        if (!isCouncilMember(_memberToRemove)) {
             revert MemberNotOnCouncil();
         }
         /// @dev if this member already voted, revert
-        if(hasVotedForMemberRemoval[msg.sender][_memberToRemove]){
+        if (hasVotedForMemberRemoval[msg.sender][_memberToRemove]) {
             revert AlreadyVoted();
         }
         /// @dev record vote
@@ -148,9 +148,9 @@ contract AutomatedVoting is IAutomatedVoting {
         removalVotes[_memberToRemove]++;
 
         /// @dev if threshold is reached, remove member and start election
-        if(removalVotes[_memberToRemove] >= 3){
+        if (removalVotes[_memberToRemove] >= 3) {
             /// @dev burn rights
-            for(uint i = 0; i < council.length; i++) {
+            for (uint i = 0; i < council.length; i++) {
                 if (council[i] == _memberToRemove) {
                     delete council[i];
                 }
@@ -158,11 +158,11 @@ contract AutomatedVoting is IAutomatedVoting {
 
             /// @dev clear all counting/tracking for this member
             removalVotes[_memberToRemove] = 0;
-            for(uint i = 0; i < council.length; i++) {
+            for (uint i = 0; i < council.length; i++) {
                 hasVotedForMemberRemoval[council[i]][_memberToRemove] = false;
             }
-            for(uint i = 0; i < membersUpForRemoval.length; i++) {
-                if(membersUpForRemoval[i] == _memberToRemove){
+            for (uint i = 0; i < membersUpForRemoval.length; i++) {
+                if (membersUpForRemoval[i] == _memberToRemove) {
                     delete membersUpForRemoval[i];
                 }
             }
@@ -173,9 +173,9 @@ contract AutomatedVoting is IAutomatedVoting {
 
     function startCKIPElection() public override onlyStaker {}
 
-    function stepDown() public override onlyCouncil() {
+    function stepDown() public override onlyCouncil {
         uint councilMemberCount = 0;
-        for(uint i = 0; i < council.length; i++) {
+        for (uint i = 0; i < council.length; i++) {
             if (council[i] != address(0)) {
                 councilMemberCount++;
             }
@@ -185,7 +185,7 @@ contract AutomatedVoting is IAutomatedVoting {
             revert CouncilMemberCannotStepDown();
         }
         // burn msg.sender rights
-        for(uint i = 0; i < council.length; i++) {
+        for (uint i = 0; i < council.length; i++) {
             if (council[i] == msg.sender) {
                 delete council[i];
             }
@@ -207,7 +207,13 @@ contract AutomatedVoting is IAutomatedVoting {
     function nominateInSingleElection(
         uint256 _election,
         address candidate
-    ) public override onlyStaker onlyDuringNomination(_election) onlySingleElection(_election) {
+    )
+        public
+        override
+        onlyStaker
+        onlyDuringNomination(_election)
+        onlySingleElection(_election)
+    {
         elections[_election].candidateAddresses.push(candidate);
         isNominated[_election][candidate] = true;
     }
@@ -215,7 +221,13 @@ contract AutomatedVoting is IAutomatedVoting {
     function voteInSingleElection(
         uint256 _election,
         address candidate
-    ) public override onlyStaker onlyDuringVoting(_election) onlySingleElection(_election) {
+    )
+        public
+        override
+        onlyStaker
+        onlyDuringVoting(_election)
+        onlySingleElection(_election)
+    {
         if (hasVoted[msg.sender][_election]) {
             revert AlreadyVoted();
         }
@@ -231,7 +243,13 @@ contract AutomatedVoting is IAutomatedVoting {
     function nominateInFullElection(
         uint256 _election,
         address[] calldata candidates
-    ) public override onlyStaker onlyDuringNomination(_election) onlyFullElection(_election) {
+    )
+        public
+        override
+        onlyStaker
+        onlyDuringNomination(_election)
+        onlyFullElection(_election)
+    {
         for (uint256 i = 0; i < candidates.length; i++) {
             //todo: optimize this to not repeat the same candidates
             elections[_election].candidateAddresses.push(candidates[i]);
@@ -242,7 +260,13 @@ contract AutomatedVoting is IAutomatedVoting {
     function voteInFullElection(
         uint256 _election,
         address[] calldata candidates
-    ) public override onlyStaker onlyDuringVoting(_election) onlyFullElection(_election) {
+    )
+        public
+        override
+        onlyStaker
+        onlyDuringVoting(_election)
+        onlyFullElection(_election)
+    {
         if (candidates.length > 5) {
             revert TooManyCandidates();
         }
@@ -276,11 +300,10 @@ contract AutomatedVoting is IAutomatedVoting {
         elections[electionNumber].theElectionType = Enums.electionType.full;
     }
 
-    function _candidatesAreNominated(uint256 _election, address[] memory candidates)
-        internal
-        view
-        returns (bool)
-    {
+    function _candidatesAreNominated(
+        uint256 _election,
+        address[] memory candidates
+    ) internal view returns (bool) {
         for (uint256 i = 0; i < candidates.length; i++) {
             if (isNominated[_election][candidates[i]] == false) {
                 return false;
