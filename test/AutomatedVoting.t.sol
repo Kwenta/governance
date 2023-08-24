@@ -432,6 +432,8 @@ contract AutomatedVotingTest is Test {
         automatedVoting.finalizeElection(0);
     }
 
+    // nominateInSingleElection()
+
     // voteInSingleElection()
 
     // nominateInFullElection()

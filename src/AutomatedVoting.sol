@@ -15,6 +15,11 @@ contract AutomatedVoting is IAutomatedVoting {
     uint256 public lastScheduledElection;
     IStakingRewards public stakingRewards;
 
+    /// @dev this is for council removal elections
+    mapping(address => uint256) public removalVotes;
+    mapping(address => mapping(address => bool)) hasVotedForMemberRemoval;
+    address[] public membersUpForRemoval; 
+
     struct election {
         uint256 startTime;
         uint256 endTime;
@@ -123,14 +128,50 @@ contract AutomatedVoting is IAutomatedVoting {
         } else {
             lastScheduledElection = block.timestamp;
             _startFullElection();
+            //todo: reset quorums and other elections because scheduled takes precedence
         }
     }
 
     function startCouncilElection(
-        address _council
-    ) public override onlyCouncil {}
+        address _memberToRemove
+    ) public override onlyCouncil {
+        /// @dev if the member to remove is not on the council, revert
+        if(!isCouncilMember(_memberToRemove)){
+            revert MemberNotOnCouncil();
+        }
+        /// @dev if this member already voted, revert
+        if(hasVotedForMemberRemoval[msg.sender][_memberToRemove]){
+            revert AlreadyVoted();
+        }
+        /// @dev record vote
+        hasVotedForMemberRemoval[msg.sender][_memberToRemove] = true;
+        removalVotes[_memberToRemove]++;
 
-    function startCKIPElection(address _council) public override onlyStaker {}
+        /// @dev if threshold is reached, remove member and start election
+        if(removalVotes[_memberToRemove] >= 3){
+            /// @dev burn rights
+            for(uint i = 0; i < council.length; i++) {
+                if (council[i] == _memberToRemove) {
+                    delete council[i];
+                }
+            }
+
+            /// @dev clear all counting/tracking for this member
+            removalVotes[_memberToRemove] = 0;
+            for(uint i = 0; i < council.length; i++) {
+                hasVotedForMemberRemoval[council[i]][_memberToRemove] = false;
+            }
+            for(uint i = 0; i < membersUpForRemoval.length; i++) {
+                if(membersUpForRemoval[i] == _memberToRemove){
+                    delete membersUpForRemoval[i];
+                }
+            }
+
+            _startSingleElection();
+        }
+    }
+
+    function startCKIPElection() public override onlyStaker {}
 
     function stepDown() public override onlyCouncil() {
         uint councilMemberCount = 0;
