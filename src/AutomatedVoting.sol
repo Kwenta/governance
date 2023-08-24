@@ -66,7 +66,9 @@ contract AutomatedVoting is IAutomatedVoting {
 
     modifier onlySingleElection(uint256 _election) {
         require(
-            elections[_election].theElectionType == Enums.electionType.single,
+            elections[_election].theElectionType == Enums.electionType.council ||
+                elections[_election].theElectionType ==
+                Enums.electionType.stepDown,
             "Election not a single election"
         );
         _;
@@ -74,7 +76,9 @@ contract AutomatedVoting is IAutomatedVoting {
 
     modifier onlyFullElection(uint256 _election) {
         require(
-            elections[_election].theElectionType == Enums.electionType.full,
+            elections[_election].theElectionType == Enums.electionType.CKIP ||
+                elections[_election].theElectionType ==
+                Enums.electionType.scheduled,
             "Election not a full election"
         );
         _;
@@ -128,7 +132,7 @@ contract AutomatedVoting is IAutomatedVoting {
             revert ElectionNotReadyToBeStarted();
         } else {
             lastScheduledElection = block.timestamp;
-            _startFullElection();
+            _startElection(Enums.electionType.scheduled);
             //todo: reset quorums and other elections because scheduled takes precedence
             // _finalizeElection(current ongoing elections)
         }
@@ -169,7 +173,7 @@ contract AutomatedVoting is IAutomatedVoting {
                 }
             }
 
-            _startSingleElection();
+            _startElection(Enums.electionType.council);
         }
     }
 
@@ -179,7 +183,7 @@ contract AutomatedVoting is IAutomatedVoting {
             revert ElectionNotReadyToBeStarted();
         } else {
             lastCKIPElection = block.timestamp;
-            _startFullElection();
+            _startElection(Enums.electionType.CKIP);
         }
     }
 
@@ -201,7 +205,7 @@ contract AutomatedVoting is IAutomatedVoting {
             }
         }
         // start election state
-        _startSingleElection();
+        _startElection(Enums.electionType.stepDown);
     }
 
     function finalizeElection(uint256 _election) public override {
@@ -292,22 +296,31 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    function _startSingleElection() internal {
-        uint256 electionNumber = electionNumbers.length;
-        electionNumbers.push(electionNumber);
-        elections[electionNumber].startTime = block.timestamp;
-        elections[electionNumber].endTime = block.timestamp + 3 weeks;
-        elections[electionNumber].isFinalized = false;
-        elections[electionNumber].theElectionType = Enums.electionType.single;
-    }
+    // function _startSingleElection() internal {
+    //     uint256 electionNumber = electionNumbers.length;
+    //     electionNumbers.push(electionNumber);
+    //     elections[electionNumber].startTime = block.timestamp;
+    //     elections[electionNumber].endTime = block.timestamp + 3 weeks;
+    //     elections[electionNumber].isFinalized = false;
+    //     elections[electionNumber].theElectionType = Enums.electionType.single;
+    // }
 
-    function _startFullElection() internal {
+    // function _startFullElection() internal {
+        // uint256 electionNumber = electionNumbers.length;
+        // electionNumbers.push(electionNumber);
+        // elections[electionNumber].startTime = block.timestamp;
+        // elections[electionNumber].endTime = block.timestamp + 3 weeks;
+        // elections[electionNumber].isFinalized = false;
+        // elections[electionNumber].theElectionType = Enums.electionType.full;
+    // }
+
+    function _startElection(Enums.electionType electionType) internal {
         uint256 electionNumber = electionNumbers.length;
         electionNumbers.push(electionNumber);
         elections[electionNumber].startTime = block.timestamp;
         elections[electionNumber].endTime = block.timestamp + 3 weeks;
         elections[electionNumber].isFinalized = false;
-        elections[electionNumber].theElectionType = Enums.electionType.full;
+        elections[electionNumber].theElectionType = electionType;
     }
 
     function _candidatesAreNominated(
@@ -350,12 +363,12 @@ contract AutomatedVoting is IAutomatedVoting {
 
     function _finalizeElection(uint256 _election) internal {
         elections[_election].isFinalized = true;
-        if (elections[_election].theElectionType == Enums.electionType.full) {
+        if (elections[_election].theElectionType == Enums.electionType.scheduled || elections[_election].theElectionType == Enums.electionType.CKIP) {
             /// @dev this is for a full election
             (address[] memory winners, ) = getWinners(_election, 5);
             elections[_election].winningCandidates = winners;
             council = winners;
-        } else {
+        } else if (elections[_election].theElectionType == Enums.electionType.council || elections[_election].theElectionType == Enums.electionType.stepDown) {
             /// @dev this is for a single election
             (address[] memory winners, ) = getWinners(_election, 1);
             elections[_election].winningCandidates = winners;

@@ -319,7 +319,7 @@ contract AutomatedVotingTest is Test {
         assertEq(electionStartTime, block.timestamp);
         assertEq(endTime, block.timestamp + 3 weeks);
         assertEq(isFinalized, false);
-        assertTrue(theElectionType == Enums.electionType.full);
+        assertTrue(theElectionType == Enums.electionType.scheduled);
     }
 
     // startCouncilElection()
@@ -344,7 +344,7 @@ contract AutomatedVotingTest is Test {
         assertEq(electionStartTime, block.timestamp);
         assertEq(endTime, block.timestamp + 3 weeks);
         assertEq(isFinalized, false);
-        assertTrue(theElectionType == Enums.electionType.single);
+        assertTrue(theElectionType == Enums.electionType.stepDown);
     }
 
     function testStepDownNotCouncil() public {
