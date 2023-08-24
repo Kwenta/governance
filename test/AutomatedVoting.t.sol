@@ -372,6 +372,17 @@ contract AutomatedVotingTest is Test {
         automatedVoting.stepDown();
     }
 
+    function testStepDownCannotStepDown() public {
+        vm.prank(address(0x1));
+        automatedVoting.stepDown();
+        /// @dev cant step down because they are last member
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.CouncilMemberCannotStepDown.selector)
+        );
+        vm.prank(user2);
+        automatedVoting.stepDown();
+    }
+
 
     // finalizeElection()
 
