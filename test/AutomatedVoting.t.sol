@@ -43,8 +43,9 @@ contract AutomatedVotingTest is Test {
             address(rewardEscrow),
             address(this)
         );
-        address[] memory council = new address[](1);
+        address[] memory council = new address[](5);
         council[0] = address(0x1);
+        council[1] = user2;
         automatedVoting = new AutomatedVoting(council, address(stakingRewards));
         automatedVotingInternals = new AutomatedVotingInternals(
             council,
@@ -56,10 +57,6 @@ contract AutomatedVotingTest is Test {
 
     function testOnlyCouncilSuccess() public {
         vm.prank(address(0x1));
-        /// @dev it reverts on this error because it gets past onlyCouncil()
-        vm.expectRevert(
-            abi.encodeWithSelector(IAutomatedVoting.CouncilMemberCannotStepDown.selector)
-        );
         automatedVoting.stepDown();
     }
 
@@ -213,8 +210,8 @@ contract AutomatedVotingTest is Test {
 
     function testGetCouncil() public {
         address[] memory result = automatedVoting.getCouncil();
-        assertEq(result.length, 1, "Council should have 1 member");
-        assertEq(result[0], address(0x1), "Council member should be 0x1");
+        assertEq(result.length, 5);
+        assertEq(result[0], address(0x1));
     }
 
     // timeUntilNextScheduledElection()
@@ -348,6 +345,26 @@ contract AutomatedVotingTest is Test {
     // startCKIPelection()
 
     // stepDown()
+
+    function testStepDownSuccess() public {
+        vm.prank(address(0x1));
+        automatedVoting.stepDown();
+
+        assertFalse(automatedVoting.isCouncilMember(user1));
+        assertEq(automatedVoting.timeUntilElectionStateEnd(0), 3 weeks);
+        assertEq(automatedVoting.electionNumbers(0), 0);
+        (
+            uint256 electionStartTime,
+            uint256 endTime,
+            bool isFinalized,
+            Enums.electionType theElectionType
+        ) = automatedVoting.elections(0);
+        assertEq(electionStartTime, block.timestamp);
+        assertEq(endTime, block.timestamp + 3 weeks);
+        assertEq(isFinalized, false);
+        assertTrue(theElectionType == Enums.electionType.single);
+    }
+
 
     // finalizeElection()
 
