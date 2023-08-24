@@ -54,6 +54,22 @@ contract AutomatedVotingTest is Test {
 
     // onlyCouncil()
 
+    function testOnlyCouncilSuccess() public {
+        vm.prank(address(0x1));
+        /// @dev it reverts on this error because it gets past onlyCouncil()
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.CouncilMemberCannotStepDown.selector)
+        );
+        automatedVoting.stepDown();
+    }
+
+    function testOnlyCouncilFail() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.CallerNotCouncil.selector)
+        );
+        automatedVoting.stepDown();
+    }
+
     // onlyStaker()
 
     // onlyDuringNomination()
