@@ -13,6 +13,7 @@ contract AutomatedVoting is IAutomatedVoting {
     mapping(uint256 => mapping(address => bool)) public isNominated;
     uint256[] public electionNumbers;
     uint256 public lastScheduledElection;
+    uint256 public lastCKIPElection;
     IStakingRewards public stakingRewards;
 
     /// @dev this is for council removal elections
@@ -171,7 +172,15 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    function startCKIPElection() public override onlyStaker {}
+    function startCKIPElection() public override onlyStaker {
+        /// @dev if a CKIP election is ongoing, revert
+        if (block.timestamp < lastCKIPElection + 3 weeks) {
+            revert ElectionNotReadyToBeStarted();
+        } else {
+            lastCKIPElection = block.timestamp;
+            _startFullElection();
+        }
+    }
 
     function stepDown() public override onlyCouncil {
         uint councilMemberCount = 0;
