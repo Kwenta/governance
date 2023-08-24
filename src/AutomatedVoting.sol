@@ -130,6 +130,7 @@ contract AutomatedVoting is IAutomatedVoting {
             lastScheduledElection = block.timestamp;
             _startFullElection();
             //todo: reset quorums and other elections because scheduled takes precedence
+            // _finalizeElection(current ongoing elections)
         }
     }
 
