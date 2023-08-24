@@ -577,14 +577,14 @@ contract AutomatedVotingTest is Test {
         automatedVoting.voteInFullElection(0, candidates);
     }
 
-    // _isCouncilMember()
+    // isCouncilMember()
 
     function testIsCouncilMember() public {
-        assertEq(automatedVotingInternals.isCouncilMember(address(0x1)), true);
+        assertEq(automatedVoting.isCouncilMember(address(0x1)), true);
     }
 
     function testIsNotCouncilMember() public {
-        assertEq(automatedVotingInternals.isCouncilMember(address(0x2)), false);
+        assertEq(automatedVoting.isCouncilMember(address(0x2)), false);
     }
 
     // _isStaker()

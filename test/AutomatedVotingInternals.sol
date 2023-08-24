@@ -9,10 +9,6 @@ contract AutomatedVotingInternals is AutomatedVoting {
         address _stakingRewards
     ) AutomatedVoting(_council, _stakingRewards) {}
 
-    function isCouncilMember(address voter) public view returns (bool) {
-        return _isCouncilMember(voter);
-    }
-
     function isStaker(address voter) public view returns (bool) {
         return _isStaker(voter);
     }

@@ -25,7 +25,7 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     modifier onlyCouncil() {
-        if (_isCouncilMember(msg.sender)) {
+        if (isCouncilMember(msg.sender)) {
             _;
         } else {
             revert CallerNotCouncil();
@@ -248,15 +248,15 @@ contract AutomatedVoting is IAutomatedVoting {
         return true;
     }
 
-    function _isCouncilMember(
+    function isCouncilMember(
         address voter
-    ) internal view returns (bool isCouncilMember) {
+    ) public view returns (bool isACouncilMember) {
         for (uint i = 0; i < council.length; i++) {
             if (council[i] == voter) {
                 return true;
             }
         }
-        if (!isCouncilMember) {
+        if (!isACouncilMember) {
             return false;
         }
     }
