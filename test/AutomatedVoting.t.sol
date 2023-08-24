@@ -365,6 +365,13 @@ contract AutomatedVotingTest is Test {
         assertTrue(theElectionType == Enums.electionType.single);
     }
 
+    function testStepDownNotCouncil() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.CallerNotCouncil.selector)
+        );
+        automatedVoting.stepDown();
+    }
+
 
     // finalizeElection()
 
