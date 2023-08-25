@@ -39,13 +39,17 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     modifier onlyStaker() {
-        //todo: add historical check for staker
-        // based off when election started
         if (_isStaker(msg.sender)) {
             _;
         } else {
             revert CallerNotStaked();
         }
+    }
+
+    modifier wasStaked(uint256 _election) {
+        //todo: add historical check for staker
+        // based off when election started
+        _;
     }
 
     modifier onlyDuringNomination(uint256 _election) {
