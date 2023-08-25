@@ -465,6 +465,98 @@ contract AutomatedVotingTest is Test {
 
     // voteInSingleElection()
 
+    function testVoteInSingleElectionSuccess() public {
+        vm.warp(block.timestamp + 24 weeks);
+        kwenta.transfer(user1, 1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        vm.prank(user2);
+        automatedVoting.stepDown();
+
+        automatedVoting.nominateInSingleElection(0, user1);
+        vm.warp(block.timestamp + 1 weeks);
+        automatedVoting.voteInSingleElection(0, user1);
+        assertEq(automatedVoting.voteCounts(0, user1), 1);
+    }
+
+    function testVoteInSingleElectionNotStaked() public {
+        vm.warp(block.timestamp + 24 weeks);
+        vm.prank(user2);
+        automatedVoting.stepDown();
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.CallerNotStaked.selector)
+        );
+        automatedVoting.voteInSingleElection(0, user1);
+    }
+
+    function testVoteInSingleElectionNotDuringVoting() public {
+        vm.warp(block.timestamp + 24 weeks);
+        kwenta.transfer(user1, 1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        vm.prank(user2);
+        automatedVoting.stepDown();
+
+        vm.expectRevert("Election not in voting state");
+        automatedVoting.voteInSingleElection(0, user1);
+    }
+
+    function testVoteInSingleElectionAlreadyEnded() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        vm.warp(block.timestamp + 3 weeks + 1);
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        vm.expectRevert("Election not in voting state");
+        automatedVoting.voteInSingleElection(0, user1);
+    }
+
+    function testVoteInSingleElectionNotSingleElection() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        kwenta.transfer(user1, 1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        vm.warp(block.timestamp + 1 weeks + 1);
+
+        vm.expectRevert("Election not a single election");
+        automatedVoting.voteInSingleElection(0, user1);
+    }
+
+    function testVoteInSingleElectionAlreadyVoted() public {
+        vm.warp(block.timestamp + 24 weeks);
+        kwenta.transfer(user1, 2);
+        kwenta.approve(address(stakingRewards), 2);
+        stakingRewards.stake(2);
+        vm.prank(user2);
+        automatedVoting.stepDown();
+
+        automatedVoting.nominateInSingleElection(0, user1);
+        vm.warp(block.timestamp + 1 weeks + 1);
+        automatedVoting.voteInSingleElection(0, user1);
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.AlreadyVoted.selector)
+        );
+        automatedVoting.voteInSingleElection(0, user1);
+    }
+
+    function testVoteInSingleElectionCandidateNotNominated() public {
+        vm.warp(block.timestamp + 24 weeks);
+        kwenta.transfer(user1, 2);
+        kwenta.approve(address(stakingRewards), 2);
+        stakingRewards.stake(2);
+        vm.prank(user2);
+        automatedVoting.stepDown();
+        vm.warp(block.timestamp + 1 weeks + 1);
+        
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.CandidateNotNominated.selector)
+        );
+        automatedVoting.voteInSingleElection(0, user1);
+    }
+
     // nominateInFullElection()
 
     function testNominateInFullElectionSuccess() public {

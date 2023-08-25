@@ -420,4 +420,5 @@ contract AutomatedVoting is IAutomatedVoting {
     //removing council member has quorum
 
     //todo: make sure someone can't become a council member twice
+    // check this on single elections
 }
