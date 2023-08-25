@@ -39,6 +39,8 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     modifier onlyStaker() {
+        //todo: add historical check for staker
+        // based off when election started
         if (_isStaker(msg.sender)) {
             _;
         } else {
