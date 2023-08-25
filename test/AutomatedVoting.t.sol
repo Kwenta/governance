@@ -417,6 +417,19 @@ contract AutomatedVotingTest is Test {
 
     // nominateInSingleElection()
 
+    function testNominateInSingleElectionSuccess() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        kwenta.transfer(user1, 1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        vm.prank(user2);
+        automatedVoting.stepDown();
+
+        automatedVoting.nominateInSingleElection(1, user1);
+        assertEq(automatedVoting.isNominated(1, user1), true);
+    }
+
     // voteInSingleElection()
 
     // nominateInFullElection()
