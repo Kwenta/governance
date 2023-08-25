@@ -753,6 +753,26 @@ contract AutomatedVotingTest is Test {
         automatedVoting.voteInFullElection(0, candidates);
     }
 
+    function testVoteInFullElectionCandidateNotNominated() public {
+        vm.warp(block.timestamp + 24 weeks);
+        automatedVoting.startScheduledElection();
+        kwenta.transfer(user1, 2);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 2);
+        stakingRewards.stake(2);
+        address[] memory candidates = new address[](5);
+        candidates[0] = user1;
+        candidates[1] = user2;
+        candidates[2] = user3;
+        candidates[3] = user4;
+        candidates[4] = user5;
+        vm.warp(block.timestamp + 1 weeks);
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.CandidateNotNominated.selector)
+        );
+        automatedVoting.voteInFullElection(0, candidates);
+    }
+
     // isCouncilMember()
 
     function testIsCouncilMember() public {
