@@ -327,6 +327,42 @@ contract AutomatedVotingTest is Test {
 
     // startCouncilElection()
 
+    function testStartCouncilElectionSuccess() public {
+        vm.prank(user1);
+        automatedVoting.startCouncilElection(user5);
+        assertEq(automatedVoting.hasVotedForMemberRemoval(user1, user5), true);
+        assertEq(automatedVoting.removalVotes(user5), 1);
+        vm.prank(user2);
+        automatedVoting.startCouncilElection(user5);
+        assertEq(automatedVoting.hasVotedForMemberRemoval(user2, user5), true);
+        assertEq(automatedVoting.removalVotes(user5), 2);
+        /// @dev member is booted after the third vote, election starts, and accounting is cleared
+        vm.prank(user3);
+        automatedVoting.startCouncilElection(user5);
+        
+        /// @dev check accounting
+        assertEq(automatedVoting.isCouncilMember(user5), false);
+        assertEq(automatedVoting.removalVotes(user5), 0);
+        assertEq(automatedVoting.hasVotedForMemberRemoval(user1, user5), false);
+        assertEq(automatedVoting.hasVotedForMemberRemoval(user2, user5), false);
+        assertEq(automatedVoting.hasVotedForMemberRemoval(user3, user5), false);
+
+        /// @dev check election
+        assertEq(automatedVoting.timeUntilElectionStateEnd(0), 3 weeks);
+        assertEq(automatedVoting.lastScheduledElection(), block.timestamp);
+        assertEq(automatedVoting.electionNumbers(0), 0);
+        (
+            uint256 electionStartTime,
+            uint256 endTime,
+            bool isFinalized,
+            Enums.electionType theElectionType
+        ) = automatedVoting.elections(0);
+        assertEq(electionStartTime, block.timestamp);
+        assertEq(endTime, block.timestamp + 3 weeks);
+        assertEq(isFinalized, false);
+        assertTrue(theElectionType == Enums.electionType.council);
+    }
+
     // startCKIPelection()
 
     // stepDown()
