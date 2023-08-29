@@ -18,7 +18,7 @@ contract AutomatedVoting is IAutomatedVoting {
 
     /// @dev this is for council removal elections
     mapping(address => uint256) public removalVotes;
-    mapping(address => mapping(address => bool)) hasVotedForMemberRemoval;
+    mapping(address => mapping(address => bool)) public hasVotedForMemberRemoval;
     address[] public membersUpForRemoval;
 
     struct election {
