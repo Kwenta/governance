@@ -43,8 +43,11 @@ contract AutomatedVotingTest is Test {
             address(this)
         );
         address[] memory council = new address[](5);
-        council[0] = address(0x1);
+        council[0] = user1;
         council[1] = user2;
+        council[2] = user3;
+        council[3] = user4;
+        council[4] = user5;
         automatedVoting = new AutomatedVoting(council, address(stakingRewards));
         automatedVotingInternals = new AutomatedVotingInternals(
             council,
@@ -55,7 +58,7 @@ contract AutomatedVotingTest is Test {
     // onlyCouncil()
 
     function testOnlyCouncilSuccess() public {
-        vm.prank(address(0x1));
+        vm.prank(user1);
         automatedVoting.stepDown();
     }
 
@@ -202,7 +205,7 @@ contract AutomatedVotingTest is Test {
     function testGetCouncil() public {
         address[] memory result = automatedVoting.getCouncil();
         assertEq(result.length, 5);
-        assertEq(result[0], address(0x1));
+        assertEq(result[0], user1);
     }
 
     // timeUntilNextScheduledElection()
@@ -329,7 +332,7 @@ contract AutomatedVotingTest is Test {
     // stepDown()
 
     function testStepDownSuccess() public {
-        vm.prank(address(0x1));
+        vm.prank(user1);
         automatedVoting.stepDown();
 
         assertFalse(automatedVoting.isCouncilMember(user1));
@@ -355,7 +358,13 @@ contract AutomatedVotingTest is Test {
     }
 
     function testStepDownCannotStepDown() public {
-        vm.prank(address(0x1));
+        vm.prank(user1);
+        automatedVoting.stepDown();
+        vm.prank(user3);
+        automatedVoting.stepDown();
+        vm.prank(user4);
+        automatedVoting.stepDown();
+        vm.prank(user5);
         automatedVoting.stepDown();
         /// @dev cant step down because they are last member
         vm.expectRevert(
@@ -776,7 +785,7 @@ contract AutomatedVotingTest is Test {
     // isCouncilMember()
 
     function testIsCouncilMember() public {
-        assertEq(automatedVoting.isCouncilMember(address(0x1)), true);
+        assertEq(automatedVoting.isCouncilMember(user1), true);
     }
 
     function testIsNotCouncilMember() public {
