@@ -370,6 +370,16 @@ contract AutomatedVotingTest is Test {
         automatedVoting.startCouncilElection(user5);
     }
 
+    function testStartCouncilElectionAlreadyVoted() public {
+        vm.prank(user1);
+        automatedVoting.startCouncilElection(user5);
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.AlreadyVoted.selector)
+        );
+        vm.prank(user1);
+        automatedVoting.startCouncilElection(user5);
+    }
+
     // startCKIPelection()
 
     // stepDown()
