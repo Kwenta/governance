@@ -363,6 +363,13 @@ contract AutomatedVotingTest is Test {
         assertTrue(theElectionType == Enums.electionType.council);
     }
 
+    function testStartCouncilElectionNotCouncil() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.CallerNotCouncil.selector)
+        );
+        automatedVoting.startCouncilElection(user5);
+    }
+
     // startCKIPelection()
 
     // stepDown()
