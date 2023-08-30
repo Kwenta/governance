@@ -415,6 +415,13 @@ contract AutomatedVotingTest is Test {
         assertTrue(theElectionType == Enums.electionType.CKIP);
     }
 
+    function testStartCKIPElectionNotStaked() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.CallerNotStaked.selector)
+        );
+        automatedVoting.startCKIPElection();
+    }
+
     // stepDown()
 
     function testStepDownSuccess() public {
