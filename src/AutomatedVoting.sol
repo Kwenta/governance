@@ -133,6 +133,8 @@ contract AutomatedVoting is IAutomatedVoting {
         return elections[_election].isFinalized;
     }
 
+    /// @notice starts the scheduled election
+    /// can only be started every 24 weeks
     function startScheduledElection() public override {
         if (block.timestamp < lastScheduledElection + 24 weeks) {
             revert ElectionNotReadyToBeStarted();
@@ -144,6 +146,10 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    /// @notice vote in a council election
+    /// @notice a 3/5 threshold of calling this function must be reached
+    /// @dev rather than starting an election with a time
+    /// @param _memberToRemove the member to remove from the council
     function startCouncilElection(
         address _memberToRemove
     ) public override onlyCouncil {
