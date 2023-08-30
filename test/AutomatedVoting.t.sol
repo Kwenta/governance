@@ -28,7 +28,7 @@ contract AutomatedVotingTest is Test {
 
     function setUp() public {
         /// @dev this is so the time of lastScheduledElection is != 0
-        vm.warp(block.timestamp + 1 weeks);
+        vm.warp(block.timestamp + 3 weeks);
         admin = createUser();
         user1 = createUser();
         user2 = createUser();
@@ -391,6 +391,29 @@ contract AutomatedVotingTest is Test {
     }
 
     // startCKIPelection()
+
+    function testStartCKIPElectionSuccess() public {
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        automatedVoting.startCKIPElection();
+
+        /// @dev check election
+        assertEq(automatedVoting.timeUntilElectionStateEnd(0), 3 weeks);
+        assertEq(automatedVoting.lastScheduledElection(), block.timestamp);
+        assertEq(automatedVoting.electionNumbers(0), 0);
+        (
+            uint256 electionStartTime,
+            uint256 endTime,
+            bool isFinalized,
+            Enums.electionType theElectionType
+        ) = automatedVoting.elections(0);
+        assertEq(electionStartTime, block.timestamp);
+        assertEq(endTime, block.timestamp + 3 weeks);
+        assertEq(isFinalized, false);
+        assertTrue(theElectionType == Enums.electionType.CKIP);
+    }
 
     // stepDown()
 
