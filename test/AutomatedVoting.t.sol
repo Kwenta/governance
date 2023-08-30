@@ -452,6 +452,16 @@ contract AutomatedVotingTest is Test {
         automatedVoting.startCKIPElection();
     }
 
+    function testStartCKIPElectionImmediatelyAfterCooldown() public {
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        automatedVoting.startCKIPElection();
+        vm.warp(block.timestamp + 3 weeks);
+        automatedVoting.startCKIPElection();
+    }
+
     // stepDown()
 
     function testStepDownSuccess() public {
