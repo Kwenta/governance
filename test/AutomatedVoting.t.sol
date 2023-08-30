@@ -436,6 +436,22 @@ contract AutomatedVotingTest is Test {
         automatedVoting.startCKIPElection();
     }
 
+    function testFuzzStartCKIPElectionNotReadyToStart(uint time) public {
+        vm.assume(time < 3 weeks);
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        automatedVoting.startCKIPElection();
+        vm.warp(block.timestamp + time);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAutomatedVoting.ElectionNotReadyToBeStarted.selector
+            )
+        );
+        automatedVoting.startCKIPElection();
+    }
+
     // stepDown()
 
     function testStepDownSuccess() public {
@@ -988,6 +1004,9 @@ contract AutomatedVotingTest is Test {
     //todo: test everything with when a non-existent election is put in
 
     //todo: test onlyFullElection
+
+    //todo: test elections like CKIP reelection for when another re-election
+    // is started right at 3 weeks end but the first election is not finalized yet
 
     /// @dev create a new user address
     function createUser() public returns (address) {
