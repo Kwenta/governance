@@ -96,6 +96,8 @@ contract AutomatedVoting is IAutomatedVoting {
         lastScheduledElection = block.timestamp;
     }
 
+    /// @notice gets the time until the next scheduled election
+    /// @return uint256 the time until the next scheduled election
     function timeUntilNextScheduledElection()
         public
         view
@@ -109,6 +111,9 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    /// @notice gets the time until the election state ends
+    /// @param _election the election to check
+    /// @return uint256 the time until the election state ends
     function timeUntilElectionStateEnd(
         uint256 _election
     ) public view override returns (uint256) {
@@ -123,10 +128,15 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    /// @notice gets the current council
+    /// @return address[] the current council
     function getCouncil() public view override returns (address[] memory) {
         return council;
     }
 
+    /// @notice checks if an election is finalized
+    /// @param _election the election to check
+    /// @return bool election is finalized
     function isElectionFinalized(
         uint256 _election
     ) public view override returns (bool) {
@@ -189,6 +199,7 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    /// @notice starts a CKIP election
     function startCKIPElection() public override onlyStaker {
         /// @dev if a CKIP election is ongoing, revert
         if (block.timestamp < lastCKIPElection + 3 weeks) {
@@ -199,6 +210,8 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    /// @notice function for council member to step down
+    /// @dev cannot step down if there is only one council member
     function stepDown() public override onlyCouncil {
         uint councilMemberCount = 0;
         for (uint i = 0; i < council.length; i++) {
@@ -220,6 +233,8 @@ contract AutomatedVoting is IAutomatedVoting {
         _startElection(Enums.electionType.stepDown);
     }
 
+    /// @notice finalizes an election
+    /// @param _election the election to finalize
     function finalizeElection(uint256 _election) public override {
         if (elections[_election].isFinalized) {
             revert ElectionAlreadyFinalized();
@@ -230,6 +245,9 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    /// @notice nominates a candidate for a single election
+    /// @param _election the election to nominate a candidate for
+    /// @param candidate the candidate to nominate
     function nominateInSingleElection(
         uint256 _election,
         address candidate
@@ -244,6 +262,9 @@ contract AutomatedVoting is IAutomatedVoting {
         isNominated[_election][candidate] = true;
     }
 
+    /// @notice votes for a candidate in a single election
+    /// @param _election the election to vote in
+    /// @param candidate the candidate to vote for
     function voteInSingleElection(
         uint256 _election,
         address candidate
@@ -266,6 +287,9 @@ contract AutomatedVoting is IAutomatedVoting {
         voteCounts[_election][candidate]++;
     }
 
+    /// @notice nominates candidates for a full election
+    /// @param _election the election to nominate candidates for
+    /// @param candidates the candidates to nominate
     function nominateInFullElection(
         uint256 _election,
         address[] calldata candidates
@@ -283,6 +307,9 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    /// @notice votes for candidates in a full election
+    /// @param _election the election to vote in
+    /// @param candidates the candidates to vote for
     function voteInFullElection(
         uint256 _election,
         address[] calldata candidates
@@ -308,6 +335,7 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    /// @dev starts an election internally by recording state
     function _startElection(Enums.electionType electionType) internal {
         uint256 electionNumber = electionNumbers.length;
         electionNumbers.push(electionNumber);
@@ -317,6 +345,7 @@ contract AutomatedVoting is IAutomatedVoting {
         elections[electionNumber].theElectionType = electionType;
     }
 
+    /// @dev helper function to determine if the candidates are nominated
     function _candidatesAreNominated(
         uint256 _election,
         address[] memory candidates
@@ -329,6 +358,9 @@ contract AutomatedVoting is IAutomatedVoting {
         return true;
     }
 
+    /// @notice checks if a voter is a council member
+    /// @param voter the voter to check
+    /// @return bool voter is a council member
     function isCouncilMember(
         address voter
     ) public view returns (bool isACouncilMember) {
@@ -342,6 +374,7 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    /// @dev helper function to determine if a voter is a staker
     function _isStaker(address voter) internal view returns (bool isStaker) {
         if (stakingRewards.balanceOf(voter) > 0) {
             return true;
@@ -355,6 +388,7 @@ contract AutomatedVoting is IAutomatedVoting {
         //todo: if quorum reached, finalize election _finalizeElection(_election)
     }
 
+    /// @dev internal function to finalize elections depending on type
     function _finalizeElection(uint256 _election) internal {
         elections[_election].isFinalized = true;
         if (elections[_election].theElectionType == Enums.electionType.scheduled || elections[_election].theElectionType == Enums.electionType.CKIP) {
@@ -370,6 +404,11 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    /// @notice calculates the winners of an election
+    /// @param electionId the election to calculate winners for
+    /// @param numberOfWinners the number of winners to calculate
+    /// @return winners the addresses of the winners
+    /// @return voteCountsOfWinners the vote counts of the winners
     function getWinners(
         uint256 electionId,
         uint256 numberOfWinners
@@ -405,6 +444,8 @@ contract AutomatedVoting is IAutomatedVoting {
         return (winners, voteCountsOfWinners);
     }
 
+    /// @dev internal helper function to determine if the candidate is already a winner for this election
+    /// this is to prevent double winning
     function isWinner(
         address candidate,
         address[] memory winners,
