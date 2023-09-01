@@ -360,7 +360,7 @@ contract AutomatedVoting is IAutomatedVoting {
 
     /// @notice checks if a voter is a council member
     /// @param voter the voter to check
-    /// @return bool voter is a council member
+    /// @return isACouncilMember voter is a council member
     function isCouncilMember(
         address voter
     ) public view returns (bool isACouncilMember) {
