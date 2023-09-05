@@ -400,7 +400,12 @@ contract AutomatedVoting is IAutomatedVoting {
             /// @dev this is for a single election
             (address[] memory winners, ) = getWinners(_election, 1);
             elections[_election].winningCandidates = winners;
-            //todo: figure out how to fill in a slot for a single election
+            for(uint i = 0; i < council.length; i++) {
+                if (council[i] == address(0)) {
+                    council[i] = winners[0];
+                    break;
+                }
+            }
         }
     }
 
