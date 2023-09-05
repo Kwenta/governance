@@ -987,7 +987,31 @@ contract AutomatedVotingTest is Test {
         assertEq(winners[4], user5);
     }
 
-    //todo: test getWinners more
+    function testGetWinnersStepDown() public {
+        vm.warp(block.timestamp + 24 weeks);
+        kwenta.transfer(user1, 1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        vm.prank(user2);
+        automatedVoting.stepDown();
+        automatedVoting.nominateInSingleElection(0, user1);
+        vm.warp(block.timestamp + 1 weeks);
+        automatedVoting.voteInSingleElection(0, user1);
+        assertEq(automatedVoting.voteCounts(0, user1), 1);
+        vm.warp(block.timestamp + 3 weeks + 1);
+        automatedVoting.finalizeElection(0);
+
+        (address[] memory winners, uint256[] memory votes) = automatedVoting
+            .getWinners(0, 1);
+        assertEq(winners.length, 1);
+        assertEq(votes.length, 1);
+        assertEq(winners[0], user1);
+        /// @dev reverts because index out of bounds (should do that)
+        vm.expectRevert();
+        assertEq(winners[1], user2);
+    }
+
+    //todo: test getWinners more (scrutinize it with a lot of fuzzing)
 
     // isWinner()
 
