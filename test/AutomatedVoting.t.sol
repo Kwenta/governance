@@ -23,6 +23,7 @@ contract AutomatedVotingTest is Test {
     address public user3;
     address public user4;
     address public user5;
+    address public user6;
     uint256 public userNonce;
     uint256 public startTime;
 
@@ -35,6 +36,7 @@ contract AutomatedVotingTest is Test {
         user3 = createUser();
         user4 = createUser();
         user5 = createUser();
+        user6 = createUser();
         kwenta = new Kwenta("Kwenta", "Kwe", 100_000, admin, address(this));
         rewardEscrow = new RewardEscrow(admin, address(kwenta));
         stakingRewards = new StakingRewards(
@@ -481,6 +483,14 @@ contract AutomatedVotingTest is Test {
         assertEq(endTime, block.timestamp + 3 weeks);
         assertEq(isFinalized, false);
         assertTrue(theElectionType == Enums.electionType.stepDown);
+
+        address[] memory council = automatedVoting.getCouncil();
+        assertEq(council.length, 5);
+        assertEq(council[0], address(0));
+        assertEq(council[1], user2);
+        assertEq(council[2], user3);
+        assertEq(council[3], user4);
+        assertEq(council[4], user5);
     }
 
     function testStepDownNotCouncil() public {
@@ -954,6 +964,38 @@ contract AutomatedVotingTest is Test {
         /// @dev check if the council changed
         assertEq(automatedVotingInternals.getCouncil(), candidates);
     }
+
+        function testFinalizeElectionInternalStepDown() public {
+        vm.warp(block.timestamp + 24 weeks);
+        kwenta.transfer(user1, 1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        vm.prank(user2);
+        automatedVotingInternals.stepDown();
+        automatedVotingInternals.nominateInSingleElection(0, user6);
+        vm.warp(block.timestamp + 1 weeks);
+        automatedVotingInternals.voteInSingleElection(0, user6);
+        assertEq(automatedVotingInternals.voteCounts(0, user6), 1);
+
+        address[] memory councilBefore = automatedVotingInternals.getCouncil();
+        assertEq(councilBefore.length, 5);
+        assertEq(councilBefore[0], user1);
+        assertEq(councilBefore[1], address(0));
+        assertEq(councilBefore[2], user3);
+        assertEq(councilBefore[3], user4);
+        assertEq(councilBefore[4], user5);
+        assertEq(automatedVotingInternals.isElectionFinalized(0), false);
+        automatedVotingInternals.finalizeElectionInternal(0);
+        assertEq(automatedVotingInternals.isElectionFinalized(0), true);
+        address[] memory councilAfter = automatedVotingInternals.getCouncil();
+        assertEq(councilAfter.length, 5);
+        assertEq(councilAfter[0], user1);
+        assertEq(councilAfter[1], user6);
+        assertEq(councilAfter[2], user3);
+        assertEq(councilAfter[3], user4);
+        assertEq(councilAfter[4], user5);
+    }
+
 
     // getWinners()
 
