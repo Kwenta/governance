@@ -53,6 +53,10 @@ interface IAutomatedVoting {
     /// @notice emitted when candidate is not nominated
     error CandidateNotNominated();
 
+    /// @notice emitted when scheduled election is in progress
+    /// (cannot start another election while scheduled is in progress)
+    error ScheduledElectionInProgress();
+
     // View Functions
 
     /// @notice returns the last scheduled election

@@ -52,6 +52,17 @@ contract AutomatedVoting is IAutomatedVoting {
         _;
     }
 
+    modifier notDuringScheduledElection() {
+        /// @dev make sure there is no ongoing scheduled election
+        /// @dev isElectionFinalized is for edge case when a scheduled election is over 3 weeks but
+        /// has not been finalized yet (scheduled election will be the last election in the array)
+        if (block.timestamp >= lastScheduledElection + 3 weeks && isElectionFinalized(electionNumbers.length - 1)) {
+            _;
+        } else {
+            revert ScheduledElectionInProgress();
+        }
+    }
+
     modifier onlyDuringNomination(uint256 _election) {
         require(
             block.timestamp >= elections[_election].startTime &&
