@@ -101,10 +101,9 @@ contract AutomatedVoting is IAutomatedVoting {
         _;
     }
 
-    constructor(address[] memory _council, address _stakingRewards) {
-        council = _council;
+    constructor(address _stakingRewards) {
         stakingRewards = IStakingRewards(_stakingRewards);
-        lastScheduledElection = block.timestamp;
+        startScheduledElection();
     }
 
     /// @notice gets the time until the next scheduled election
