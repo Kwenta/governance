@@ -149,6 +149,12 @@ contract AutomatedVoting is IAutomatedVoting {
         return council;
     }
 
+    /// @notice gets the current election numbers up for removal
+    /// @return address[] the current election numbers up for removal
+    function getMembersUpForRemoval() public view override returns (address[] memory) {
+        return membersUpForRemoval;
+    }
+
     /// @notice checks if an election is finalized
     /// @param _election the election to check
     /// @return bool election is finalized
@@ -169,6 +175,7 @@ contract AutomatedVoting is IAutomatedVoting {
             _startElection(Enums.electionType.scheduled);
             //todo: reset quorums and other elections because scheduled takes precedence
             // _finalizeElection(current ongoing elections)
+            // for(unfinished elections) {elections[_election].isFinalized = true;}
         }
     }
 
@@ -186,6 +193,18 @@ contract AutomatedVoting is IAutomatedVoting {
         /// @dev if this member already voted, revert
         if (hasVotedForMemberRemoval[msg.sender][_memberToRemove]) {
             revert AlreadyVoted();
+        }
+        /// @dev this is to add the member to the array if they are not already in it
+        if (membersUpForRemoval.length == 0) {
+            membersUpForRemoval.push(_memberToRemove);
+        } else {
+            for(uint i = 0; i < membersUpForRemoval.length; i++) {
+            if (membersUpForRemoval[i] == _memberToRemove) {
+                break;
+            } else if (i == membersUpForRemoval.length - 1) {
+                membersUpForRemoval.push(_memberToRemove);
+            }
+        }
         }
         /// @dev record vote
         hasVotedForMemberRemoval[msg.sender][_memberToRemove] = true;
