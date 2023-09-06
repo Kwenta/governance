@@ -77,6 +77,9 @@ interface IAutomatedVoting {
     /// @notice returns the current council
     function getCouncil() external view returns (address[] memory);
 
+    /// @notice returns the current council up for removal
+    function getMembersUpForRemoval() external view returns (address[] memory);
+
     /// @notice returns if the election is finalized
     /// @param election the election to check
     function isElectionFinalized(uint256 election) external view returns (bool);
