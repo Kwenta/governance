@@ -996,6 +996,36 @@ contract AutomatedVotingTest is Test {
         assertEq(councilAfter[4], user5);
     }
 
+    function testFinalizeElectionInternalCouncil() public {
+        vm.prank(user1);
+        automatedVotingInternals.startCouncilElection(user5);
+        assertEq(automatedVotingInternals.hasVotedForMemberRemoval(user1, user5), true);
+        assertEq(automatedVotingInternals.removalVotes(user5), 1);
+        vm.prank(user2);
+        automatedVotingInternals.startCouncilElection(user5);
+        assertEq(automatedVotingInternals.hasVotedForMemberRemoval(user2, user5), true);
+        assertEq(automatedVotingInternals.removalVotes(user5), 2);
+        /// @dev member is booted after the third vote, election starts, and accounting is cleared
+        vm.prank(user3);
+        automatedVotingInternals.startCouncilElection(user5);
+
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        automatedVotingInternals.nominateInSingleElection(0, user6);
+        vm.warp(block.timestamp + 1 weeks);
+        automatedVotingInternals.voteInSingleElection(0, user6);
+        vm.warp(block.timestamp + 3 weeks + 1);
+        assertEq(automatedVotingInternals.isElectionFinalized(0), false);
+        automatedVotingInternals.finalizeElectionInternal(0);
+        assertEq(automatedVotingInternals.isElectionFinalized(0), true);
+
+        assertEq(automatedVotingInternals.getCouncil().length, 5);
+        assertEq(automatedVotingInternals.getCouncil()[0], user1);
+        assertEq(automatedVotingInternals.getCouncil()[1], user2);
+        assertEq(automatedVotingInternals.getCouncil()[2], user3);
+        assertEq(automatedVotingInternals.getCouncil()[3], user4);
+        assertEq(automatedVotingInternals.getCouncil()[4], user6);
+    }
 
     // getWinners()
 
