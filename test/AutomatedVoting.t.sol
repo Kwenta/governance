@@ -311,6 +311,24 @@ contract AutomatedVotingTest is Test {
 
     // startScheduledElection()
 
+    function testStartScheduledElectionSuccess() public {
+        vm.warp(block.timestamp + 21 weeks);
+        automatedVoting.startScheduledElection();
+        assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
+        assertEq(automatedVoting.lastScheduledElectionStartTime(), block.timestamp);
+        assertEq(automatedVoting.electionNumbers(1), 1);
+        (
+            uint256 electionStartTime,
+            uint256 endTime,
+            bool isFinalized,
+            Enums.electionType theElectionType
+        ) = automatedVoting.elections(1);
+        assertEq(electionStartTime, block.timestamp);
+        assertEq(endTime, block.timestamp + 3 weeks);
+        assertEq(isFinalized, false);
+        assertTrue(theElectionType == Enums.electionType.scheduled);
+    }
+
     function testFuzzStartScheduledElectionNotReady(uint128 time) public {
         vm.assume(time < 21 weeks);
         vm.warp(block.timestamp + time);
@@ -332,22 +350,30 @@ contract AutomatedVotingTest is Test {
         automatedVoting.startScheduledElection();
     }
 
-    function testStartScheduledElectionReady() public {
+    function testStartScheduledElectionLastElectionIsntFinalized() public {
         vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
-        assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
-        assertEq(automatedVoting.lastScheduledElectionStartTime(), block.timestamp);
-        assertEq(automatedVoting.electionNumbers(1), 1);
-        (
-            uint256 electionStartTime,
-            uint256 endTime,
-            bool isFinalized,
-            Enums.electionType theElectionType
-        ) = automatedVoting.elections(1);
-        assertEq(electionStartTime, block.timestamp);
-        assertEq(endTime, block.timestamp + 3 weeks);
-        assertEq(isFinalized, false);
-        assertTrue(theElectionType == Enums.electionType.scheduled);
+        vm.warp(block.timestamp + 24 weeks);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAutomatedVoting.ElectionNotReadyToBeStarted.selector
+            )
+        );
+        automatedVoting.startScheduledElection();
+        automatedVoting.finalizeElection(1);
+        automatedVoting.startScheduledElection();
+    }
+
+    function testFuzzStartScheduledElectionLastElectionIsntFinalized(uint128 time) public {
+        vm.warp(block.timestamp + 21 weeks);
+        automatedVoting.startScheduledElection();
+        vm.warp(block.timestamp + time);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAutomatedVoting.ElectionNotReadyToBeStarted.selector
+            )
+        );
+        automatedVoting.startScheduledElection();
     }
 
     // startCouncilElection()
