@@ -499,6 +499,27 @@ contract AutomatedVoting is IAutomatedVoting {
         return false;
     }
 
+    /// @dev internal helper function cancel ongoing elections when a scheduled election starts
+    function _cancelOngoingElections() internal {
+        //todo: optimize this
+        for(uint i = 0; i < electionNumbers.length; i++) {
+            if (elections[i].isFinalized == false) {
+                elections[i].isFinalized = true;
+                /// @dev if the election is a council election, clear any accounting
+                if (elections[i].theElectionType == Enums.electionType.council) {
+                    for (uint j = 0; j < council.length; j++) {
+                        for (uint k = 0; k < membersUpForRemoval.length; k++){
+                            hasVotedForMemberRemoval[council[j]][membersUpForRemoval[k]] = false;
+                        }
+                    }
+                    for (uint j = 0; j < membersUpForRemoval.length; j++) {
+                        delete membersUpForRemoval[j];
+                    }
+                }
+            }
+        }
+    }
+
     //todo: special functionality to boot someone off
     //todo: voting is one function/idea (stakers do it)
 
