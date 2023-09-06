@@ -28,7 +28,7 @@ contract AutomatedVotingTest is Test {
     uint256 public startTime;
 
     function setUp() public {
-        /// @dev this is so the time of lastScheduledElection is != 0
+        /// @dev this is so lastScheduledElectionStartTime is != 0
         vm.warp(block.timestamp + 25 weeks);
         admin = createUser();
         user1 = createUser();
@@ -336,7 +336,7 @@ contract AutomatedVotingTest is Test {
         vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
-        assertEq(automatedVoting.lastScheduledElection(), block.timestamp);
+        assertEq(automatedVoting.lastScheduledElectionStartTime(), block.timestamp);
         assertEq(automatedVoting.electionNumbers(1), 1);
         (
             uint256 electionStartTime,
@@ -374,7 +374,7 @@ contract AutomatedVotingTest is Test {
 
         /// @dev check election
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
-        assertEq(automatedVoting.lastScheduledElection(), block.timestamp - 3 weeks);
+        assertEq(automatedVoting.lastScheduledElectionStartTime(), block.timestamp - 3 weeks);
         assertEq(automatedVoting.electionNumbers(1), 1);
         (
             uint256 electionStartTime,
@@ -426,7 +426,7 @@ contract AutomatedVotingTest is Test {
 
         /// @dev check election
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
-        assertEq(automatedVoting.lastScheduledElection(), block.timestamp - 3 weeks);
+        assertEq(automatedVoting.lastScheduledElectionStartTime(), block.timestamp - 3 weeks);
         assertEq(automatedVoting.electionNumbers(1), 1);
         (
             uint256 electionStartTime,
@@ -484,6 +484,52 @@ contract AutomatedVotingTest is Test {
         stakingRewards.stake(1);
         automatedVoting.startCKIPElection();
         vm.warp(block.timestamp + 3 weeks);
+        automatedVoting.startCKIPElection();
+    }
+
+    function testStartCKIPElectionScheduledElectionJustStarted() public {
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+
+        vm.warp(block.timestamp + 21 weeks);
+        automatedVoting.startScheduledElection();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAutomatedVoting.ScheduledElectionInProgress.selector
+            )
+        );
+        automatedVoting.startCKIPElection();
+    }
+
+    function testFuzzStartCKIPElectionDuringScheduledElection(uint128 time) public {
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+
+        vm.warp(block.timestamp + 21 weeks);
+        automatedVoting.startScheduledElection();
+        vm.warp(block.timestamp + time);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAutomatedVoting.ScheduledElectionInProgress.selector
+            )
+        );
+        automatedVoting.startCKIPElection();
+    }
+
+    function testStartCKIPElectionScheduledElectionJustEnded() public {
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+
+        vm.warp(block.timestamp + 21 weeks);
+        automatedVoting.startScheduledElection();
+        vm.warp(block.timestamp + 3 weeks);
+        automatedVoting.finalizeElection(1);
         automatedVoting.startCKIPElection();
     }
 
