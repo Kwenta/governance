@@ -12,7 +12,8 @@ contract AutomatedVoting is IAutomatedVoting {
     mapping(address => mapping(uint256 => bool)) hasVoted;
     mapping(uint256 => mapping(address => bool)) public isNominated;
     uint256[] public electionNumbers;
-    uint256 public lastScheduledElection;
+    uint256 public lastScheduledElectionStartTime;
+    uint256 public lastScheduledElectionNumber;
     uint256 public lastCKIPElection;
     IStakingRewards public stakingRewards;
 
@@ -56,7 +57,7 @@ contract AutomatedVoting is IAutomatedVoting {
         /// @dev make sure there is no ongoing scheduled election
         /// @dev isElectionFinalized is for edge case when a scheduled election is over 3 weeks but
         /// has not been finalized yet (scheduled election will be the last election in the array)
-        if (block.timestamp >= lastScheduledElection + 3 weeks && isElectionFinalized(electionNumbers.length - 1)) {
+        if (block.timestamp >= lastScheduledElectionStartTime + 3 weeks && isElectionFinalized(lastScheduledElectionNumber)) {
             _;
         } else {
             revert ScheduledElectionInProgress();
@@ -103,7 +104,11 @@ contract AutomatedVoting is IAutomatedVoting {
 
     constructor(address _stakingRewards) {
         stakingRewards = IStakingRewards(_stakingRewards);
-        startScheduledElection();
+        /// @dev start a scheduled election
+        /// (bypasses election 0 not finalized check)
+        lastScheduledElectionStartTime = block.timestamp;
+        lastScheduledElectionNumber = electionNumbers.length;
+        _startElection(Enums.electionType.scheduled);
     }
 
     /// @notice gets the time until the next scheduled election
@@ -114,10 +119,10 @@ contract AutomatedVoting is IAutomatedVoting {
         override
         returns (uint256)
     {
-        if (block.timestamp >= lastScheduledElection + 24 weeks) {
+        if (block.timestamp >= lastScheduledElectionStartTime + 24 weeks) {
             return 0;
         } else {
-            return 24 weeks - (block.timestamp - lastScheduledElection);
+            return 24 weeks - (block.timestamp - lastScheduledElectionStartTime);
         }
     }
 
@@ -156,10 +161,11 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @notice starts the scheduled election
     /// can only be started every 24 weeks
     function startScheduledElection() public override {
-        if (block.timestamp < lastScheduledElection + 24 weeks) {
+        if (block.timestamp < lastScheduledElectionStartTime + 24 weeks || !isElectionFinalized(lastScheduledElectionNumber)) {
             revert ElectionNotReadyToBeStarted();
         } else {
-            lastScheduledElection = block.timestamp;
+            lastScheduledElectionStartTime = block.timestamp;
+            lastScheduledElectionNumber = electionNumbers.length;
             _startElection(Enums.electionType.scheduled);
             //todo: reset quorums and other elections because scheduled takes precedence
             // _finalizeElection(current ongoing elections)
@@ -210,7 +216,7 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     /// @notice starts a CKIP election
-    function startCKIPElection() public override onlyStaker {
+    function startCKIPElection() public override onlyStaker notDuringScheduledElection {
         /// @dev if a CKIP election is ongoing, revert
         if (block.timestamp < lastCKIPElection + 3 weeks) {
             revert ElectionNotReadyToBeStarted();
