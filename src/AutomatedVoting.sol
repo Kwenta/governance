@@ -178,7 +178,7 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @param _memberToRemove the member to remove from the council
     function startCouncilElection(
         address _memberToRemove
-    ) public override onlyCouncil {
+    ) public override onlyCouncil notDuringScheduledElection {
         /// @dev if the member to remove is not on the council, revert
         if (!isCouncilMember(_memberToRemove)) {
             revert MemberNotOnCouncil();
