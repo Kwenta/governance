@@ -5,9 +5,8 @@ import {AutomatedVoting} from "../src/AutomatedVoting.sol";
 
 contract AutomatedVotingInternals is AutomatedVoting {
     constructor(
-        address[] memory _council,
         address _stakingRewards
-    ) AutomatedVoting(_council, _stakingRewards) {}
+    ) AutomatedVoting(_stakingRewards) {}
 
     function isStaker(address voter) public view returns (bool) {
         return _isStaker(voter);

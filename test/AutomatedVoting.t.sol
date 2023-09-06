@@ -29,7 +29,7 @@ contract AutomatedVotingTest is Test {
 
     function setUp() public {
         /// @dev this is so the time of lastScheduledElection is != 0
-        vm.warp(block.timestamp + 3 weeks);
+        vm.warp(block.timestamp + 25 weeks);
         admin = createUser();
         user1 = createUser();
         user2 = createUser();
@@ -50,11 +50,24 @@ contract AutomatedVotingTest is Test {
         council[2] = user3;
         council[3] = user4;
         council[4] = user5;
-        automatedVoting = new AutomatedVoting(council, address(stakingRewards));
-        automatedVotingInternals = new AutomatedVotingInternals(
-            council,
-            address(stakingRewards)
-        );
+
+        /// @dev set up council for automatedVoting and automatedVotingInternals
+        automatedVoting = new AutomatedVoting(address(stakingRewards));
+        automatedVotingInternals = new AutomatedVotingInternals(address(stakingRewards));
+        kwenta.transfer(admin, 1);
+        vm.startPrank(admin);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        automatedVoting.nominateInFullElection(0, council);
+        automatedVotingInternals.nominateInFullElection(0, council);
+        vm.warp(block.timestamp + 1 weeks);
+        automatedVotingInternals.voteInFullElection(0, council);
+        automatedVoting.voteInFullElection(0, council);
+        vm.warp(block.timestamp + 2 weeks);
+        automatedVotingInternals.finalizeElection(0);
+        automatedVoting.finalizeElection(0);      
+        vm.stopPrank();
+
     }
 
     // onlyCouncil()
@@ -76,40 +89,40 @@ contract AutomatedVotingTest is Test {
     // onlyDuringNomination()
 
     function testOnlyDuringNominationAtStart() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        automatedVoting.nominateInFullElection(0, new address[](5));
+        automatedVoting.nominateInFullElection(1, new address[](5));
     }
 
     function testFuzzOnlyDuringNomination(uint128 time) public {
         vm.assume(time <= 1 weeks);
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.warp(block.timestamp + time);
-        automatedVoting.nominateInFullElection(0, new address[](5));
+        automatedVoting.nominateInFullElection(1, new address[](5));
     }
 
     function testOnlyDuringNominationLastSecond() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 1 weeks);
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        automatedVoting.nominateInFullElection(0, new address[](5));
+        automatedVoting.nominateInFullElection(1, new address[](5));
     }
 
     function testOnlyDuringNominationPassed() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 1 weeks + 1);
         kwenta.transfer(user1, 1);
@@ -117,7 +130,7 @@ contract AutomatedVotingTest is Test {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.expectRevert("Election not in nomination state");
-        automatedVoting.nominateInFullElection(0, new address[](5));
+        automatedVoting.nominateInFullElection(1, new address[](5));
     }
 
     function testOnlyDuringNominationNoElectionYet() public {
@@ -127,26 +140,26 @@ contract AutomatedVotingTest is Test {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.expectRevert("Election not in nomination state");
-        automatedVoting.nominateInFullElection(0, new address[](5));
+        automatedVoting.nominateInFullElection(1, new address[](5));
     }
 
     // onlyDuringVoting()
 
     function testOnlyDuringVotingAtStart() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        automatedVoting.nominateInFullElection(0, new address[](5));
+        automatedVoting.nominateInFullElection(1, new address[](5));
         vm.warp(block.timestamp + 1 weeks);
-        automatedVoting.voteInFullElection(0, new address[](5));
+        automatedVoting.voteInFullElection(1, new address[](5));
     }
 
     function testFuzzOnlyDuringVoting(uint128 time) public {
         vm.assume(time <= 2 weeks);
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 1 weeks);
         kwenta.transfer(user1, 1);
@@ -154,13 +167,13 @@ contract AutomatedVotingTest is Test {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
 
-        automatedVoting.nominateInFullElection(0, new address[](5));
+        automatedVoting.nominateInFullElection(1, new address[](5));
         vm.warp(block.timestamp + time);
-        automatedVoting.voteInFullElection(0, new address[](5));
+        automatedVoting.voteInFullElection(1, new address[](5));
     }
 
     function testOnlyDuringVotingLastSecond() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 1 weeks);
         kwenta.transfer(user1, 1);
@@ -168,13 +181,13 @@ contract AutomatedVotingTest is Test {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
 
-        automatedVoting.nominateInFullElection(0, new address[](5));
+        automatedVoting.nominateInFullElection(1, new address[](5));
         vm.warp(block.timestamp + 2 weeks);
-        automatedVoting.voteInFullElection(0, new address[](5));
+        automatedVoting.voteInFullElection(1, new address[](5));
     }
 
     function testOnlyDuringVotingPassed() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
@@ -182,24 +195,24 @@ contract AutomatedVotingTest is Test {
         stakingRewards.stake(1);
 
         vm.warp(block.timestamp + 1 weeks);
-        automatedVoting.nominateInFullElection(0, new address[](5));
+        automatedVoting.nominateInFullElection(1, new address[](5));
         vm.warp(block.timestamp + 2 weeks + 1);
         vm.expectRevert("Election not in voting state");
-        automatedVoting.voteInFullElection(0, new address[](5));
+        automatedVoting.voteInFullElection(1, new address[](5));
     }
 
     function testOnlyDuringVotingNotVotingYet() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
 
-        automatedVoting.nominateInFullElection(0, new address[](5));
+        automatedVoting.nominateInFullElection(1, new address[](5));
         vm.warp(block.timestamp + 1 weeks - 1);
         vm.expectRevert("Election not in voting state");
-        automatedVoting.voteInFullElection(0, new address[](5));
+        automatedVoting.voteInFullElection(1, new address[](5));
     }
 
     // getCouncil()
@@ -213,93 +226,93 @@ contract AutomatedVotingTest is Test {
     // timeUntilNextScheduledElection()
 
     function testTimeUntilNextScheduledElection() public {
-        assertEq(automatedVoting.timeUntilNextScheduledElection(), 24 weeks);
+        assertEq(automatedVoting.timeUntilNextScheduledElection(), 21 weeks);
     }
 
     function testTimeUntilNextScheduledElectionOverdue() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         assertEq(automatedVoting.timeUntilNextScheduledElection(), 0);
     }
 
     function testTimeUntilNextScheduledElectionRightBeforeOverdue() public {
-        vm.warp(block.timestamp + 24 weeks - 1);
+        vm.warp(block.timestamp + 21 weeks - 1);
         assertEq(automatedVoting.timeUntilNextScheduledElection(), 1);
     }
 
     function testFuzzTimeUntilNextScheduledElection(uint128 time) public {
-        vm.assume(time < 24 weeks);
+        vm.assume(time < 21 weeks);
         vm.warp(block.timestamp + time);
         assertEq(
             automatedVoting.timeUntilNextScheduledElection(),
-            24 weeks - time
+            21 weeks - time
         );
     }
 
-    // timeUntilElectionStateEnd()
+    // timeUntilElectionStateEnd(1
 
     function testTimeUntilElectionStateEndNoElection() public {
-        assertEq(automatedVoting.timeUntilElectionStateEnd(0), 0);
+        assertEq(automatedVoting.timeUntilElectionStateEnd(1), 0);
     }
 
     function testTimeUntilElectionStateEndNewScheduledElection() public {
-        /// @dev warp forward 24 weeks to get past the cooldown
-        vm.warp(block.timestamp + 24 weeks);
+        /// @dev warp forward 21 weeks to get past the cooldown
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
-        assertEq(automatedVoting.timeUntilElectionStateEnd(0), 3 weeks);
+        assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
     }
 
     function testTimeUntilElectionStateEndFinishedElection() public {
-        /// @dev warp forward 24 weeks to get past the cooldown
-        vm.warp(block.timestamp + 24 weeks);
+        /// @dev warp forward 21 weeks to get past the cooldown
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 3 weeks);
-        assertEq(automatedVoting.timeUntilElectionStateEnd(0), 0);
+        assertEq(automatedVoting.timeUntilElectionStateEnd(1), 0);
     }
 
     function testTimeUntilElectionStateEndRightBeforeFinish() public {
-        /// @dev warp forward 24 weeks to get past the cooldown
-        vm.warp(block.timestamp + 24 weeks);
+        /// @dev warp forward 21 weeks to get past the cooldown
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 3 weeks - 1);
-        assertEq(automatedVoting.timeUntilElectionStateEnd(0), 1);
+        assertEq(automatedVoting.timeUntilElectionStateEnd(1), 1);
     }
 
     function testFuzzTimeUntilElectionStateEndNewScheduledElection(
         uint128 time
     ) public {
         vm.assume(time < 3 weeks);
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + time);
-        assertEq(automatedVoting.timeUntilElectionStateEnd(0), 3 weeks - time);
+        assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks - time);
     }
 
-    // isElectionFinalized()
+    // isElectionFinalized(1
 
     function testIsElectionFinalizedNoElection() public {
-        assertEq(automatedVoting.isElectionFinalized(0), false);
+        assertEq(automatedVoting.isElectionFinalized(1), false);
     }
 
     function testIsElectionFinalizedNewElection() public {
-        /// @dev warp forward 24 weeks to get past the cooldown
-        vm.warp(block.timestamp + 24 weeks);
+        /// @dev warp forward 21 weeks to get past the cooldown
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
-        assertEq(automatedVoting.isElectionFinalized(0), false);
+        assertEq(automatedVoting.isElectionFinalized(1), false);
     }
 
     function testIsElectionFinalizedFinishedElection() public {
-        /// @dev warp forward 24 weeks to get past the cooldown
-        vm.warp(block.timestamp + 24 weeks);
+        /// @dev warp forward 21 weeks to get past the cooldown
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 3 weeks + 1);
-        automatedVoting.finalizeElection(0);
-        assertEq(automatedVoting.isElectionFinalized(0), true);
+        automatedVoting.finalizeElection(1);
+        assertEq(automatedVoting.isElectionFinalized(1), true);
     }
 
     // startScheduledElection()
 
     function testFuzzStartScheduledElectionNotReady(uint128 time) public {
-        vm.assume(time < 24 weeks);
+        vm.assume(time < 21 weeks);
         vm.warp(block.timestamp + time);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -309,18 +322,28 @@ contract AutomatedVotingTest is Test {
         automatedVoting.startScheduledElection();
     }
 
-    function testStartScheduledElectionReady() public {
-        vm.warp(block.timestamp + 24 weeks);
+    function testStartScheduledElectionNotReady() public {
+        vm.warp(block.timestamp + 21 weeks - 1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAutomatedVoting.ElectionNotReadyToBeStarted.selector
+            )
+        );
         automatedVoting.startScheduledElection();
-        assertEq(automatedVoting.timeUntilElectionStateEnd(0), 3 weeks);
+    }
+
+    function testStartScheduledElectionReady() public {
+        vm.warp(block.timestamp + 21 weeks);
+        automatedVoting.startScheduledElection();
+        assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
         assertEq(automatedVoting.lastScheduledElection(), block.timestamp);
-        assertEq(automatedVoting.electionNumbers(0), 0);
+        assertEq(automatedVoting.electionNumbers(1), 1);
         (
             uint256 electionStartTime,
             uint256 endTime,
             bool isFinalized,
             Enums.electionType theElectionType
-        ) = automatedVoting.elections(0);
+        ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
         assertEq(endTime, block.timestamp + 3 weeks);
         assertEq(isFinalized, false);
@@ -350,15 +373,15 @@ contract AutomatedVotingTest is Test {
         assertEq(automatedVoting.hasVotedForMemberRemoval(user3, user5), false);
 
         /// @dev check election
-        assertEq(automatedVoting.timeUntilElectionStateEnd(0), 3 weeks);
-        assertEq(automatedVoting.lastScheduledElection(), block.timestamp);
-        assertEq(automatedVoting.electionNumbers(0), 0);
+        assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
+        assertEq(automatedVoting.lastScheduledElection(), block.timestamp - 3 weeks);
+        assertEq(automatedVoting.electionNumbers(1), 1);
         (
             uint256 electionStartTime,
             uint256 endTime,
             bool isFinalized,
             Enums.electionType theElectionType
-        ) = automatedVoting.elections(0);
+        ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
         assertEq(endTime, block.timestamp + 3 weeks);
         assertEq(isFinalized, false);
@@ -402,15 +425,15 @@ contract AutomatedVotingTest is Test {
         automatedVoting.startCKIPElection();
 
         /// @dev check election
-        assertEq(automatedVoting.timeUntilElectionStateEnd(0), 3 weeks);
-        assertEq(automatedVoting.lastScheduledElection(), block.timestamp);
-        assertEq(automatedVoting.electionNumbers(0), 0);
+        assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
+        assertEq(automatedVoting.lastScheduledElection(), block.timestamp - 3 weeks);
+        assertEq(automatedVoting.electionNumbers(1), 1);
         (
             uint256 electionStartTime,
             uint256 endTime,
             bool isFinalized,
             Enums.electionType theElectionType
-        ) = automatedVoting.elections(0);
+        ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
         assertEq(endTime, block.timestamp + 3 weeks);
         assertEq(isFinalized, false);
@@ -471,14 +494,14 @@ contract AutomatedVotingTest is Test {
         automatedVoting.stepDown();
 
         assertFalse(automatedVoting.isCouncilMember(user1));
-        assertEq(automatedVoting.timeUntilElectionStateEnd(0), 3 weeks);
-        assertEq(automatedVoting.electionNumbers(0), 0);
+        assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
+        assertEq(automatedVoting.electionNumbers(1), 1);
         (
             uint256 electionStartTime,
             uint256 endTime,
             bool isFinalized,
             Enums.electionType theElectionType
-        ) = automatedVoting.elections(0);
+        ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
         assertEq(endTime, block.timestamp + 3 weeks);
         assertEq(isFinalized, false);
@@ -519,32 +542,32 @@ contract AutomatedVotingTest is Test {
         automatedVoting.stepDown();
     }
 
-    // finalizeElection()
+    // finalizeElection(1
 
     function testFinalizeElectionAlreadyFinalized() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 3 weeks);
-        automatedVoting.finalizeElection(0);
+        automatedVoting.finalizeElection(1);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAutomatedVoting.ElectionAlreadyFinalized.selector
             )
         );
-        automatedVoting.finalizeElection(0);
+        automatedVoting.finalizeElection(1);
     }
 
     function testFinalizeElection() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 3 weeks);
-        automatedVoting.finalizeElection(0);
-        assertEq(automatedVoting.isElectionFinalized(0), true);
+        automatedVoting.finalizeElection(1);
+        assertEq(automatedVoting.isElectionFinalized(1), true);
     }
 
     function testFuzzFinalizeElectionNotReady(uint128 time) public {
         vm.assume(time < 3 weeks);
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + time);
         vm.expectRevert(
@@ -552,11 +575,11 @@ contract AutomatedVotingTest is Test {
                 IAutomatedVoting.ElectionNotReadyToBeFinalized.selector
             )
         );
-        automatedVoting.finalizeElection(0);
+        automatedVoting.finalizeElection(1);
     }
 
     function testFinalizeElectionNotReady() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 3 weeks - 1);
         vm.expectRevert(
@@ -564,35 +587,35 @@ contract AutomatedVotingTest is Test {
                 IAutomatedVoting.ElectionNotReadyToBeFinalized.selector
             )
         );
-        automatedVoting.finalizeElection(0);
+        automatedVoting.finalizeElection(1);
     }
 
-    // nominateInSingleElection()
+    // nominateInSingleElection(1
 
     function testNominateInSingleElectionSuccess() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         kwenta.transfer(user1, 1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.prank(user2);
         automatedVoting.stepDown();
 
-        automatedVoting.nominateInSingleElection(0, user1);
+        automatedVoting.nominateInSingleElection(1, user1);
         assertEq(automatedVoting.isNominated(0, user1), true);
     }
 
     function testNominateInSingleElectionNotStaked() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         vm.prank(user2);
         automatedVoting.stepDown();
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.CallerNotStaked.selector)
         );
-        automatedVoting.nominateInSingleElection(0, user1);
+        automatedVoting.nominateInSingleElection(1, user1);
     }
 
     function testNominateInSingleElectionNotDuringNomination() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         kwenta.transfer(user1, 1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
@@ -601,48 +624,48 @@ contract AutomatedVotingTest is Test {
         vm.warp(block.timestamp + 1 weeks + 1);
         
         vm.expectRevert("Election not in nomination state");
-        automatedVoting.nominateInSingleElection(0, user1);
+        automatedVoting.nominateInSingleElection(1, user1);
     }
 
     function testNominateInSingleElectionNotSingleElection() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         kwenta.transfer(user1, 1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         
         vm.expectRevert("Election not a single election");
-        automatedVoting.nominateInSingleElection(0, user1);
+        automatedVoting.nominateInSingleElection(1, user1);
     }
 
-    // voteInSingleElection()
+    // voteInSingleElection(1
 
     function testVoteInSingleElectionSuccess() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         kwenta.transfer(user1, 1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.prank(user2);
         automatedVoting.stepDown();
 
-        automatedVoting.nominateInSingleElection(0, user1);
+        automatedVoting.nominateInSingleElection(1, user1);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVoting.voteInSingleElection(0, user1);
-        assertEq(automatedVoting.voteCounts(0, user1), 1);
+        automatedVoting.voteInSingleElection(1, user1);
+        assertEq(automatedVoting.voteCounts(1, user1), 1);
     }
 
     function testVoteInSingleElectionNotStaked() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         vm.prank(user2);
         automatedVoting.stepDown();
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.CallerNotStaked.selector)
         );
-        automatedVoting.voteInSingleElection(0, user1);
+        automatedVoting.voteInSingleElection(1, user1);
     }
 
     function testVoteInSingleElectionNotDuringVoting() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         kwenta.transfer(user1, 1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
@@ -650,11 +673,11 @@ contract AutomatedVotingTest is Test {
         automatedVoting.stepDown();
 
         vm.expectRevert("Election not in voting state");
-        automatedVoting.voteInSingleElection(0, user1);
+        automatedVoting.voteInSingleElection(1, user1);
     }
 
     function testVoteInSingleElectionAlreadyEnded() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 3 weeks + 1);
         kwenta.transfer(user1, 1);
@@ -662,11 +685,11 @@ contract AutomatedVotingTest is Test {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.expectRevert("Election not in voting state");
-        automatedVoting.voteInSingleElection(0, user1);
+        automatedVoting.voteInSingleElection(1, user1);
     }
 
     function testVoteInSingleElectionNotSingleElection() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         kwenta.transfer(user1, 1);
         kwenta.approve(address(stakingRewards), 1);
@@ -674,28 +697,28 @@ contract AutomatedVotingTest is Test {
         vm.warp(block.timestamp + 1 weeks + 1);
 
         vm.expectRevert("Election not a single election");
-        automatedVoting.voteInSingleElection(0, user1);
+        automatedVoting.voteInSingleElection(1, user1);
     }
 
     function testVoteInSingleElectionAlreadyVoted() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         kwenta.transfer(user1, 2);
         kwenta.approve(address(stakingRewards), 2);
         stakingRewards.stake(2);
         vm.prank(user2);
         automatedVoting.stepDown();
 
-        automatedVoting.nominateInSingleElection(0, user1);
+        automatedVoting.nominateInSingleElection(1, user1);
         vm.warp(block.timestamp + 1 weeks + 1);
-        automatedVoting.voteInSingleElection(0, user1);
+        automatedVoting.voteInSingleElection(1, user1);
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.AlreadyVoted.selector)
         );
-        automatedVoting.voteInSingleElection(0, user1);
+        automatedVoting.voteInSingleElection(1, user1);
     }
 
     function testVoteInSingleElectionCandidateNotNominated() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         kwenta.transfer(user1, 2);
         kwenta.approve(address(stakingRewards), 2);
         stakingRewards.stake(2);
@@ -706,13 +729,13 @@ contract AutomatedVotingTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.CandidateNotNominated.selector)
         );
-        automatedVoting.voteInSingleElection(0, user1);
+        automatedVoting.voteInSingleElection(1, user1);
     }
 
-    // nominateInFullElection()
+    // nominateInFullElection(1
 
     function testNominateInFullElectionSuccess() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
@@ -724,7 +747,7 @@ contract AutomatedVotingTest is Test {
         candidates[2] = user3;
         candidates[3] = user4;
         candidates[4] = user5;
-        automatedVoting.nominateInFullElection(0, candidates);
+        automatedVoting.nominateInFullElection(1, candidates);
 
         //todo: check the candidateAddresses array
         assertEq(automatedVoting.isNominated(0, user1), true);
@@ -735,7 +758,7 @@ contract AutomatedVotingTest is Test {
     }
 
     function testNominateInFullElectionNotStaked() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         address[] memory candidates = new address[](5);
         candidates[0] = user1;
@@ -746,7 +769,7 @@ contract AutomatedVotingTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.CallerNotStaked.selector)
         );
-        automatedVoting.nominateInFullElection(0, candidates);
+        automatedVoting.nominateInFullElection(1, candidates);
     }
 
     function testNominateInFullElectionNotElection() public {
@@ -756,11 +779,11 @@ contract AutomatedVotingTest is Test {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.expectRevert("Election not in nomination state");
-        automatedVoting.nominateInFullElection(0, new address[](5));
+        automatedVoting.nominateInFullElection(1, new address[](5));
     }
 
     function testNominateInFullElectionNominatingEnded() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 1 weeks + 1);
         kwenta.transfer(user1, 1);
@@ -768,11 +791,11 @@ contract AutomatedVotingTest is Test {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.expectRevert("Election not in nomination state");
-        automatedVoting.nominateInFullElection(0, new address[](5));
+        automatedVoting.nominateInFullElection(1, new address[](5));
     }
 
     function testNominateInFullElectionNotFullElection() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         vm.prank(user2);
         automatedVoting.stepDown();
         kwenta.transfer(user1, 1);
@@ -787,13 +810,13 @@ contract AutomatedVotingTest is Test {
         candidates[4] = user5;
 
         vm.expectRevert("Election not a full election");
-        automatedVoting.nominateInFullElection(0, candidates);
+        automatedVoting.nominateInFullElection(1, candidates);
     }
 
-    // voteInFullElection()
+    // voteInFullElection(1
 
     function testVoteInFullElectionSuccess() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
@@ -805,27 +828,27 @@ contract AutomatedVotingTest is Test {
         candidates[2] = user3;
         candidates[3] = user4;
         candidates[4] = user5;
-        automatedVoting.nominateInFullElection(0, candidates);
+        automatedVoting.nominateInFullElection(1, candidates);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVoting.voteInFullElection(0, candidates);
+        automatedVoting.voteInFullElection(1, candidates);
 
         //todo: check the candidateAddresses array
-        uint user1Votes = automatedVoting.voteCounts(0, user1);
+        uint user1Votes = automatedVoting.voteCounts(1, user1);
         assertEq(user1Votes, 1);
-        uint user2Votes = automatedVoting.voteCounts(0, user2);
+        uint user2Votes = automatedVoting.voteCounts(1, user2);
         assertEq(user2Votes, 1);
-        uint user3Votes = automatedVoting.voteCounts(0, user3);
+        uint user3Votes = automatedVoting.voteCounts(1, user3);
         assertEq(user3Votes, 1);
-        uint user4Votes = automatedVoting.voteCounts(0, user4);
+        uint user4Votes = automatedVoting.voteCounts(1, user4);
         assertEq(user4Votes, 1);
-        uint user5Votes = automatedVoting.voteCounts(0, user5);
+        uint user5Votes = automatedVoting.voteCounts(1, user5);
         assertEq(user5Votes, 1);
-        uint adminVotes = automatedVoting.voteCounts(0, admin);
+        uint adminVotes = automatedVoting.voteCounts(1, admin);
         assertEq(adminVotes, 0);
     }
 
     function testVoteInFullElectionNotStaked() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         address[] memory candidates = new address[](5);
         candidates[0] = user1;
@@ -837,21 +860,21 @@ contract AutomatedVotingTest is Test {
             abi.encodeWithSelector(IAutomatedVoting.CallerNotStaked.selector)
         );
         vm.startPrank(user1);
-        automatedVoting.voteInFullElection(0, candidates);
+        automatedVoting.voteInFullElection(1, candidates);
     }
 
     function testVoteInFullElectionNotElection() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.expectRevert("Election not in voting state");
-        automatedVoting.voteInFullElection(0, new address[](5));
+        automatedVoting.voteInFullElection(1, new address[](5));
     }
 
     function testVoteInFullElectionAlreadyEnded() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 3 weeks + 1);
         kwenta.transfer(user1, 1);
@@ -859,11 +882,11 @@ contract AutomatedVotingTest is Test {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.expectRevert("Election not in voting state");
-        automatedVoting.voteInFullElection(0, new address[](5));
+        automatedVoting.voteInFullElection(1, new address[](5));
     }
 
     function testVoteInFullElectionTooManyCandidates() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
@@ -880,11 +903,11 @@ contract AutomatedVotingTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.TooManyCandidates.selector)
         );
-        automatedVoting.voteInFullElection(0, candidates);
+        automatedVoting.voteInFullElection(1, candidates);
     }
 
     function testVoteInFullElectionAlreadyVoted() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
@@ -896,17 +919,17 @@ contract AutomatedVotingTest is Test {
         candidates[2] = user3;
         candidates[3] = user4;
         candidates[4] = user5;
-        automatedVoting.nominateInFullElection(0, candidates);
+        automatedVoting.nominateInFullElection(1, candidates);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVoting.voteInFullElection(0, candidates);
+        automatedVoting.voteInFullElection(1, candidates);
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.AlreadyVoted.selector)
         );
-        automatedVoting.voteInFullElection(0, candidates);
+        automatedVoting.voteInFullElection(1, candidates);
     }
 
     function testVoteInFullElectionCandidateNotNominated() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         kwenta.transfer(user1, 2);
         vm.startPrank(user1);
@@ -922,7 +945,7 @@ contract AutomatedVotingTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.CandidateNotNominated.selector)
         );
-        automatedVoting.voteInFullElection(0, candidates);
+        automatedVoting.voteInFullElection(1, candidates);
     }
 
     // isCouncilMember()
@@ -942,7 +965,7 @@ contract AutomatedVotingTest is Test {
     // _finalizeElection()
 
     function testFinalizeElectionInternal() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVotingInternals.startScheduledElection();
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
@@ -954,28 +977,28 @@ contract AutomatedVotingTest is Test {
         candidates[2] = user3;
         candidates[3] = user4;
         candidates[4] = user5;
-        automatedVotingInternals.nominateInFullElection(0, candidates);
+        automatedVotingInternals.nominateInFullElection(1, candidates);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVotingInternals.voteInFullElection(0, candidates);
+        automatedVotingInternals.voteInFullElection(1, candidates);
         vm.warp(block.timestamp + 3 weeks + 1);
-        automatedVotingInternals.finalizeElectionInternal(0);
-        assertEq(automatedVotingInternals.isElectionFinalized(0), true);
+        automatedVotingInternals.finalizeElectionInternal(1);
+        assertEq(automatedVotingInternals.isElectionFinalized(1), true);
 
         /// @dev check if the council changed
         assertEq(automatedVotingInternals.getCouncil(), candidates);
     }
 
         function testFinalizeElectionInternalStepDown() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         kwenta.transfer(user1, 1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.prank(user2);
         automatedVotingInternals.stepDown();
-        automatedVotingInternals.nominateInSingleElection(0, user6);
+        automatedVotingInternals.nominateInSingleElection(1, user6);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVotingInternals.voteInSingleElection(0, user6);
-        assertEq(automatedVotingInternals.voteCounts(0, user6), 1);
+        automatedVotingInternals.voteInSingleElection(1, user6);
+        assertEq(automatedVotingInternals.voteCounts(1, user6), 1);
 
         address[] memory councilBefore = automatedVotingInternals.getCouncil();
         assertEq(councilBefore.length, 5);
@@ -984,9 +1007,9 @@ contract AutomatedVotingTest is Test {
         assertEq(councilBefore[2], user3);
         assertEq(councilBefore[3], user4);
         assertEq(councilBefore[4], user5);
-        assertEq(automatedVotingInternals.isElectionFinalized(0), false);
-        automatedVotingInternals.finalizeElectionInternal(0);
-        assertEq(automatedVotingInternals.isElectionFinalized(0), true);
+        assertEq(automatedVotingInternals.isElectionFinalized(1), false);
+        automatedVotingInternals.finalizeElectionInternal(1);
+        assertEq(automatedVotingInternals.isElectionFinalized(1), true);
         address[] memory councilAfter = automatedVotingInternals.getCouncil();
         assertEq(councilAfter.length, 5);
         assertEq(councilAfter[0], user1);
@@ -1011,13 +1034,13 @@ contract AutomatedVotingTest is Test {
 
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        automatedVotingInternals.nominateInSingleElection(0, user6);
+        automatedVotingInternals.nominateInSingleElection(1, user6);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVotingInternals.voteInSingleElection(0, user6);
+        automatedVotingInternals.voteInSingleElection(1, user6);
         vm.warp(block.timestamp + 3 weeks + 1);
-        assertEq(automatedVotingInternals.isElectionFinalized(0), false);
-        automatedVotingInternals.finalizeElectionInternal(0);
-        assertEq(automatedVotingInternals.isElectionFinalized(0), true);
+        assertEq(automatedVotingInternals.isElectionFinalized(1), false);
+        automatedVotingInternals.finalizeElectionInternal(1);
+        assertEq(automatedVotingInternals.isElectionFinalized(1), true);
 
         assertEq(automatedVotingInternals.getCouncil().length, 5);
         assertEq(automatedVotingInternals.getCouncil()[0], user1);
@@ -1030,7 +1053,7 @@ contract AutomatedVotingTest is Test {
     // getWinners()
 
     function testGetWinners() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
@@ -1042,11 +1065,11 @@ contract AutomatedVotingTest is Test {
         candidates[2] = user3;
         candidates[3] = user4;
         candidates[4] = user5;
-        automatedVoting.nominateInFullElection(0, candidates);
+        automatedVoting.nominateInFullElection(1, candidates);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVoting.voteInFullElection(0, candidates);
+        automatedVoting.voteInFullElection(1, candidates);
         vm.warp(block.timestamp + 3 weeks + 1);
-        automatedVoting.finalizeElection(0);
+        automatedVoting.finalizeElection(1);
 
         (address[] memory winners, uint256[] memory votes) = automatedVoting
             .getWinners(0, 5);
@@ -1060,18 +1083,18 @@ contract AutomatedVotingTest is Test {
     }
 
     function testGetWinnersStepDown() public {
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 21 weeks);
         kwenta.transfer(user1, 1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.prank(user2);
         automatedVoting.stepDown();
-        automatedVoting.nominateInSingleElection(0, user1);
+        automatedVoting.nominateInSingleElection(1, user1);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVoting.voteInSingleElection(0, user1);
-        assertEq(automatedVoting.voteCounts(0, user1), 1);
+        automatedVoting.voteInSingleElection(1, user1);
+        assertEq(automatedVoting.voteCounts(1, user1), 1);
         vm.warp(block.timestamp + 3 weeks + 1);
-        automatedVoting.finalizeElection(0);
+        automatedVoting.finalizeElection(1);
 
         (address[] memory winners, uint256[] memory votes) = automatedVoting
             .getWinners(0, 1);
@@ -1111,7 +1134,7 @@ contract AutomatedVotingTest is Test {
 
     //todo: test onlyFullElection
 
-    //todo: test elections like CKIP reelection for when another re-election
+    //todo: test elections 1ike CKIP reelection for when another re-election
     // is started right at 3 weeks end but the first election is not finalized yet
 
     /// @dev create a new user address

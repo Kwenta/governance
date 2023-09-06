@@ -12,7 +12,7 @@ contract EchidnaTest is AutomatedVoting {
     RewardEscrow public rewardEscrow;
     address public admin;
 
-    constructor() AutomatedVoting(new address[](5), address(0)) {
+    constructor() AutomatedVoting(address(0)) {
         council[0] = address(0x1);
         council[1] = address(0x2);
         council[2] = address(0x3);
