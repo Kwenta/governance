@@ -379,8 +379,13 @@ contract AutomatedVotingTest is Test {
     // startCouncilElection()
 
     function testStartCouncilElectionSuccess() public {
+        address[] memory membersUpForRemoval = automatedVoting.getMembersUpForRemoval();
+        assertEq(membersUpForRemoval.length, 0);
         vm.prank(user1);
         automatedVoting.startCouncilElection(user5);
+        membersUpForRemoval = automatedVoting.getMembersUpForRemoval();
+        assertEq(membersUpForRemoval.length, 1);
+        assertEq(membersUpForRemoval[0], user5);
         assertEq(automatedVoting.hasVotedForMemberRemoval(user1, user5), true);
         assertEq(automatedVoting.removalVotes(user5), 1);
         vm.prank(user2);
@@ -392,6 +397,9 @@ contract AutomatedVotingTest is Test {
         automatedVoting.startCouncilElection(user5);
         
         /// @dev check accounting
+        membersUpForRemoval = automatedVoting.getMembersUpForRemoval();
+        assertEq(membersUpForRemoval.length, 1);
+        assertEq(membersUpForRemoval[0], address(0));
         assertEq(automatedVoting.isCouncilMember(user5), false);
         assertEq(automatedVoting.removalVotes(user5), 0);
         assertEq(automatedVoting.hasVotedForMemberRemoval(user1, user5), false);
@@ -1300,6 +1308,8 @@ contract AutomatedVotingTest is Test {
 
     //todo: test elections 1ike CKIP reelection for when another re-election
     // is started right at 3 weeks end but the first election is not finalized yet
+
+    //todo: test more of the membersUpForRemoval in startCouncil
 
     /// @dev create a new user address
     function createUser() public returns (address) {
