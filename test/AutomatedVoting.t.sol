@@ -588,6 +588,52 @@ contract AutomatedVotingTest is Test {
         automatedVoting.stepDown();
     }
 
+    function testStepDownScheduledElectionJustStarted() public {
+        vm.warp(block.timestamp + 21 weeks);
+        automatedVoting.startScheduledElection();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAutomatedVoting.ScheduledElectionInProgress.selector
+            )
+        );
+        vm.prank(user1);
+        automatedVoting.stepDown();
+    }
+
+    function testFuzzStepDownDuringScheduledElection(uint128 time) public {
+        vm.warp(block.timestamp + 21 weeks);
+        automatedVoting.startScheduledElection();
+        vm.warp(block.timestamp + time);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAutomatedVoting.ScheduledElectionInProgress.selector
+            )
+        );
+        vm.prank(user1);
+        automatedVoting.stepDown();
+    }
+
+    function testStepDownScheduledElectionJustEnded() public {
+        vm.warp(block.timestamp + 21 weeks);
+        automatedVoting.startScheduledElection();
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        address[] memory candidates = new address[](5);
+        candidates[0] = user1;
+        candidates[1] = user2;
+        candidates[2] = user3;
+        candidates[3] = user4;
+        candidates[4] = user5;
+        automatedVoting.nominateInFullElection(1, candidates);
+        vm.warp(block.timestamp + 1 weeks);
+        automatedVoting.voteInFullElection(1, candidates);
+        vm.warp(block.timestamp + 3 weeks);
+        automatedVoting.finalizeElection(1);
+        automatedVoting.stepDown();
+    }
+
     // finalizeElection(1
 
     function testFinalizeElectionAlreadyFinalized() public {

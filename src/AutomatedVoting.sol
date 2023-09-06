@@ -228,7 +228,7 @@ contract AutomatedVoting is IAutomatedVoting {
 
     /// @notice function for council member to step down
     /// @dev cannot step down if there is only one council member
-    function stepDown() public override onlyCouncil {
+    function stepDown() public override onlyCouncil notDuringScheduledElection {
         uint councilMemberCount = 0;
         for (uint i = 0; i < council.length; i++) {
             if (council[i] != address(0)) {
