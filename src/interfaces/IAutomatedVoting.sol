@@ -59,8 +59,11 @@ interface IAutomatedVoting {
 
     // View Functions
 
-    /// @notice returns the last scheduled election
-    function lastScheduledElection() external view returns (uint256);
+    /// @notice returns the time of the last scheduled election
+    function lastScheduledElectionStartTime() external view returns (uint256);
+
+    /// @notice returns the number of the last scheduled election
+    function lastScheduledElectionNumber() external view returns (uint256);
 
     /// @notice returns the time until the next scheduled election
     function timeUntilNextScheduledElection() external view returns (uint256);
