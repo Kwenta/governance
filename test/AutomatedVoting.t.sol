@@ -397,6 +397,53 @@ contract AutomatedVotingTest is Test {
         assertEq(automatedVoting.isElectionFinalized(1), true);
     }
 
+    function testStartScheduledElectionAndCancelCouncilState() public {
+        address[] memory membersUpForRemoval = automatedVoting.getMembersUpForRemoval();
+        assertEq(membersUpForRemoval.length, 0);
+        vm.prank(user1);
+        automatedVoting.startCouncilElection(user5);
+        membersUpForRemoval = automatedVoting.getMembersUpForRemoval();
+        assertEq(membersUpForRemoval.length, 1);
+        assertEq(membersUpForRemoval[0], user5);
+        assertEq(automatedVoting.hasVotedForMemberRemoval(user1, user5), true);
+        assertEq(automatedVoting.removalVotes(user5), 1);
+        vm.prank(user2);
+        automatedVoting.startCouncilElection(user5);
+        assertEq(automatedVoting.hasVotedForMemberRemoval(user2, user5), true);
+        assertEq(automatedVoting.removalVotes(user5), 2);
+        /// @dev user 3 doesnt vote for user5, so user5 isnt booted
+        vm.prank(user3);
+        automatedVoting.startCouncilElection(user1);
+        assertEq(automatedVoting.hasVotedForMemberRemoval(user3, user5), false);
+        assertEq(automatedVoting.removalVotes(user5), 2);    
+        membersUpForRemoval = automatedVoting.getMembersUpForRemoval();
+        assertEq(membersUpForRemoval.length, 2);
+        assertEq(membersUpForRemoval[1], user1);
+        assertEq(automatedVoting.hasVotedForMemberRemoval(user3, user1), true);
+        assertEq(automatedVoting.removalVotes(user1), 1); 
+
+        /// @dev start scheduled election so everything should be clear but the council stays the same
+        vm.warp(block.timestamp + 21 weeks);
+        automatedVoting.startScheduledElection();
+
+        /// @dev check accounting
+        membersUpForRemoval = automatedVoting.getMembersUpForRemoval();
+        assertEq(membersUpForRemoval.length, 2);
+        assertEq(membersUpForRemoval[0], address(0));
+        assertEq(membersUpForRemoval[1], address(0));
+        assertEq(automatedVoting.isCouncilMember(user5), true);
+        assertEq(automatedVoting.isCouncilMember(user1), true);
+        assertEq(automatedVoting.removalVotes(user5), 0);
+        assertEq(automatedVoting.removalVotes(user1), 0);
+        assertEq(automatedVoting.hasVotedForMemberRemoval(user1, user5), false);
+        assertEq(automatedVoting.hasVotedForMemberRemoval(user2, user5), false);
+        assertEq(automatedVoting.hasVotedForMemberRemoval(user3, user1), false);
+    }
+
+    function testStartScheduledElectionAndCancelCouncilElection() public {
+        
+    }
+
     // startCouncilElection()
 
     function testStartCouncilElectionSuccess() public {
