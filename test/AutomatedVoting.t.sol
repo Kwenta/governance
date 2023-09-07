@@ -376,6 +376,15 @@ contract AutomatedVotingTest is Test {
         automatedVoting.startScheduledElection();
     }
 
+    function testStartScheduledElectionAndCancelStepDownElection() public {
+        vm.prank(user1);
+        automatedVoting.stepDown();
+        assertEq(automatedVoting.isElectionFinalized(1), false);
+        vm.warp(block.timestamp + 21 weeks);
+        automatedVoting.startScheduledElection();
+        assertEq(automatedVoting.isElectionFinalized(1), true);
+    }
+
     // startCouncilElection()
 
     function testStartCouncilElectionSuccess() public {
@@ -714,7 +723,7 @@ contract AutomatedVotingTest is Test {
         automatedVoting.stepDown();
     }
 
-    // finalizeElection(1
+    // finalizeElection()
 
     function testFinalizeElectionAlreadyFinalized() public {
         vm.warp(block.timestamp + 21 weeks);
@@ -810,7 +819,7 @@ contract AutomatedVotingTest is Test {
         automatedVoting.nominateInSingleElection(1, user1);
     }
 
-    // voteInSingleElection(1
+    // voteInSingleElection()
 
     function testVoteInSingleElectionSuccess() public {
         vm.warp(block.timestamp + 21 weeks);
@@ -904,7 +913,7 @@ contract AutomatedVotingTest is Test {
         automatedVoting.voteInSingleElection(1, user1);
     }
 
-    // nominateInFullElection(1
+    // nominateInFullElection()
 
     function testNominateInFullElectionSuccess() public {
         vm.warp(block.timestamp + 21 weeks);
@@ -985,7 +994,7 @@ contract AutomatedVotingTest is Test {
         automatedVoting.nominateInFullElection(1, candidates);
     }
 
-    // voteInFullElection(1
+    // voteInFullElection()
 
     function testVoteInFullElectionSuccess() public {
         vm.warp(block.timestamp + 21 weeks);
