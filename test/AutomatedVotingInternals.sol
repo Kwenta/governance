@@ -27,4 +27,8 @@ contract AutomatedVotingInternals is AutomatedVoting {
     ) public pure returns (bool) {
         return isWinner(candidate, winners, upToIndex);
     }
+
+    function cancelOngoingElectionsInternal() public {
+        _cancelOngoingElections();
+    }
 }

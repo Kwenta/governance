@@ -1300,6 +1300,21 @@ contract AutomatedVotingTest is Test {
         );
     }
 
+    // _cancelOngoingElections()
+
+    function testCancelOngoingElectionsStepDown() public {
+        vm.prank(user1);
+        automatedVotingInternals.stepDown();
+        assertEq(automatedVotingInternals.isElectionFinalized(1), false);
+        vm.prank(user2);
+        automatedVotingInternals.stepDown();
+        assertEq(automatedVotingInternals.isElectionFinalized(2), false);
+
+        automatedVotingInternals.cancelOngoingElectionsInternal();
+        assertEq(automatedVotingInternals.isElectionFinalized(1), true);
+        assertEq(automatedVotingInternals.isElectionFinalized(2), true);
+    }
+
     //todo: test isWinner for the < upToIndex change
 
     //todo: test everything with when a non-existent election is put in
