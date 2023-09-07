@@ -441,7 +441,18 @@ contract AutomatedVotingTest is Test {
     }
 
     function testStartScheduledElectionAndCancelCouncilElection() public {
-        
+        vm.prank(user1);
+        automatedVoting.startCouncilElection(user5);
+        vm.prank(user2);
+        automatedVoting.startCouncilElection(user5);
+        /// @dev member is booted after the third vote and election starts
+        vm.prank(user3);
+        automatedVoting.startCouncilElection(user5);
+        assertEq(automatedVoting.isElectionFinalized(1), false);
+
+        vm.warp(block.timestamp + 21 weeks);
+        automatedVoting.startScheduledElection();
+        assertEq(automatedVoting.isElectionFinalized(1), true);
     }
 
     // startCouncilElection()
