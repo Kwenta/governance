@@ -172,11 +172,9 @@ contract AutomatedVoting is IAutomatedVoting {
         } else {
             lastScheduledElectionStartTime = block.timestamp;
             lastScheduledElectionNumber = electionNumbers.length;
-            //todo: reset quorums and other elections because scheduled takes precedence
-            // _finalizeElection(current ongoing elections)
-            // for(unfinished elections) {elections[_election].isFinalized = true;}
             /// @dev cancel ongoing elections before _startElection so 
             /// this scheduled election isnt cancelled
+            _cancelOngoingElections();
             _startElection(Enums.electionType.scheduled);
         }
     }
