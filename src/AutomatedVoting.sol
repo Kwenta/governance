@@ -21,6 +21,7 @@ contract AutomatedVoting is IAutomatedVoting {
     mapping(address => uint256) public removalVotes;
     mapping(address => mapping(address => bool)) public hasVotedForMemberRemoval;
     address[] public membersUpForRemoval;
+    // mapping(uint256 => uint256) public stakedAmountsForQuorum;
 
     struct election {
         uint256 startTime;
@@ -101,6 +102,8 @@ contract AutomatedVoting is IAutomatedVoting {
         );
         _;
     }
+
+    //todo: modifier onlyActiveElections (for when an election gets canceled and finalized)
 
     constructor(address _stakingRewards) {
         stakingRewards = IStakingRewards(_stakingRewards);
@@ -318,6 +321,10 @@ contract AutomatedVoting is IAutomatedVoting {
         if (!_candidatesAreNominated(_election, candidates)) {
             revert CandidateNotNominated();
         }
+        // if (elections[_election].theElectionType == Enums.electionType.CKIP) {
+        //     uint256 userStaked = stakingRewards.balanceOf(msg.sender);
+        //     stakedAmountsForQuorum[_election] += userStaked;
+        // }
         hasVoted[msg.sender][_election] = true;
         voteCounts[_election][candidate]++;
     }
@@ -432,6 +439,13 @@ contract AutomatedVoting is IAutomatedVoting {
             elections[_election].winningCandidates = winners;
             council = winners;
         } else if (elections[_election].theElectionType == Enums.electionType.council || elections[_election].theElectionType == Enums.electionType.stepDown) {
+            // if (elections[_election].theElectionType == Enums.electionType.stepDown) {
+            //     uint256 quorumPercentage = stakedAmountsForQuorum[_election] * 100 / stakingRewards.totalSupply();
+            //     if (quorumPercentage < 40) {
+            //         //todo: emit event that quorum was not reached
+            //         return;
+            //     }
+            // }
             /// @dev this is for a single election
             (address[] memory winners, ) = getWinners(_election, 1);
             elections[_election].winningCandidates = winners;
