@@ -1339,6 +1339,48 @@ contract AutomatedVotingTest is Test {
         assertEq(automatedVotingInternals.isElectionFinalized(1), true);
     }
 
+    function testCancelOngoingElectionsCouncil() public {
+        address[] memory membersUpForRemoval = automatedVotingInternals.getMembersUpForRemoval();
+        assertEq(membersUpForRemoval.length, 0);
+        vm.prank(user1);
+        automatedVotingInternals.startCouncilElection(user5);
+        membersUpForRemoval = automatedVotingInternals.getMembersUpForRemoval();
+        assertEq(membersUpForRemoval.length, 1);
+        assertEq(membersUpForRemoval[0], user5);
+        assertEq(automatedVotingInternals.hasVotedForMemberRemoval(user1, user5), true);
+        assertEq(automatedVotingInternals.removalVotes(user5), 1);
+        vm.prank(user2);
+        automatedVotingInternals.startCouncilElection(user5);
+        assertEq(automatedVotingInternals.hasVotedForMemberRemoval(user2, user5), true);
+        assertEq(automatedVotingInternals.removalVotes(user5), 2);
+        /// @dev user 3 doesnt vote for user5, so user5 isnt booted
+        vm.prank(user3);
+        automatedVotingInternals.startCouncilElection(user1);
+        assertEq(automatedVotingInternals.hasVotedForMemberRemoval(user3, user5), false);
+        assertEq(automatedVotingInternals.removalVotes(user5), 2);    
+        membersUpForRemoval = automatedVotingInternals.getMembersUpForRemoval();
+        assertEq(membersUpForRemoval.length, 2);
+        assertEq(membersUpForRemoval[1], user1);
+        assertEq(automatedVotingInternals.hasVotedForMemberRemoval(user3, user1), true);
+        assertEq(automatedVotingInternals.removalVotes(user1), 1); 
+
+        /// @dev cancel ongoing elections so everything should be clear but the council stays the same
+        automatedVotingInternals.cancelOngoingElectionsInternal();
+
+        /// @dev check accounting
+        membersUpForRemoval = automatedVotingInternals.getMembersUpForRemoval();
+        assertEq(membersUpForRemoval.length, 2);
+        assertEq(membersUpForRemoval[0], address(0));
+        assertEq(membersUpForRemoval[1], address(0));
+        assertEq(automatedVotingInternals.isCouncilMember(user5), true);
+        assertEq(automatedVotingInternals.isCouncilMember(user1), true);
+        assertEq(automatedVotingInternals.removalVotes(user5), 0);
+        assertEq(automatedVotingInternals.removalVotes(user1), 0);
+        assertEq(automatedVotingInternals.hasVotedForMemberRemoval(user1, user5), false);
+        assertEq(automatedVotingInternals.hasVotedForMemberRemoval(user2, user5), false);
+        assertEq(automatedVotingInternals.hasVotedForMemberRemoval(user3, user1), false);
+    }
+
     //todo: test isWinner for the < upToIndex change
 
     //todo: test everything with when a non-existent election is put in
