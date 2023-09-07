@@ -385,6 +385,18 @@ contract AutomatedVotingTest is Test {
         assertEq(automatedVoting.isElectionFinalized(1), true);
     }
 
+    function testStartScheduledElectionAndCancelCKIPElection() public {
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        automatedVoting.startCKIPElection();
+        assertEq(automatedVoting.isElectionFinalized(1), false);
+        vm.warp(block.timestamp + 21 weeks);
+        automatedVoting.startScheduledElection();
+        assertEq(automatedVoting.isElectionFinalized(1), true);
+    }
+
     // startCouncilElection()
 
     function testStartCouncilElectionSuccess() public {
