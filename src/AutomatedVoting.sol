@@ -507,18 +507,16 @@ contract AutomatedVoting is IAutomatedVoting {
         for(uint i = 0; i < electionNumbers.length; i++) {
             if (elections[i].isFinalized == false) {
                 elections[i].isFinalized = true;
-                /// @dev if the election is a council election, clear any accounting
-                if (elections[i].theElectionType == Enums.electionType.council) {
-                    for (uint j = 0; j < council.length; j++) {
-                        for (uint k = 0; k < membersUpForRemoval.length; k++){
-                            hasVotedForMemberRemoval[council[j]][membersUpForRemoval[k]] = false;
-                        }
-                    }
-                    for (uint j = 0; j < membersUpForRemoval.length; j++) {
-                        delete membersUpForRemoval[j];
-                    }
+                
                 }
             }
+        /// @dev if there is voting for a council election, clear any accounting
+        for (uint j = 0; j < membersUpForRemoval.length; j++) {
+            for (uint k = 0; k < council.length; k++) {
+                hasVotedForMemberRemoval[council[k]][membersUpForRemoval[j]] = false;
+            }
+            removalVotes[membersUpForRemoval[j]] = 0;
+            delete membersUpForRemoval[j];
         }
     }
 
