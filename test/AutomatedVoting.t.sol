@@ -1309,10 +1309,34 @@ contract AutomatedVotingTest is Test {
         vm.prank(user2);
         automatedVotingInternals.stepDown();
         assertEq(automatedVotingInternals.isElectionFinalized(2), false);
-
+        (
+            ,
+            ,
+            ,
+            Enums.electionType theElectionType
+        ) = automatedVotingInternals.elections(1);
+        assertTrue(theElectionType == Enums.electionType.stepDown);
         automatedVotingInternals.cancelOngoingElectionsInternal();
         assertEq(automatedVotingInternals.isElectionFinalized(1), true);
         assertEq(automatedVotingInternals.isElectionFinalized(2), true);
+    }
+
+    function testCancelOngoingElectionsCKIP() public {
+        kwenta.transfer(user1, 1);
+        vm.startPrank(user1);
+        kwenta.approve(address(stakingRewards), 1);
+        stakingRewards.stake(1);
+        automatedVotingInternals.startCKIPElection();
+        assertEq(automatedVotingInternals.isElectionFinalized(1), false);
+        (
+            ,
+            ,
+            ,
+            Enums.electionType theElectionType
+        ) = automatedVotingInternals.elections(1);
+        assertTrue(theElectionType == Enums.electionType.CKIP);
+        automatedVotingInternals.cancelOngoingElectionsInternal();
+        assertEq(automatedVotingInternals.isElectionFinalized(1), true);
     }
 
     //todo: test isWinner for the < upToIndex change
