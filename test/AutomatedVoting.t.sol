@@ -10,8 +10,9 @@ import {Kwenta} from "../lib/token/contracts/Kwenta.sol";
 import {RewardEscrow} from "../lib/token/contracts/RewardEscrow.sol";
 import {AutomatedVotingInternals} from "./AutomatedVotingInternals.sol";
 import {Enums} from "../src/Enums.sol";
+import {DefaultStakingV2Setup} from "../lib/token/test/foundry/utils/setup/DefaultStakingV2Setup.t.sol";
 
-contract AutomatedVotingTest is Test {
+contract AutomatedVotingTest is DefaultStakingV2Setup {
     AutomatedVoting public automatedVoting;
     AutomatedVotingInternals public automatedVotingInternals;
     StakingRewards public stakingRewards;
