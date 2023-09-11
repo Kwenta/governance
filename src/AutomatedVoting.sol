@@ -6,12 +6,12 @@ import {IStakingRewards} from "../lib/token/contracts/interfaces/IStakingRewards
 import {Enums} from "./Enums.sol";
 
 contract AutomatedVoting is IAutomatedVoting {
-    address[] public council;
+    address[] public council; //todo: restrict to 5
     mapping(uint256 => election) public elections;
-    mapping(uint256 => mapping(address => uint256)) public voteCounts;
-    mapping(address => mapping(uint256 => bool)) hasVoted;
-    mapping(uint256 => mapping(address => bool)) public isNominated;
-    uint256[] public electionNumbers;
+    mapping(uint256 => mapping(address => uint256)) public voteCounts; //todo: put in struct
+    mapping(address => mapping(uint256 => bool)) hasVoted; //todo: switch keys, put in struct
+    mapping(uint256 => mapping(address => bool)) public isNominated; //todo: put in struct
+    uint256[] public electionNumbers; //todo: uint counter of current election
     uint256 public lastScheduledElectionStartTime;
     uint256 public lastScheduledElectionNumber;
     uint256 public lastCKIPElection;
@@ -19,17 +19,21 @@ contract AutomatedVoting is IAutomatedVoting {
 
     /// @dev this is for council removal elections
     mapping(address => uint256) public removalVotes;
-    mapping(address => mapping(address => bool)) public hasVotedForMemberRemoval;
+    mapping(address => mapping(address => bool))
+        public hasVotedForMemberRemoval;
     address[] public membersUpForRemoval;
     // mapping(uint256 => uint256) public stakedAmountsForQuorum;
 
+    //todo: change CKIP to community
+    //todo: capitalize
     struct election {
         uint256 startTime;
-        uint256 endTime;
+        uint256 endTime; //todo: remove and replace with endTime view function, use startTime + constant ELECTION_DURATION
         bool isFinalized;
-        Enums.electionType theElectionType;
+        Enums.electionType theElectionType; //todo: review enums, compress if able
         address[] candidateAddresses; // Array of candidate addresses for this election
-        address[] winningCandidates; // Array of candidates that won
+        address[] winningCandidates; // Array of candidates that won 
+        //todo: remove winningCandidates and use only candidateAddresses and actively rearrange when voting happens
     }
 
     modifier onlyCouncil() {
@@ -58,7 +62,10 @@ contract AutomatedVoting is IAutomatedVoting {
         /// @dev make sure there is no ongoing scheduled election
         /// @dev isElectionFinalized is for edge case when a scheduled election is over 3 weeks but
         /// has not been finalized yet (scheduled election will be the last election in the array)
-        if (block.timestamp >= lastScheduledElectionStartTime + 3 weeks && isElectionFinalized(lastScheduledElectionNumber)) {
+        if (
+            block.timestamp >= lastScheduledElectionStartTime + 3 weeks &&
+            isElectionFinalized(lastScheduledElectionNumber)
+        ) {
             _;
         } else {
             revert ScheduledElectionInProgress();
@@ -85,7 +92,8 @@ contract AutomatedVoting is IAutomatedVoting {
 
     modifier onlySingleElection(uint256 _election) {
         require(
-            elections[_election].theElectionType == Enums.electionType.council ||
+            elections[_election].theElectionType ==
+                Enums.electionType.council ||
                 elections[_election].theElectionType ==
                 Enums.electionType.stepDown,
             "Election not a single election"
@@ -125,7 +133,8 @@ contract AutomatedVoting is IAutomatedVoting {
         if (block.timestamp >= lastScheduledElectionStartTime + 24 weeks) {
             return 0;
         } else {
-            return 24 weeks - (block.timestamp - lastScheduledElectionStartTime);
+            return
+                24 weeks - (block.timestamp - lastScheduledElectionStartTime);
         }
     }
 
@@ -154,7 +163,12 @@ contract AutomatedVoting is IAutomatedVoting {
 
     /// @notice gets the current election numbers up for removal
     /// @return address[] the current election numbers up for removal
-    function getMembersUpForRemoval() public view override returns (address[] memory) {
+    function getMembersUpForRemoval()
+        public
+        view
+        override
+        returns (address[] memory)
+    {
         return membersUpForRemoval;
     }
 
@@ -170,18 +184,22 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @notice starts the scheduled election
     /// can only be started every 24 weeks
     function startScheduledElection() public override {
-        if (block.timestamp < lastScheduledElectionStartTime + 24 weeks || !isElectionFinalized(lastScheduledElectionNumber)) {
+        if (
+            block.timestamp < lastScheduledElectionStartTime + 24 weeks ||
+            !isElectionFinalized(lastScheduledElectionNumber)
+        ) {
             revert ElectionNotReadyToBeStarted();
         } else {
             lastScheduledElectionStartTime = block.timestamp;
             lastScheduledElectionNumber = electionNumbers.length;
-            /// @dev cancel ongoing elections before _startElection so 
+            /// @dev cancel ongoing elections before _startElection so
             /// this scheduled election isnt cancelled
             _cancelOngoingElections();
             _startElection(Enums.electionType.scheduled);
         }
     }
 
+    //todo: integrate with safe module here
     /// @notice vote in a council election
     /// @notice a 3/5 threshold of calling this function must be reached
     /// @dev rather than starting an election with a time
@@ -193,6 +211,7 @@ contract AutomatedVoting is IAutomatedVoting {
         if (!isCouncilMember(_memberToRemove)) {
             revert MemberNotOnCouncil();
         }
+        //todo: cant be address(0)
         /// @dev if this member already voted, revert
         if (hasVotedForMemberRemoval[msg.sender][_memberToRemove]) {
             revert AlreadyVoted();
@@ -201,13 +220,13 @@ contract AutomatedVoting is IAutomatedVoting {
         if (membersUpForRemoval.length == 0) {
             membersUpForRemoval.push(_memberToRemove);
         } else {
-            for(uint i = 0; i < membersUpForRemoval.length; i++) {
-            if (membersUpForRemoval[i] == _memberToRemove) {
-                break;
-            } else if (i == membersUpForRemoval.length - 1) {
-                membersUpForRemoval.push(_memberToRemove);
+            for (uint i = 0; i < membersUpForRemoval.length; i++) {
+                if (membersUpForRemoval[i] == _memberToRemove) {
+                    break;
+                } else if (i == membersUpForRemoval.length - 1) {
+                    membersUpForRemoval.push(_memberToRemove);
+                }
             }
-        }
         }
         /// @dev record vote
         hasVotedForMemberRemoval[msg.sender][_memberToRemove] = true;
@@ -232,13 +251,19 @@ contract AutomatedVoting is IAutomatedVoting {
                     delete membersUpForRemoval[i];
                 }
             }
-
+            //todo: split into 2 functions: voting for election and starting replacement election
+            //voting logic in one and starting election in another
             _startElection(Enums.electionType.council);
         }
     }
 
     /// @notice starts a CKIP election
-    function startCKIPElection() public override onlyStaker notDuringScheduledElection {
+    function startCKIPElection()
+        public
+        override
+        onlyStaker
+        notDuringScheduledElection
+    {
         /// @dev if a CKIP election is ongoing, revert
         if (block.timestamp < lastCKIPElection + 3 weeks) {
             revert ElectionNotReadyToBeStarted();
@@ -257,7 +282,7 @@ contract AutomatedVoting is IAutomatedVoting {
                 councilMemberCount++;
             }
         }
-        // make sure there is at least one council member
+        // make sure there is at least one council member //todo: can stepdown if last
         if (councilMemberCount <= 1) {
             revert CouncilMemberCannotStepDown();
         }
@@ -286,7 +311,7 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @notice nominates a candidate for a single election
     /// @param _election the election to nominate a candidate for
     /// @param candidate the candidate to nominate
-    function nominateInSingleElection(
+    function nominateInSingleElection( //todo: remove access controls, single nominate
         uint256 _election,
         address candidate
     )
@@ -354,7 +379,7 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @param candidates the candidates to vote for
     function voteInFullElection(
         uint256 _election,
-        address[] calldata candidates
+        address[] calldata candidates //todo: only vote for 1
     )
         public
         override
@@ -433,12 +458,20 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @dev internal function to finalize elections depending on type
     function _finalizeElection(uint256 _election) internal {
         elections[_election].isFinalized = true;
-        if (elections[_election].theElectionType == Enums.electionType.scheduled || elections[_election].theElectionType == Enums.electionType.CKIP) {
+        if (
+            elections[_election].theElectionType ==
+            Enums.electionType.scheduled ||
+            elections[_election].theElectionType == Enums.electionType.CKIP
+        ) {
             /// @dev this is for a full election
             (address[] memory winners, ) = getWinners(_election, 5);
             elections[_election].winningCandidates = winners;
             council = winners;
-        } else if (elections[_election].theElectionType == Enums.electionType.council || elections[_election].theElectionType == Enums.electionType.stepDown) {
+        } else if (
+            elections[_election].theElectionType ==
+            Enums.electionType.council ||
+            elections[_election].theElectionType == Enums.electionType.stepDown
+        ) {
             // if (elections[_election].theElectionType == Enums.electionType.stepDown) {
             //     uint256 quorumPercentage = stakedAmountsForQuorum[_election] * 100 / stakingRewards.totalSupply();
             //     if (quorumPercentage < 40) {
@@ -449,7 +482,7 @@ contract AutomatedVoting is IAutomatedVoting {
             /// @dev this is for a single election
             (address[] memory winners, ) = getWinners(_election, 1);
             elections[_election].winningCandidates = winners;
-            for(uint i = 0; i < council.length; i++) {
+            for (uint i = 0; i < council.length; i++) {
                 if (council[i] == address(0)) {
                     council[i] = winners[0];
                     break;
@@ -516,16 +549,26 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @dev internal helper function cancel ongoing elections when a scheduled election starts
     function _cancelOngoingElections() internal {
         //todo: optimize this
-        for(uint i = 0; i < electionNumbers.length; i++) {
+        for (uint i = 0; i < electionNumbers.length; i++) {
             if (elections[i].isFinalized == false) {
                 elections[i].isFinalized = true;
-                
-                }
             }
+        }
+        //todo:
+        // for (uint i = lastFinalizedElection; i < currentElectionNumber; i++) {
+        //     if (elections[i].isFinalized == false) {
+        //         elections[i].isFinalized = true;
+        //     }
+        // }
+        // //lastFinalizedElection = currentElectionNumber;
+
+        //todo: simplify based off council election changes
         /// @dev if there is voting for a council election, clear any accounting
         for (uint j = 0; j < membersUpForRemoval.length; j++) {
             for (uint k = 0; k < council.length; k++) {
-                hasVotedForMemberRemoval[council[k]][membersUpForRemoval[j]] = false;
+                hasVotedForMemberRemoval[council[k]][
+                    membersUpForRemoval[j]
+                ] = false;
             }
             removalVotes[membersUpForRemoval[j]] = 0;
             delete membersUpForRemoval[j];

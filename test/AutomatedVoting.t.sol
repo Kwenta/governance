@@ -16,19 +16,19 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     AutomatedVoting public automatedVoting;
     AutomatedVotingInternals public automatedVotingInternals;
     StakingRewards public stakingRewards;
-    Kwenta public kwenta;
+    // Kwenta public kwenta;
     RewardEscrow public rewardEscrow;
     address public admin;
-    address public user1;
-    address public user2;
-    address public user3;
-    address public user4;
-    address public user5;
+    // address public user1;
+    // address public user2;
+    // address public user3;
+    // address public user4;
+    // address public user5;
     address public user6;
-    uint256 public userNonce;
+    // uint256 public userNonce;
     uint256 public startTime;
 
-    function setUp() public {
+    function setUp() public override {
         /// @dev this is so lastScheduledElectionStartTime is != 0
         vm.warp(block.timestamp + 25 weeks);
         admin = createUser();
@@ -1473,8 +1473,8 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     //todo: test more of the membersUpForRemoval in startCouncil
 
     /// @dev create a new user address
-    function createUser() public returns (address) {
-        userNonce++;
-        return vm.addr(userNonce);
-    }
+    // function createUser() public returns (address) {
+    //     userNonce++;
+    //     return vm.addr(userNonce);
+    // }
 }

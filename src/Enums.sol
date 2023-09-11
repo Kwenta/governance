@@ -5,7 +5,7 @@ contract Enums {
     enum electionType {
         scheduled,
         council,
-        CKIP,
+        CKIP, //todo: change CKIP to community
         stepDown
     }
 }
