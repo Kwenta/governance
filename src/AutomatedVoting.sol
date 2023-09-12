@@ -8,7 +8,6 @@ import {Enums} from "./Enums.sol";
 contract AutomatedVoting is IAutomatedVoting {
     address[] public council; //todo: restrict to 5
     mapping(uint256 => election) public elections;
-    mapping(address => mapping(uint256 => bool)) hasVoted; //todo: switch keys, put in struct
     uint256[] public electionNumbers; //todo: uint counter of current election
     uint256 public lastScheduledElectionStartTime;
     uint256 public lastScheduledElectionNumber;
@@ -36,6 +35,7 @@ contract AutomatedVoting is IAutomatedVoting {
         //todo: remove winningCandidates and use only candidateAddresses and actively rearrange when voting happens
         mapping(address => uint256) voteCounts;
         mapping(address => bool) isNominated;
+        mapping(address => bool) hasVoted;
     }
 
     modifier onlyCouncil() {
@@ -345,7 +345,7 @@ contract AutomatedVoting is IAutomatedVoting {
         onlyDuringVoting(_election)
         onlySingleElection(_election)
     {
-        if (hasVoted[msg.sender][_election]) {
+        if (elections[_election].hasVoted[msg.sender]) {
             revert AlreadyVoted();
         }
         address[] memory candidates = new address[](1);
@@ -357,7 +357,7 @@ contract AutomatedVoting is IAutomatedVoting {
         //     uint256 userStaked = stakingRewards.balanceOf(msg.sender);
         //     stakedAmountsForQuorum[_election] += userStaked;
         // }
-        hasVoted[msg.sender][_election] = true;
+        elections[_election].hasVoted[msg.sender] = true;
         elections[_election].voteCounts[candidate]++;
     }
 
@@ -397,13 +397,13 @@ contract AutomatedVoting is IAutomatedVoting {
         if (candidates.length > 5) {
             revert TooManyCandidates();
         }
-        if (hasVoted[msg.sender][_election]) {
+        if (elections[_election].hasVoted[msg.sender]) {
             revert AlreadyVoted();
         }
         if (!_candidatesAreNominated(_election, candidates)) {
             revert CandidateNotNominated();
         }
-        hasVoted[msg.sender][_election] = true;
+        elections[_election].hasVoted[msg.sender] = true;
         for (uint256 i = 0; i < candidates.length; i++) {
             elections[_election].voteCounts[candidates[i]]++;
         }
