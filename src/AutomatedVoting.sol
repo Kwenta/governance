@@ -113,6 +113,7 @@ contract AutomatedVoting is IAutomatedVoting {
 
     //todo: modifier onlyActiveElections (for when an election gets canceled and finalized)
 
+    //todo: change to stakingV2
     constructor(address _stakingRewards) {
         stakingRewards = IStakingRewards(_stakingRewards);
         /// @dev start a scheduled election
@@ -120,6 +121,10 @@ contract AutomatedVoting is IAutomatedVoting {
         lastScheduledElectionStartTime = block.timestamp;
         lastScheduledElectionNumber = electionNumbers.length;
         _startElection(Enums.electionType.scheduled);
+    }
+
+    function electionEndTime(uint256 _election) public view override returns (uint256) {
+        return elections[_election].startTime + 3 weeks;
     }
 
     /// @notice gets the time until the next scheduled election
