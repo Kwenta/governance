@@ -320,12 +320,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVoting.electionNumbers(1), 1);
         (
             uint256 electionStartTime,
-            uint256 endTime,
             bool isFinalized,
             Enums.electionType theElectionType
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
-        assertEq(endTime, block.timestamp + 3 weeks);
         assertEq(isFinalized, false);
         assertTrue(theElectionType == Enums.electionType.scheduled);
     }
@@ -492,12 +490,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVoting.electionNumbers(1), 1);
         (
             uint256 electionStartTime,
-            uint256 endTime,
             bool isFinalized,
             Enums.electionType theElectionType
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
-        assertEq(endTime, block.timestamp + 3 weeks);
         assertEq(isFinalized, false);
         assertTrue(theElectionType == Enums.electionType.council);
     }
@@ -590,12 +586,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVoting.electionNumbers(1), 1);
         (
             uint256 electionStartTime,
-            uint256 endTime,
             bool isFinalized,
             Enums.electionType theElectionType
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
-        assertEq(endTime, block.timestamp + 3 weeks);
         assertEq(isFinalized, false);
         assertTrue(theElectionType == Enums.electionType.CKIP);
     }
@@ -704,12 +698,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVoting.electionNumbers(1), 1);
         (
             uint256 electionStartTime,
-            uint256 endTime,
             bool isFinalized,
             Enums.electionType theElectionType
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
-        assertEq(endTime, block.timestamp + 3 weeks);
         assertEq(isFinalized, false);
         assertTrue(theElectionType == Enums.electionType.stepDown);
 
@@ -1392,7 +1384,6 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         (
             ,
             ,
-            ,
             Enums.electionType theElectionType
         ) = automatedVotingInternals.elections(1);
         assertTrue(theElectionType == Enums.electionType.stepDown);
@@ -1409,7 +1400,6 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVotingInternals.startCKIPElection();
         assertEq(automatedVotingInternals.isElectionFinalized(1), false);
         (
-            ,
             ,
             ,
             Enums.electionType theElectionType

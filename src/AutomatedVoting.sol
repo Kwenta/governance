@@ -24,11 +24,14 @@ contract AutomatedVoting is IAutomatedVoting {
     address[] public membersUpForRemoval;
     // mapping(uint256 => uint256) public stakedAmountsForQuorum;
 
+    /// @notice constant for election duration
+    /// @dev 1 week nomination, 2 weeks voting
+    uint256 constant ELECTION_DURATION = 3 weeks;
+
     //todo: change CKIP to community
     //todo: capitalize
     struct election {
         uint256 startTime;
-        uint256 endTime; //todo: remove and replace with endTime view function, use startTime + constant ELECTION_DURATION
         bool isFinalized;
         Enums.electionType theElectionType; //todo: review enums, compress if able
         address[] candidateAddresses; // Array of candidate addresses for this election
@@ -84,7 +87,7 @@ contract AutomatedVoting is IAutomatedVoting {
     modifier onlyDuringVoting(uint256 _election) {
         require(
             block.timestamp >= elections[_election].startTime + 1 weeks &&
-                block.timestamp <= elections[_election].endTime,
+                block.timestamp <= electionEndTime(_election),
             "Election not in voting state"
         );
         _;
@@ -124,7 +127,7 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     function electionEndTime(uint256 _election) public view override returns (uint256) {
-        return elections[_election].startTime + 3 weeks;
+        return elections[_election].startTime + ELECTION_DURATION;
     }
 
     /// @notice gets the time until the next scheduled election
@@ -151,12 +154,12 @@ contract AutomatedVoting is IAutomatedVoting {
     ) public view override returns (uint256) {
         /// @dev if the election is over or the election number is greater than the number of elections, return 0
         if (
-            elections[_election].endTime <= block.timestamp ||
+            electionEndTime(_election) <= block.timestamp ||
             _election >= electionNumbers.length
         ) {
             return 0;
         } else {
-            return elections[_election].endTime - block.timestamp;
+            return electionEndTime(_election) - block.timestamp;
         }
     }
 
@@ -306,7 +309,7 @@ contract AutomatedVoting is IAutomatedVoting {
     function finalizeElection(uint256 _election) public override {
         if (elections[_election].isFinalized) {
             revert ElectionAlreadyFinalized();
-        } else if (block.timestamp >= elections[_election].endTime) {
+        } else if (block.timestamp >= electionEndTime(_election)) {
             _finalizeElection(_election);
         } else {
             revert ElectionNotReadyToBeFinalized();
@@ -412,7 +415,6 @@ contract AutomatedVoting is IAutomatedVoting {
         uint256 electionNumber = electionNumbers.length;
         electionNumbers.push(electionNumber);
         elections[electionNumber].startTime = block.timestamp;
-        elections[electionNumber].endTime = block.timestamp + 3 weeks;
         elections[electionNumber].isFinalized = false;
         elections[electionNumber].theElectionType = electionType;
     }
