@@ -97,9 +97,9 @@ interface IAutomatedVoting {
     /// @param Council the council member to remove
     function startCouncilElection(address Council) external;
 
-    /// @notice start an election to remove a member of the Council
-    /// @notice this is only callable by the stakers through the CKIP
-    function startCKIPElection() external;
+    /// @notice start a re-election
+    /// @notice this is only callable by the stakers
+    function startCommunityElection() external;
 
     /// @notice step down from the council
     /// @dev this triggers an election to replace the member

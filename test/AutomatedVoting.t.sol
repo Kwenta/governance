@@ -325,7 +325,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
         assertEq(isFinalized, false);
-        assertTrue(theElectionType == Enums.electionType.scheduled);
+        assertTrue(theElectionType == Enums.electionType.full);
     }
 
     function testFuzzStartScheduledElectionNotReady(uint128 time) public {
@@ -384,12 +384,12 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVoting.isElectionFinalized(1), true);
     }
 
-    function testStartScheduledElectionAndCancelCKIPElection() public {
+    function testStartScheduledElectionAndCancelCommunityElection() public {
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        automatedVoting.startCKIPElection();
+        automatedVoting.startCommunityElection();
         assertEq(automatedVoting.isElectionFinalized(1), false);
         vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
@@ -571,14 +571,14 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.startCouncilElection(user5);
     }
 
-    // startCKIPelection()
+    // startCommunityelection()
 
-    function testStartCKIPElectionSuccess() public {
+    function testStartCommunityElectionSuccess() public {
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        automatedVoting.startCKIPElection();
+        automatedVoting.startCommunityElection();
 
         /// @dev check election
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
@@ -591,57 +591,57 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
         assertEq(isFinalized, false);
-        assertTrue(theElectionType == Enums.electionType.CKIP);
+        assertTrue(theElectionType == Enums.electionType.full);
     }
 
-    function testStartCKIPElectionNotStaked() public {
+    function testStartCommunityElectionNotStaked() public {
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.CallerNotStaked.selector)
         );
-        automatedVoting.startCKIPElection();
+        automatedVoting.startCommunityElection();
     }
 
-    function testStartCKIPElectionNotReadyToStart() public {
+    function testStartCommunityElectionNotReadyToStart() public {
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        automatedVoting.startCKIPElection();
+        automatedVoting.startCommunityElection();
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAutomatedVoting.ElectionNotReadyToBeStarted.selector
             )
         );
-        automatedVoting.startCKIPElection();
+        automatedVoting.startCommunityElection();
     }
 
-    function testFuzzStartCKIPElectionNotReadyToStart(uint time) public {
+    function testFuzzStartCommunityElectionNotReadyToStart(uint time) public {
         vm.assume(time < 3 weeks);
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        automatedVoting.startCKIPElection();
+        automatedVoting.startCommunityElection();
         vm.warp(block.timestamp + time);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAutomatedVoting.ElectionNotReadyToBeStarted.selector
             )
         );
-        automatedVoting.startCKIPElection();
+        automatedVoting.startCommunityElection();
     }
 
-    function testStartCKIPElectionImmediatelyAfterCooldown() public {
+    function testStartCommunityElectionImmediatelyAfterCooldown() public {
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        automatedVoting.startCKIPElection();
+        automatedVoting.startCommunityElection();
         vm.warp(block.timestamp + 3 weeks);
-        automatedVoting.startCKIPElection();
+        automatedVoting.startCommunityElection();
     }
 
-    function testStartCKIPElectionScheduledElectionJustStarted() public {
+    function testStartCommunityElectionScheduledElectionJustStarted() public {
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
@@ -654,10 +654,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
                 IAutomatedVoting.ScheduledElectionInProgress.selector
             )
         );
-        automatedVoting.startCKIPElection();
+        automatedVoting.startCommunityElection();
     }
 
-    function testFuzzStartCKIPElectionDuringScheduledElection(uint128 time) public {
+    function testFuzzStartCommunityElectionDuringScheduledElection(uint128 time) public {
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
@@ -671,10 +671,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
                 IAutomatedVoting.ScheduledElectionInProgress.selector
             )
         );
-        automatedVoting.startCKIPElection();
+        automatedVoting.startCommunityElection();
     }
 
-    function testStartCKIPElectionScheduledElectionJustEnded() public {
+    function testStartCommunityElectionScheduledElectionJustEnded() public {
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
@@ -684,7 +684,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 3 weeks);
         automatedVoting.finalizeElection(1);
-        automatedVoting.startCKIPElection();
+        automatedVoting.startCommunityElection();
     }
 
     // stepDown()
@@ -1394,19 +1394,19 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVotingInternals.isElectionFinalized(2), true);
     }
 
-    function testCancelOngoingElectionsCKIP() public {
+    function testCancelOngoingElectionsCommunity() public {
         kwenta.transfer(user1, 1);
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        automatedVotingInternals.startCKIPElection();
+        automatedVotingInternals.startCommunityElection();
         assertEq(automatedVotingInternals.isElectionFinalized(1), false);
         (
             ,
             ,
             Enums.electionType theElectionType
         ) = automatedVotingInternals.elections(1);
-        assertTrue(theElectionType == Enums.electionType.CKIP);
+        assertTrue(theElectionType == Enums.electionType.full);
         automatedVotingInternals.cancelOngoingElectionsInternal();
         assertEq(automatedVotingInternals.isElectionFinalized(1), true);
     }
@@ -1459,7 +1459,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
     //todo: test onlyFullElection
 
-    //todo: test elections 1ike CKIP reelection for when another re-election
+    //todo: test elections 1ike Community reelection for when another re-election
     // is started right at 3 weeks end but the first election is not finalized yet
 
     //todo: test more of the membersUpForRemoval in startCouncil

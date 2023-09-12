@@ -3,9 +3,8 @@ pragma solidity ^0.8.19;
 
 contract Enums {
     enum electionType {
-        scheduled,
+        full,
         council,
-        CKIP, //todo: change CKIP to community
         stepDown
     }
 }

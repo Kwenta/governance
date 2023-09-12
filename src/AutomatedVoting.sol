@@ -16,7 +16,10 @@ contract AutomatedVoting is IAutomatedVoting {
 
     uint256 public lastScheduledElectionStartTime;
     uint256 public lastScheduledElectionNumber;
-    uint256 public lastCKIPElection;
+
+    /// @notice tracker for timestamp start of last community election
+    uint256 public lastCommunityElection;
+
     IStakingRewards public stakingRewards;
 
     /// @dev this is for council removal elections
@@ -30,7 +33,7 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @dev 1 week nomination, 2 weeks voting
     uint256 constant ELECTION_DURATION = 3 weeks;
 
-    //todo: change CKIP to community
+    //todo: change community to community
     //todo: capitalize
     struct election {
         uint256 startTime;
@@ -110,9 +113,8 @@ contract AutomatedVoting is IAutomatedVoting {
 
     modifier onlyFullElection(uint256 _election) {
         require(
-            elections[_election].theElectionType == Enums.electionType.CKIP ||
                 elections[_election].theElectionType ==
-                Enums.electionType.scheduled,
+                Enums.electionType.full,
             "Election not a full election"
         );
         _;
@@ -127,7 +129,7 @@ contract AutomatedVoting is IAutomatedVoting {
         /// (bypasses election 0 not finalized check)
         lastScheduledElectionStartTime = block.timestamp;
         lastScheduledElectionNumber = electionNumbers;
-        _startElection(Enums.electionType.scheduled);
+        _startElection(Enums.electionType.full);
     }
 
     function electionEndTime(uint256 _election) public view override returns (uint256) {
@@ -207,7 +209,7 @@ contract AutomatedVoting is IAutomatedVoting {
             /// @dev cancel ongoing elections before _startElection so
             /// this scheduled election isnt cancelled
             _cancelOngoingElections();
-            _startElection(Enums.electionType.scheduled);
+            _startElection(Enums.electionType.full);
         }
     }
 
@@ -269,19 +271,19 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    /// @notice starts a CKIP election
-    function startCKIPElection()
+    /// @notice starts a community election
+    function startCommunityElection()
         public
         override
         onlyStaker
         notDuringScheduledElection
     {
-        /// @dev if a CKIP election is ongoing, revert
-        if (block.timestamp < lastCKIPElection + 3 weeks) {
+        /// @dev if a community election is ongoing, revert
+        if (block.timestamp < lastCommunityElection + 3 weeks) {
             revert ElectionNotReadyToBeStarted();
         } else {
-            lastCKIPElection = block.timestamp;
-            _startElection(Enums.electionType.CKIP);
+            lastCommunityElection = block.timestamp;
+            _startElection(Enums.electionType.full);
         }
     }
 
@@ -358,7 +360,7 @@ contract AutomatedVoting is IAutomatedVoting {
         if (!_candidatesAreNominated(_election, candidates)) {
             revert CandidateNotNominated();
         }
-        // if (elections[_election].theElectionType == Enums.electionType.CKIP) {
+        // if (elections[_election].theElectionType == Enums.electionType.community) {
         //     uint256 userStaked = stakingRewards.balanceOf(msg.sender);
         //     stakedAmountsForQuorum[_election] += userStaked;
         // }
@@ -471,8 +473,7 @@ contract AutomatedVoting is IAutomatedVoting {
         elections[_election].isFinalized = true;
         if (
             elections[_election].theElectionType ==
-            Enums.electionType.scheduled ||
-            elections[_election].theElectionType == Enums.electionType.CKIP
+            Enums.electionType.full
         ) {
             /// @dev this is for a full election
             (address[] memory winners, ) = getWinners(_election, 5);
