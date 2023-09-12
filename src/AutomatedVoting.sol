@@ -8,7 +8,6 @@ import {Enums} from "./Enums.sol";
 contract AutomatedVoting is IAutomatedVoting {
     address[] public council; //todo: restrict to 5
     mapping(uint256 => election) public elections;
-    mapping(uint256 => mapping(address => uint256)) public voteCounts; //todo: put in struct
     mapping(address => mapping(uint256 => bool)) hasVoted; //todo: switch keys, put in struct
     mapping(uint256 => mapping(address => bool)) public isNominated; //todo: put in struct
     uint256[] public electionNumbers; //todo: uint counter of current election
@@ -36,6 +35,7 @@ contract AutomatedVoting is IAutomatedVoting {
         Enums.electionType theElectionType; //todo: review enums, compress if able
         address[] candidateAddresses; // Array of candidate addresses for this election
         //todo: remove winningCandidates and use only candidateAddresses and actively rearrange when voting happens
+        mapping(address => uint256) voteCounts;
     }
 
     modifier onlyCouncil() {
@@ -358,7 +358,7 @@ contract AutomatedVoting is IAutomatedVoting {
         //     stakedAmountsForQuorum[_election] += userStaked;
         // }
         hasVoted[msg.sender][_election] = true;
-        voteCounts[_election][candidate]++;
+        elections[_election].voteCounts[candidate]++;
     }
 
     /// @notice nominates candidates for a full election
@@ -405,7 +405,7 @@ contract AutomatedVoting is IAutomatedVoting {
         }
         hasVoted[msg.sender][_election] = true;
         for (uint256 i = 0; i < candidates.length; i++) {
-            voteCounts[_election][candidates[i]]++;
+            elections[_election].voteCounts[candidates[i]]++;
         }
     }
 
@@ -520,10 +520,10 @@ contract AutomatedVoting is IAutomatedVoting {
             ) {
                 address candidate = elections[electionId].candidateAddresses[j];
                 if (
-                    voteCounts[electionId][candidate] > maxVotes &&
+                    elections[electionId].voteCounts[candidate] > maxVotes &&
                     !isWinner(candidate, winners, i)
                 ) {
-                    maxVotes = voteCounts[electionId][candidate];
+                    maxVotes = elections[electionId].voteCounts[candidate];
                     bestCandidate = candidate;
                 }
             }
