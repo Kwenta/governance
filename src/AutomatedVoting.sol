@@ -9,7 +9,6 @@ contract AutomatedVoting is IAutomatedVoting {
     address[] public council; //todo: restrict to 5
     mapping(uint256 => election) public elections;
     mapping(address => mapping(uint256 => bool)) hasVoted; //todo: switch keys, put in struct
-    mapping(uint256 => mapping(address => bool)) public isNominated; //todo: put in struct
     uint256[] public electionNumbers; //todo: uint counter of current election
     uint256 public lastScheduledElectionStartTime;
     uint256 public lastScheduledElectionNumber;
@@ -36,6 +35,7 @@ contract AutomatedVoting is IAutomatedVoting {
         address[] candidateAddresses; // Array of candidate addresses for this election
         //todo: remove winningCandidates and use only candidateAddresses and actively rearrange when voting happens
         mapping(address => uint256) voteCounts;
+        mapping(address => bool) isNominated;
     }
 
     modifier onlyCouncil() {
@@ -329,7 +329,7 @@ contract AutomatedVoting is IAutomatedVoting {
         onlySingleElection(_election)
     {
         elections[_election].candidateAddresses.push(candidate);
-        isNominated[_election][candidate] = true;
+        elections[_election].isNominated[candidate] = true;
     }
 
     /// @notice votes for a candidate in a single election
@@ -377,7 +377,7 @@ contract AutomatedVoting is IAutomatedVoting {
         for (uint256 i = 0; i < candidates.length; i++) {
             //todo: optimize this to not repeat the same candidates
             elections[_election].candidateAddresses.push(candidates[i]);
-            isNominated[_election][candidates[i]] = true;
+            elections[_election].isNominated[candidates[i]] = true;
         }
     }
 
@@ -424,7 +424,7 @@ contract AutomatedVoting is IAutomatedVoting {
         address[] memory candidates
     ) internal view returns (bool) {
         for (uint256 i = 0; i < candidates.length; i++) {
-            if (isNominated[_election][candidates[i]] == false) {
+            if (elections[_election].isNominated[candidates[i]] == false) {
                 return false;
             }
         }
