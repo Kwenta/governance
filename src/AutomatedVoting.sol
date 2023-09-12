@@ -9,19 +9,24 @@ import {Enums} from "./Enums.sol";
 contract AutomatedVoting is IAutomatedVoting {
     /// @notice array of council members
     address[] public council;
-    
+
+    /// @notice mapping of election number to election
     mapping(uint256 => election) public elections;
 
     /// @notice counter for elections
     /// @dev always stores the next election number
     uint256 public electionNumbers;
 
+    /// @notice tracker for timestamp start of last scheduled election
     uint256 public lastScheduledElectionStartTime;
+
+    /// @notice tracker for last scheduled election number
     uint256 public lastScheduledElectionNumber;
 
     /// @notice tracker for timestamp start of last community election
     uint256 public lastCommunityElection;
 
+    /// @notice staking rewards contract
     IStakingRewards public stakingRewards;
 
     /// @dev this is for council removal elections
