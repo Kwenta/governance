@@ -549,7 +549,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.stepDown();
     }
 
-    function testStepDownCannotStepDown() public {
+    function testEveryoneCanStepDown() public {
         vm.prank(user1);
         automatedVoting.stepDown();
         vm.prank(user3);
@@ -558,12 +558,6 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.stepDown();
         vm.prank(user5);
         automatedVoting.stepDown();
-        /// @dev cant step down because they are last member
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAutomatedVoting.CouncilMemberCannotStepDown.selector
-            )
-        );
         vm.prank(user2);
         automatedVoting.stepDown();
     }

@@ -240,10 +240,6 @@ contract AutomatedVoting is IAutomatedVoting {
                 councilMemberCount++;
             }
         }
-        // make sure there is at least one council member //todo: can stepdown if last
-        if (councilMemberCount <= 1) {
-            revert CouncilMemberCannotStepDown();
-        }
         // burn msg.sender rights
         for (uint i = 0; i < council.length; i++) {
             if (council[i] == msg.sender) {
