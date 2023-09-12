@@ -325,7 +325,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
         assertEq(isFinalized, false);
-        assertTrue(theElectionType == Enums.electionType.full);
+        assertTrue(theElectionType == Enums.electionType.scheduled);
     }
 
     function testFuzzStartScheduledElectionNotReady(uint128 time) public {
@@ -419,7 +419,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
         assertEq(isFinalized, false);
-        assertTrue(theElectionType == Enums.electionType.full);
+        assertTrue(theElectionType == Enums.electionType.community);
     }
 
     function testStartCommunityElectionNotStaked() public {
@@ -531,7 +531,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
         assertEq(isFinalized, false);
-        assertTrue(theElectionType == Enums.electionType.stepDown);
+        assertTrue(theElectionType == Enums.electionType.single);
 
         address[] memory council = automatedVoting.getCouncil();
         assertEq(council.length, 5);
@@ -1187,7 +1187,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
             ,
             Enums.electionType theElectionType
         ) = automatedVotingInternals.elections(1);
-        assertTrue(theElectionType == Enums.electionType.stepDown);
+        assertTrue(theElectionType == Enums.electionType.single);
         automatedVotingInternals.cancelOngoingElectionsInternal();
         assertEq(automatedVotingInternals.isElectionFinalized(1), true);
         assertEq(automatedVotingInternals.isElectionFinalized(2), true);
@@ -1205,7 +1205,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
             ,
             Enums.electionType theElectionType
         ) = automatedVotingInternals.elections(1);
-        assertTrue(theElectionType == Enums.electionType.full);
+        assertTrue(theElectionType == Enums.electionType.community);
         automatedVotingInternals.cancelOngoingElectionsInternal();
         assertEq(automatedVotingInternals.isElectionFinalized(1), true);
     }

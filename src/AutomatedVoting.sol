@@ -105,9 +105,7 @@ contract AutomatedVoting is IAutomatedVoting {
     modifier onlySingleElection(uint256 _election) {
         require(
             elections[_election].theElectionType ==
-                Enums.electionType.council ||
-                elections[_election].theElectionType ==
-                Enums.electionType.stepDown,
+                Enums.electionType.single,
             "Election not a single election"
         );
         _;
@@ -116,7 +114,7 @@ contract AutomatedVoting is IAutomatedVoting {
     modifier onlyFullElection(uint256 _election) {
         require(
                 elections[_election].theElectionType ==
-                Enums.electionType.full,
+                Enums.electionType.scheduled || elections[_election].theElectionType == Enums.electionType.community,
             "Election not a full election"
         );
         _;
@@ -132,7 +130,7 @@ contract AutomatedVoting is IAutomatedVoting {
         /// (bypasses election 0 not finalized check)
         lastScheduledElectionStartTime = block.timestamp;
         lastScheduledElectionNumber = electionNumbers;
-        _startElection(Enums.electionType.full);
+        _startElection(Enums.electionType.scheduled);
     }
 
     function electionEndTime(uint256 _election) public view override returns (uint256) {
@@ -201,7 +199,7 @@ contract AutomatedVoting is IAutomatedVoting {
             /// @dev cancel ongoing elections before _startElection so
             /// this scheduled election isnt cancelled
             _cancelOngoingElections();
-            _startElection(Enums.electionType.full);
+            _startElection(Enums.electionType.scheduled);
         }
     }
 
@@ -214,7 +212,7 @@ contract AutomatedVoting is IAutomatedVoting {
         address _memberToRemove
     ) public override onlyCouncil notDuringScheduledElection {
         //todo: integrate with safe here
-        _startElection(Enums.electionType.council);
+        _startElection(Enums.electionType.single);
     }
 
     /// @notice starts a community election
@@ -229,7 +227,7 @@ contract AutomatedVoting is IAutomatedVoting {
             revert ElectionNotReadyToBeStarted();
         } else {
             lastCommunityElection = block.timestamp;
-            _startElection(Enums.electionType.full);
+            _startElection(Enums.electionType.community);
         }
     }
 
@@ -253,7 +251,7 @@ contract AutomatedVoting is IAutomatedVoting {
             }
         }
         // start election state
-        _startElection(Enums.electionType.stepDown);
+        _startElection(Enums.electionType.single);
     }
 
     /// @notice finalizes an election
@@ -419,23 +417,25 @@ contract AutomatedVoting is IAutomatedVoting {
         elections[_election].isFinalized = true;
         if (
             elections[_election].theElectionType ==
-            Enums.electionType.full
+            Enums.electionType.scheduled
         ) {
+            
             /// @dev this is for a full election
             (address[] memory winners, ) = getWinners(_election, 5);
             council = winners;
-        } else if (
-            elections[_election].theElectionType ==
-            Enums.electionType.council ||
-            elections[_election].theElectionType == Enums.electionType.stepDown
-        ) {
-            // if (elections[_election].theElectionType == Enums.electionType.stepDown) {
+        } else if (elections[_election].theElectionType ==
+            Enums.electionType.community) {
+            // if (elections[_election].theElectionType == Enums.electionType.single) {
             //     uint256 quorumPercentage = stakedAmountsForQuorum[_election] * 100 / stakingRewards.totalSupply();
             //     if (quorumPercentage < 40) {
             //         //todo: emit event that quorum was not reached
             //         return;
             //     }
             // }
+        }else if (
+            elections[_election].theElectionType ==
+            Enums.electionType.single
+        ) {
             /// @dev this is for a single election
             (address[] memory winners, ) = getWinners(_election, 1);
             for (uint i = 0; i < council.length; i++) {
