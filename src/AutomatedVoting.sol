@@ -7,7 +7,9 @@ import {Enums} from "./Enums.sol";
 
 //todo: integrate with safe module here
 contract AutomatedVoting is IAutomatedVoting {
-    address[] public council; //todo: restrict to 5
+    /// @notice array of council members
+    address[] public council;
+    
     mapping(uint256 => election) public elections;
 
     /// @notice counter for elections
@@ -124,6 +126,7 @@ contract AutomatedVoting is IAutomatedVoting {
 
     //todo: change to stakingV2
     constructor(address _stakingRewards) {
+        council = new address[](5);
         stakingRewards = IStakingRewards(_stakingRewards);
         /// @dev start a scheduled election
         /// (bypasses election 0 not finalized check)
