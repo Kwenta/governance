@@ -5,10 +5,15 @@ import {IAutomatedVoting} from "./interfaces/IAutomatedVoting.sol";
 import {IStakingRewards} from "../lib/token/contracts/interfaces/IStakingRewards.sol";
 import {Enums} from "./Enums.sol";
 
+//todo: integrate with safe module here
 contract AutomatedVoting is IAutomatedVoting {
     address[] public council; //todo: restrict to 5
     mapping(uint256 => election) public elections;
-    uint256[] public electionNumbers; //todo: uint counter of current election
+
+    /// @notice counter for elections
+    /// @dev always stores the next election number
+    uint256 public electionNumbers;
+
     uint256 public lastScheduledElectionStartTime;
     uint256 public lastScheduledElectionNumber;
     uint256 public lastCKIPElection;
@@ -121,7 +126,7 @@ contract AutomatedVoting is IAutomatedVoting {
         /// @dev start a scheduled election
         /// (bypasses election 0 not finalized check)
         lastScheduledElectionStartTime = block.timestamp;
-        lastScheduledElectionNumber = electionNumbers.length;
+        lastScheduledElectionNumber = electionNumbers;
         _startElection(Enums.electionType.scheduled);
     }
 
@@ -154,7 +159,7 @@ contract AutomatedVoting is IAutomatedVoting {
         /// @dev if the election is over or the election number is greater than the number of elections, return 0
         if (
             electionEndTime(_election) <= block.timestamp ||
-            _election >= electionNumbers.length
+            _election >= electionNumbers
         ) {
             return 0;
         } else {
@@ -198,7 +203,7 @@ contract AutomatedVoting is IAutomatedVoting {
             revert ElectionNotReadyToBeStarted();
         } else {
             lastScheduledElectionStartTime = block.timestamp;
-            lastScheduledElectionNumber = electionNumbers.length;
+            lastScheduledElectionNumber = electionNumbers;
             /// @dev cancel ongoing elections before _startElection so
             /// this scheduled election isnt cancelled
             _cancelOngoingElections();
@@ -411,8 +416,8 @@ contract AutomatedVoting is IAutomatedVoting {
 
     /// @dev starts an election internally by recording state
     function _startElection(Enums.electionType electionType) internal {
-        uint256 electionNumber = electionNumbers.length;
-        electionNumbers.push(electionNumber);
+        uint256 electionNumber = electionNumbers;
+        electionNumbers++;
         elections[electionNumber].startTime = block.timestamp;
         elections[electionNumber].isFinalized = false;
         elections[electionNumber].theElectionType = electionType;
@@ -553,7 +558,7 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @dev internal helper function cancel ongoing elections when a scheduled election starts
     function _cancelOngoingElections() internal {
         //todo: optimize this
-        for (uint i = 0; i < electionNumbers.length; i++) {
+        for (uint i = 0; i < electionNumbers; i++) {
             if (elections[i].isFinalized == false) {
                 elections[i].isFinalized = true;
             }

@@ -317,7 +317,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.startScheduledElection();
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
         assertEq(automatedVoting.lastScheduledElectionStartTime(), block.timestamp);
-        assertEq(automatedVoting.electionNumbers(1), 1);
+        assertEq(automatedVoting.electionNumbers(), 2);
         (
             uint256 electionStartTime,
             bool isFinalized,
@@ -487,7 +487,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         /// @dev check election
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
         assertEq(automatedVoting.lastScheduledElectionStartTime(), block.timestamp - 3 weeks);
-        assertEq(automatedVoting.electionNumbers(1), 1);
+        assertEq(automatedVoting.electionNumbers(), 2);
         (
             uint256 electionStartTime,
             bool isFinalized,
@@ -583,7 +583,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         /// @dev check election
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
         assertEq(automatedVoting.lastScheduledElectionStartTime(), block.timestamp - 3 weeks);
-        assertEq(automatedVoting.electionNumbers(1), 1);
+        assertEq(automatedVoting.electionNumbers(), 2);
         (
             uint256 electionStartTime,
             bool isFinalized,
@@ -695,7 +695,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
         assertFalse(automatedVoting.isCouncilMember(user1));
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
-        assertEq(automatedVoting.electionNumbers(1), 1);
+        assertEq(automatedVoting.electionNumbers(), 2);
         (
             uint256 electionStartTime,
             bool isFinalized,
