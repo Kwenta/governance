@@ -35,7 +35,6 @@ contract AutomatedVoting is IAutomatedVoting {
         bool isFinalized;
         Enums.electionType theElectionType; //todo: review enums, compress if able
         address[] candidateAddresses; // Array of candidate addresses for this election
-        address[] winningCandidates; // Array of candidates that won 
         //todo: remove winningCandidates and use only candidateAddresses and actively rearrange when voting happens
     }
 
@@ -472,7 +471,6 @@ contract AutomatedVoting is IAutomatedVoting {
         ) {
             /// @dev this is for a full election
             (address[] memory winners, ) = getWinners(_election, 5);
-            elections[_election].winningCandidates = winners;
             council = winners;
         } else if (
             elections[_election].theElectionType ==
@@ -488,7 +486,6 @@ contract AutomatedVoting is IAutomatedVoting {
             // }
             /// @dev this is for a single election
             (address[] memory winners, ) = getWinners(_election, 1);
-            elections[_election].winningCandidates = winners;
             for (uint i = 0; i < council.length; i++) {
                 if (council[i] == address(0)) {
                     council[i] = winners[0];
