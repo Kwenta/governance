@@ -29,11 +29,6 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @notice staking rewards contract
     IStakingRewards public stakingRewards;
 
-    /// @dev this is for council removal elections
-    mapping(address => uint256) public removalVotes;
-    mapping(address => mapping(address => bool))
-        public hasVotedForMemberRemoval;
-    address[] public membersUpForRemoval;
     // mapping(uint256 => uint256) public stakedAmountsForQuorum;
 
     /// @notice constant for election duration
@@ -183,17 +178,6 @@ contract AutomatedVoting is IAutomatedVoting {
         return council;
     }
 
-    /// @notice gets the current election numbers up for removal
-    /// @return address[] the current election numbers up for removal
-    function getMembersUpForRemoval()
-        public
-        view
-        override
-        returns (address[] memory)
-    {
-        return membersUpForRemoval;
-    }
-
     /// @notice checks if an election is finalized
     /// @param _election the election to check
     /// @return bool election is finalized
@@ -229,54 +213,8 @@ contract AutomatedVoting is IAutomatedVoting {
     function startCouncilElection(
         address _memberToRemove
     ) public override onlyCouncil notDuringScheduledElection {
-        /// @dev if the member to remove is not on the council, revert
-        if (!isCouncilMember(_memberToRemove)) {
-            revert MemberNotOnCouncil();
-        }
-        //todo: cant be address(0)
-        /// @dev if this member already voted, revert
-        if (hasVotedForMemberRemoval[msg.sender][_memberToRemove]) {
-            revert AlreadyVoted();
-        }
-        /// @dev this is to add the member to the array if they are not already in it
-        if (membersUpForRemoval.length == 0) {
-            membersUpForRemoval.push(_memberToRemove);
-        } else {
-            for (uint i = 0; i < membersUpForRemoval.length; i++) {
-                if (membersUpForRemoval[i] == _memberToRemove) {
-                    break;
-                } else if (i == membersUpForRemoval.length - 1) {
-                    membersUpForRemoval.push(_memberToRemove);
-                }
-            }
-        }
-        /// @dev record vote
-        hasVotedForMemberRemoval[msg.sender][_memberToRemove] = true;
-        removalVotes[_memberToRemove]++;
-
-        /// @dev if threshold is reached, remove member and start election
-        if (removalVotes[_memberToRemove] >= 3) {
-            /// @dev burn rights
-            for (uint i = 0; i < council.length; i++) {
-                if (council[i] == _memberToRemove) {
-                    delete council[i];
-                }
-            }
-
-            /// @dev clear all counting/tracking for this member
-            removalVotes[_memberToRemove] = 0;
-            for (uint i = 0; i < council.length; i++) {
-                hasVotedForMemberRemoval[council[i]][_memberToRemove] = false;
-            }
-            for (uint i = 0; i < membersUpForRemoval.length; i++) {
-                if (membersUpForRemoval[i] == _memberToRemove) {
-                    delete membersUpForRemoval[i];
-                }
-            }
-            //todo: split into 2 functions: voting for election and starting replacement election
-            //voting logic in one and starting election in another
-            _startElection(Enums.electionType.council);
-        }
+        //todo: integrate with safe here
+        _startElection(Enums.electionType.council);
     }
 
     /// @notice starts a community election
@@ -579,18 +517,6 @@ contract AutomatedVoting is IAutomatedVoting {
         //     }
         // }
         // //lastFinalizedElection = currentElectionNumber;
-
-        //todo: simplify based off council election changes
-        /// @dev if there is voting for a council election, clear any accounting
-        for (uint j = 0; j < membersUpForRemoval.length; j++) {
-            for (uint k = 0; k < council.length; k++) {
-                hasVotedForMemberRemoval[council[k]][
-                    membersUpForRemoval[j]
-                ] = false;
-            }
-            removalVotes[membersUpForRemoval[j]] = 0;
-            delete membersUpForRemoval[j];
-        }
     }
 
     //todo: special functionality to boot someone off
