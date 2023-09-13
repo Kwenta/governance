@@ -101,11 +101,6 @@ contract AutomatedVoting is IAutomatedVoting {
     constructor(address _stakingRewardsV2) {
         council = new address[](5);
         stakingRewardsV2 = IStakingRewardsV2(_stakingRewardsV2);
-        /// @dev start a scheduled election
-        /// (bypasses election 0 not finalized check)
-        lastScheduledElectionStartTime = block.timestamp;
-        lastScheduledElectionNumber = electionNumbers;
-        _startElection(Enums.electionType.scheduled);
     }
 
     function electionEndTime(
@@ -167,7 +162,7 @@ contract AutomatedVoting is IAutomatedVoting {
     function startScheduledElection() public override {
         if (
             block.timestamp < lastScheduledElectionStartTime + 24 weeks ||
-            !isElectionFinalized(lastScheduledElectionNumber)
+            (!isElectionFinalized(lastScheduledElectionNumber) && lastScheduledElectionNumber != 0)
         ) {
             revert ElectionNotReadyToBeStarted();
         } else {
