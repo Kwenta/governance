@@ -298,9 +298,7 @@ contract AutomatedVoting is IAutomatedVoting {
         if (elections[_election].hasVoted[msg.sender]) {
             revert AlreadyVoted();
         }
-        address[] memory candidates = new address[](1);
-        candidates[0] = candidate;
-        if (!_candidatesAreNominated(_election, candidates)) {
+        if (elections[_election].isNominated[candidate] == false) {
             revert CandidateNotNominated();
         }
         if (
@@ -314,7 +312,11 @@ contract AutomatedVoting is IAutomatedVoting {
         }
         elections[_election].hasVoted[msg.sender] = true;
         elections[_election].voteCounts[candidate]++;
-        _sortCandidates(_election, candidate, elections[_election].voteCounts[candidate]);
+        _sortCandidates(
+            _election,
+            candidate,
+            elections[_election].voteCounts[candidate]
+        );
     }
 
     /// @dev starts an election internally by recording state
@@ -324,19 +326,6 @@ contract AutomatedVoting is IAutomatedVoting {
         elections[electionNumber].startTime = block.timestamp;
         elections[electionNumber].isFinalized = false;
         elections[electionNumber].theElectionType = electionType;
-    }
-
-    /// @dev helper function to determine if the candidates are nominated
-    function _candidatesAreNominated(
-        uint256 _election,
-        address[] memory candidates
-    ) internal view returns (bool) {
-        for (uint256 i = 0; i < candidates.length; i++) {
-            if (elections[_election].isNominated[candidates[i]] == false) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /// @notice checks if a voter is a council member
