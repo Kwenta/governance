@@ -11,7 +11,7 @@ contract AutomatedVoting is IAutomatedVoting {
     address[] public council;
 
     /// @notice mapping of election number to election
-    mapping(uint256 => election) public elections;
+    mapping(uint256 => Election) public elections;
 
     /// @notice counter for elections
     /// @dev always stores the next election number
@@ -35,12 +35,10 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @dev 1 week nomination, 2 weeks voting
     uint256 constant ELECTION_DURATION = 3 weeks;
 
-    //todo: change community to community
-    //todo: capitalize
-    struct election {
+    struct Election {
         uint256 startTime;
         bool isFinalized;
-        Enums.electionType theElectionType; //todo: review enums, compress if able
+        Enums.electionType theElectionType;
         address[] candidateAddresses; // Array of candidate addresses for this election
         //todo: remove winningCandidates and use only candidateAddresses and actively rearrange when voting happens
         mapping(address => uint256) voteCounts;
@@ -98,7 +96,6 @@ contract AutomatedVoting is IAutomatedVoting {
 
     //todo: modifier onlyActiveElections (for when an election gets canceled and finalized)
 
-    //todo: change to stakingV2
     constructor(address _stakingRewardsV2) {
         council = new address[](5);
         stakingRewardsV2 = IStakingRewardsV2(_stakingRewardsV2);
@@ -243,7 +240,7 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @notice nominates a candidate
     /// @param _election the election to nominate a candidate for
     /// @param candidate the candidate to nominate
-    function nominateCandidate( //todo: remove access controls, single nominate
+    function nominateCandidate(
         uint256 _election,
         address candidate
     )
@@ -463,17 +460,6 @@ contract AutomatedVoting is IAutomatedVoting {
         // }
         // //lastFinalizedElection = currentElectionNumber;
     }
-
-    //todo: special functionality to boot someone off
-    //todo: voting is one function/idea (stakers do it)
-
-    //full council election
-    //single council election
-
-    //todo: no quorum, whoever has the most at the end
-    //remove hasFinalized
-
-    //removing council member has quorum
 
     //todo: make sure someone can't become a council member twice
     // check this on single elections
