@@ -57,7 +57,7 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     modifier wasStakedBeforeElection(uint256 _election) {
-        if(_wasStakedBeforeElection(msg.sender, _election)) {
+        if (_wasStakedBeforeElection(msg.sender, _election)) {
             _;
         } else {
             revert CallerWasNotStakedBeforeElectionStart();
@@ -108,7 +108,9 @@ contract AutomatedVoting is IAutomatedVoting {
         _startElection(Enums.electionType.scheduled);
     }
 
-    function electionEndTime(uint256 _election) public view override returns (uint256) {
+    function electionEndTime(
+        uint256 _election
+    ) public view override returns (uint256) {
         return elections[_election].startTime + ELECTION_DURATION;
     }
 
@@ -204,7 +206,7 @@ contract AutomatedVoting is IAutomatedVoting {
     {
         if (stakingRewardsV2.balanceOf(msg.sender) == 0) {
             revert CallerNotStaked();
-        } 
+        }
         /// @dev if a community election is ongoing, revert
         if (block.timestamp < lastCommunityElection + 3 weeks) {
             revert ElectionNotReadyToBeStarted();
@@ -274,7 +276,7 @@ contract AutomatedVoting is IAutomatedVoting {
         onlyDuringNomination(_election)
     {
         for (uint256 i = 0; i < candidates.length; i++) {
-            if(!elections[_election].isNominated[candidates[i]]) {
+            if (!elections[_election].isNominated[candidates[i]]) {
                 elections[_election].candidateAddresses.push(candidates[i]);
                 elections[_election].isNominated[candidates[i]] = true;
             }
@@ -301,8 +303,13 @@ contract AutomatedVoting is IAutomatedVoting {
         if (!_candidatesAreNominated(_election, candidates)) {
             revert CandidateNotNominated();
         }
-        if (elections[_election].theElectionType == Enums.electionType.community) {
-            uint256 userStaked = stakingRewardsV2.balanceAtTime(msg.sender, elections[_election].startTime);
+        if (
+            elections[_election].theElectionType == Enums.electionType.community
+        ) {
+            uint256 userStaked = stakingRewardsV2.balanceAtTime(
+                msg.sender,
+                elections[_election].startTime
+            );
             elections[_election].stakedAmountsForQuorum += userStaked;
         }
         elections[_election].hasVoted[msg.sender] = true;
@@ -348,7 +355,10 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     /// @dev helper function to determine if a voter was staked before the election start
-    function _wasStakedBeforeElection(address voter, uint256 _election) internal view returns (bool isStaker) {
+    function _wasStakedBeforeElection(
+        address voter,
+        uint256 _election
+    ) internal view returns (bool isStaker) {
         uint256 electionStartTime = elections[_election].startTime;
         if (stakingRewardsV2.balanceAtTime(voter, electionStartTime) > 0) {
             return true;
@@ -357,40 +367,42 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    function _checkIfQuorumReached(uint256 _election) internal view returns (bool) {
+    function _checkIfQuorumReached(
+        uint256 _election
+    ) internal view returns (bool) {
         uint256 electionStartTime = elections[_election].startTime;
-        uint256 quorumPercentage = elections[_election].stakedAmountsForQuorum * 100 / stakingRewardsV2.totalSupplyAtTime(electionStartTime);
-                if (quorumPercentage < 40) {
-                    return false;
-                } else {
-                    return true;
-                }
+        uint256 quorumPercentage = (elections[_election]
+            .stakedAmountsForQuorum * 100) /
+            stakingRewardsV2.totalSupplyAtTime(electionStartTime);
+        if (quorumPercentage < 40) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     /// @dev internal function to finalize elections depending on type
     function _finalizeElection(uint256 _election) internal {
         elections[_election].isFinalized = true;
         if (
-            elections[_election].theElectionType ==
-            Enums.electionType.scheduled
+            elections[_election].theElectionType == Enums.electionType.scheduled
         ) {
-            
             /// @dev this is for a full election
             (address[] memory winners, ) = getWinners(_election, 5);
             council = winners;
-        } else if (elections[_election].theElectionType ==
-            Enums.electionType.community) {
-            if(_checkIfQuorumReached(_election)){
+        } else if (
+            elections[_election].theElectionType == Enums.electionType.community
+        ) {
+            if (_checkIfQuorumReached(_election)) {
                 /// @dev this is for a full election
-            (address[] memory winners, ) = getWinners(_election, 5);
-            council = winners;
+                (address[] memory winners, ) = getWinners(_election, 5);
+                council = winners;
             } else {
                 /// @dev do nothing because quorum not reached
                 //todo: emit event
             }
-        }else if (
-            elections[_election].theElectionType ==
-            Enums.electionType.single
+        } else if (
+            elections[_election].theElectionType == Enums.electionType.single
         ) {
             /// @dev this is for a single election
             (address[] memory winners, ) = getWinners(_election, 1);
