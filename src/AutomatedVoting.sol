@@ -259,8 +259,7 @@ contract AutomatedVoting is IAutomatedVoting {
         wasStakedBeforeElection(_election)
         onlyDuringNomination(_election)
     {
-        elections[_election].candidateAddresses.push(candidate);
-        elections[_election].isNominated[candidate] = true;
+        _nominate(_election, candidate);
     }
 
     /// @notice nominates multiple candidates
@@ -276,11 +275,21 @@ contract AutomatedVoting is IAutomatedVoting {
         onlyDuringNomination(_election)
     {
         for (uint256 i = 0; i < candidates.length; i++) {
-            if (!elections[_election].isNominated[candidates[i]]) {
-                elections[_election].candidateAddresses.push(candidates[i]);
-                elections[_election].isNominated[candidates[i]] = true;
-            }
+            _nominate(_election, candidates[i]);
         }
+    }
+
+    /// @notice nominates a candidate
+    function _nominate(uint256 election, address candidate) internal {
+        if (elections[election].isNominated[candidate]) {
+            revert CandidateAlreadyNominated();
+        }
+        /// @dev this prevent a council member from being nominated in a single election (becoming member twice)
+        if (isCouncilMember(candidate) && elections[election].theElectionType == Enums.electionType.single) {
+            revert CandidateIsAlreadyCouncilMember();
+        }
+        elections[election].candidateAddresses.push(candidate);
+        elections[election].isNominated[candidate] = true;
     }
 
     /// @notice votes for a candidate in a single election

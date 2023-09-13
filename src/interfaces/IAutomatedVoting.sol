@@ -43,10 +43,6 @@ interface IAutomatedVoting {
     /// @notice emitted when the election is not ready to be started
     error ElectionNotReadyToBeStarted();
 
-    /// @notice emitted when an council member cannot step down
-    /// this could happen if everyone tries to step down at once
-    error CouncilMemberCannotStepDown();
-
     /// @notice emitted when the caller has already voted for this election
     error AlreadyVoted();
 
@@ -55,6 +51,12 @@ interface IAutomatedVoting {
 
     /// @notice emitted when candidate is not nominated
     error CandidateNotNominated();
+
+    /// @notice emitted when candidate is already nominated
+    error CandidateAlreadyNominated();
+
+    /// @notice emitted when candidate is already council member
+    error CandidateIsAlreadyCouncilMember();
 
     /// @notice emitted when scheduled election is in progress
     /// (cannot start another election while scheduled is in progress)
