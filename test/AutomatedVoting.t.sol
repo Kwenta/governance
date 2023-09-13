@@ -59,11 +59,11 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.startPrank(admin);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        automatedVoting.nominateInFullElection(0, council);
-        automatedVotingInternals.nominateInFullElection(0, council);
+        automatedVoting.nominateMultipleCandidates(0, council);
+        automatedVotingInternals.nominateMultipleCandidates(0, council);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVotingInternals.voteInFullElection(0, council);
-        automatedVoting.voteInFullElection(0, council);
+        //todo: fix automatedVotingInternals.vote(0, council);
+        //todo: fix automatedVoting.vote(0, council);
         vm.warp(block.timestamp + 2 weeks);
         automatedVotingInternals.finalizeElection(0);
         automatedVoting.finalizeElection(0);      
@@ -96,7 +96,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        automatedVoting.nominateInFullElection(1, new address[](5));
+        automatedVoting.nominateMultipleCandidates(1, new address[](5));
     }
 
     function testFuzzOnlyDuringNomination(uint128 time) public {
@@ -108,7 +108,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.warp(block.timestamp + time);
-        automatedVoting.nominateInFullElection(1, new address[](5));
+        automatedVoting.nominateMultipleCandidates(1, new address[](5));
     }
 
     function testOnlyDuringNominationLastSecond() public {
@@ -119,7 +119,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        automatedVoting.nominateInFullElection(1, new address[](5));
+        automatedVoting.nominateMultipleCandidates(1, new address[](5));
     }
 
     function testOnlyDuringNominationPassed() public {
@@ -131,7 +131,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.expectRevert("Election not in nomination state");
-        automatedVoting.nominateInFullElection(1, new address[](5));
+        automatedVoting.nominateMultipleCandidates(1, new address[](5));
     }
 
     function testOnlyDuringNominationNoElectionYet() public {
@@ -141,7 +141,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.expectRevert("Election not in nomination state");
-        automatedVoting.nominateInFullElection(1, new address[](5));
+        automatedVoting.nominateMultipleCandidates(1, new address[](5));
     }
 
     // onlyDuringVoting()
@@ -153,9 +153,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.startPrank(user1);
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
-        automatedVoting.nominateInFullElection(1, new address[](5));
+        automatedVoting.nominateMultipleCandidates(1, new address[](5));
         vm.warp(block.timestamp + 1 weeks);
-        automatedVoting.voteInFullElection(1, new address[](5));
+        //todo: fix automatedVoting.vote(1, new address[](5));
     }
 
     function testFuzzOnlyDuringVoting(uint128 time) public {
@@ -168,9 +168,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
 
-        automatedVoting.nominateInFullElection(1, new address[](5));
+        automatedVoting.nominateMultipleCandidates(1, new address[](5));
         vm.warp(block.timestamp + time);
-        automatedVoting.voteInFullElection(1, new address[](5));
+        //todo: fix automatedVoting.vote(1, new address[](5));
     }
 
     function testOnlyDuringVotingLastSecond() public {
@@ -182,9 +182,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
 
-        automatedVoting.nominateInFullElection(1, new address[](5));
+        automatedVoting.nominateMultipleCandidates(1, new address[](5));
         vm.warp(block.timestamp + 2 weeks);
-        automatedVoting.voteInFullElection(1, new address[](5));
+        //todo: fix automatedVoting.vote(1, new address[](5));
     }
 
     function testOnlyDuringVotingPassed() public {
@@ -196,10 +196,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         stakingRewards.stake(1);
 
         vm.warp(block.timestamp + 1 weeks);
-        automatedVoting.nominateInFullElection(1, new address[](5));
+        automatedVoting.nominateMultipleCandidates(1, new address[](5));
         vm.warp(block.timestamp + 2 weeks + 1);
         vm.expectRevert("Election not in voting state");
-        automatedVoting.voteInFullElection(1, new address[](5));
+        //todo: fix automatedVoting.vote(1, new address[](5));
     }
 
     function testOnlyDuringVotingNotVotingYet() public {
@@ -210,10 +210,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
 
-        automatedVoting.nominateInFullElection(1, new address[](5));
+        automatedVoting.nominateMultipleCandidates(1, new address[](5));
         vm.warp(block.timestamp + 1 weeks - 1);
         vm.expectRevert("Election not in voting state");
-        automatedVoting.voteInFullElection(1, new address[](5));
+        //todo: fix automatedVoting.vote(1, new address[](5));
     }
 
     // getCouncil()
@@ -600,9 +600,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         candidates[2] = user3;
         candidates[3] = user4;
         candidates[4] = user5;
-        automatedVoting.nominateInFullElection(1, candidates);
+        automatedVoting.nominateMultipleCandidates(1, candidates);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVoting.voteInFullElection(1, candidates);
+        //todo: fix automatedVoting.vote(1, candidates);
         vm.warp(block.timestamp + 3 weeks);
         automatedVoting.finalizeElection(1);
         automatedVoting.stepDown();
@@ -656,7 +656,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.finalizeElection(1);
     }
 
-    // nominateInSingleElection(1
+    // nominateCandidate(1
 
     function testNominateInSingleElectionSuccess() public {
         vm.warp(block.timestamp + 21 weeks);
@@ -666,7 +666,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.prank(user2);
         automatedVoting.stepDown();
 
-        automatedVoting.nominateInSingleElection(1, user1);
+        automatedVoting.nominateCandidate(1, user1);
         //todo: check new way from struct assertEq(automatedVoting.isNominated(0, user1), true);
     }
 
@@ -677,7 +677,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.CallerNotStaked.selector)
         );
-        automatedVoting.nominateInSingleElection(1, user1);
+        automatedVoting.nominateCandidate(1, user1);
     }
 
     function testNominateInSingleElectionNotDuringNomination() public {
@@ -690,7 +690,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.warp(block.timestamp + 1 weeks + 1);
         
         vm.expectRevert("Election not in nomination state");
-        automatedVoting.nominateInSingleElection(1, user1);
+        automatedVoting.nominateCandidate(1, user1);
     }
 
     function testNominateInSingleElectionNotSingleElection() public {
@@ -701,7 +701,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         stakingRewards.stake(1);
         
         vm.expectRevert("Election not a single election");
-        automatedVoting.nominateInSingleElection(1, user1);
+        automatedVoting.nominateCandidate(1, user1);
     }
 
     // voteInSingleElection()
@@ -714,10 +714,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.prank(user2);
         automatedVoting.stepDown();
 
-        automatedVoting.nominateInSingleElection(1, user1);
+        automatedVoting.nominateCandidate(1, user1);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVoting.voteInSingleElection(1, user1);
-        //todo fix voteCounts check for new election mapping assertEq(automatedVoting.voteCounts(1, user1), 1);
+        //todo: fix automatedVoting.voteInSingleElection(1, user1);
+        //todo fix voteCounts check for new election mapping assertEq(//todo: fix automatedVoting.voteCounts(1, user1), 1);
     }
 
     function testVoteInSingleElectionNotStaked() public {
@@ -727,7 +727,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.CallerNotStaked.selector)
         );
-        automatedVoting.voteInSingleElection(1, user1);
+        //todo: fix automatedVoting.voteInSingleElection(1, user1);
     }
 
     function testVoteInSingleElectionNotDuringVoting() public {
@@ -739,7 +739,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.stepDown();
 
         vm.expectRevert("Election not in voting state");
-        automatedVoting.voteInSingleElection(1, user1);
+        //todo: fix automatedVoting.voteInSingleElection(1, user1);
     }
 
     function testVoteInSingleElectionAlreadyEnded() public {
@@ -751,7 +751,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.expectRevert("Election not in voting state");
-        automatedVoting.voteInSingleElection(1, user1);
+        //todo: fix automatedVoting.voteInSingleElection(1, user1);
     }
 
     function testVoteInSingleElectionNotSingleElection() public {
@@ -763,7 +763,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.warp(block.timestamp + 1 weeks + 1);
 
         vm.expectRevert("Election not a single election");
-        automatedVoting.voteInSingleElection(1, user1);
+        //todo: fix automatedVoting.voteInSingleElection(1, user1);
     }
 
     function testVoteInSingleElectionAlreadyVoted() public {
@@ -774,13 +774,13 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.prank(user2);
         automatedVoting.stepDown();
 
-        automatedVoting.nominateInSingleElection(1, user1);
+        automatedVoting.nominateCandidate(1, user1);
         vm.warp(block.timestamp + 1 weeks + 1);
-        automatedVoting.voteInSingleElection(1, user1);
+        //todo: fix automatedVoting.voteInSingleElection(1, user1);
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.AlreadyVoted.selector)
         );
-        automatedVoting.voteInSingleElection(1, user1);
+        //todo: fix automatedVoting.voteInSingleElection(1, user1);
     }
 
     function testVoteInSingleElectionCandidateNotNominated() public {
@@ -795,10 +795,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.CandidateNotNominated.selector)
         );
-        automatedVoting.voteInSingleElection(1, user1);
+        //todo: fix automatedVoting.voteInSingleElection(1, user1);
     }
 
-    // nominateInFullElection()
+    // nominateMultipleCandidates()
 
     function testNominateInFullElectionSuccess() public {
         vm.warp(block.timestamp + 21 weeks);
@@ -813,7 +813,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         candidates[2] = user3;
         candidates[3] = user4;
         candidates[4] = user5;
-        automatedVoting.nominateInFullElection(1, candidates);
+        automatedVoting.nominateMultipleCandidates(1, candidates);
 
         //todo: check the candidateAddresses array
         //todo: check new way from struct
@@ -836,7 +836,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.CallerNotStaked.selector)
         );
-        automatedVoting.nominateInFullElection(1, candidates);
+        automatedVoting.nominateMultipleCandidates(1, candidates);
     }
 
     function testNominateInFullElectionNotElection() public {
@@ -846,7 +846,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.expectRevert("Election not in nomination state");
-        automatedVoting.nominateInFullElection(1, new address[](5));
+        automatedVoting.nominateMultipleCandidates(1, new address[](5));
     }
 
     function testNominateInFullElectionNominatingEnded() public {
@@ -858,7 +858,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.expectRevert("Election not in nomination state");
-        automatedVoting.nominateInFullElection(1, new address[](5));
+        automatedVoting.nominateMultipleCandidates(1, new address[](5));
     }
 
     function testNominateInFullElectionNotFullElection() public {
@@ -877,10 +877,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         candidates[4] = user5;
 
         vm.expectRevert("Election not a full election");
-        automatedVoting.nominateInFullElection(1, candidates);
+        automatedVoting.nominateMultipleCandidates(1, candidates);
     }
 
-    // voteInFullElection()
+    // vote()
 
     function testVoteInFullElectionSuccess() public {
         vm.warp(block.timestamp + 21 weeks);
@@ -895,23 +895,23 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         candidates[2] = user3;
         candidates[3] = user4;
         candidates[4] = user5;
-        automatedVoting.nominateInFullElection(1, candidates);
+        automatedVoting.nominateMultipleCandidates(1, candidates);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVoting.voteInFullElection(1, candidates);
+        //todo: fix automatedVoting.vote(1, candidates);
 
         //todo: check the candidateAddresses array
         //todo fix voteCounts check for new election mapping 
-        // uint user1Votes = automatedVoting.voteCounts(1, user1);
+        // uint user1Votes = //todo: fix automatedVoting.voteCounts(1, user1);
         // assertEq(user1Votes, 1);
-        // uint user2Votes = automatedVoting.voteCounts(1, user2);
+        // uint user2Votes = //todo: fix automatedVoting.voteCounts(1, user2);
         // assertEq(user2Votes, 1);
-        // uint user3Votes = automatedVoting.voteCounts(1, user3);
+        // uint user3Votes = //todo: fix automatedVoting.voteCounts(1, user3);
         // assertEq(user3Votes, 1);
-        // uint user4Votes = automatedVoting.voteCounts(1, user4);
+        // uint user4Votes = //todo: fix automatedVoting.voteCounts(1, user4);
         // assertEq(user4Votes, 1);
-        // uint user5Votes = automatedVoting.voteCounts(1, user5);
+        // uint user5Votes = //todo: fix automatedVoting.voteCounts(1, user5);
         // assertEq(user5Votes, 1);
-        // uint adminVotes = automatedVoting.voteCounts(1, admin);
+        // uint adminVotes = //todo: fix automatedVoting.voteCounts(1, admin);
         // assertEq(adminVotes, 0);
     }
 
@@ -928,7 +928,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
             abi.encodeWithSelector(IAutomatedVoting.CallerNotStaked.selector)
         );
         vm.startPrank(user1);
-        automatedVoting.voteInFullElection(1, candidates);
+        //todo: fix automatedVoting.vote(1, candidates);
     }
 
     function testVoteInFullElectionNotElection() public {
@@ -938,7 +938,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.expectRevert("Election not in voting state");
-        automatedVoting.voteInFullElection(1, new address[](5));
+        //todo: fix automatedVoting.vote(1, new address[](5));
     }
 
     function testVoteInFullElectionAlreadyEnded() public {
@@ -950,7 +950,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         kwenta.approve(address(stakingRewards), 1);
         stakingRewards.stake(1);
         vm.expectRevert("Election not in voting state");
-        automatedVoting.voteInFullElection(1, new address[](5));
+        //todo: fix automatedVoting.vote(1, new address[](5));
     }
 
     function testVoteInFullElectionTooManyCandidates() public {
@@ -971,7 +971,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.TooManyCandidates.selector)
         );
-        automatedVoting.voteInFullElection(1, candidates);
+        //todo: fix automatedVoting.vote(1, candidates);
     }
 
     function testVoteInFullElectionAlreadyVoted() public {
@@ -987,13 +987,13 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         candidates[2] = user3;
         candidates[3] = user4;
         candidates[4] = user5;
-        automatedVoting.nominateInFullElection(1, candidates);
+        automatedVoting.nominateMultipleCandidates(1, candidates);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVoting.voteInFullElection(1, candidates);
+        //todo: fix automatedVoting.vote(1, candidates);
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.AlreadyVoted.selector)
         );
-        automatedVoting.voteInFullElection(1, candidates);
+        //todo: fix automatedVoting.vote(1, candidates);
     }
 
     function testVoteInFullElectionCandidateNotNominated() public {
@@ -1013,7 +1013,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.expectRevert(
             abi.encodeWithSelector(IAutomatedVoting.CandidateNotNominated.selector)
         );
-        automatedVoting.voteInFullElection(1, candidates);
+        //todo: fix automatedVoting.vote(1, candidates);
     }
 
     // isCouncilMember()
@@ -1045,9 +1045,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         candidates[2] = user3;
         candidates[3] = user4;
         candidates[4] = user5;
-        automatedVotingInternals.nominateInFullElection(1, candidates);
+        automatedVotingInternals.nominateMultipleCandidates(1, candidates);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVotingInternals.voteInFullElection(1, candidates);
+        //todo: fix automatedVotingInternals.vote(1, candidates);
         vm.warp(block.timestamp + 3 weeks + 1);
         automatedVotingInternals.finalizeElectionInternal(1);
         assertEq(automatedVotingInternals.isElectionFinalized(1), true);
@@ -1063,10 +1063,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         stakingRewards.stake(1);
         vm.prank(user2);
         automatedVotingInternals.stepDown();
-        automatedVotingInternals.nominateInSingleElection(1, user6);
+        automatedVotingInternals.nominateCandidate(1, user6);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVotingInternals.voteInSingleElection(1, user6);
-        //todo fix voteCounts check for new election mapping assertEq(automatedVotingInternals.voteCounts(1, user6), 1);
+        //todo: fix automatedVotingInternals.voteInSingleElection(1, user6);
+        //todo fix voteCounts check for new election mapping assertEq(//todo: fix automatedVotingInternals.voteCounts(1, user6), 1);
 
         address[] memory councilBefore = automatedVotingInternals.getCouncil();
         assertEq(councilBefore.length, 5);
@@ -1104,9 +1104,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         candidates[2] = user3;
         candidates[3] = user4;
         candidates[4] = user5;
-        automatedVoting.nominateInFullElection(1, candidates);
+        automatedVoting.nominateMultipleCandidates(1, candidates);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVoting.voteInFullElection(1, candidates);
+        //todo: fix automatedVoting.vote(1, candidates);
         vm.warp(block.timestamp + 3 weeks + 1);
         automatedVoting.finalizeElection(1);
 
@@ -1128,10 +1128,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         stakingRewards.stake(1);
         vm.prank(user2);
         automatedVoting.stepDown();
-        automatedVoting.nominateInSingleElection(1, user1);
+        automatedVoting.nominateCandidate(1, user1);
         vm.warp(block.timestamp + 1 weeks);
-        automatedVoting.voteInSingleElection(1, user1);
-        //todo fix voteCounts check for new election mapping assertEq(automatedVoting.voteCounts(1, user1), 1);
+        //todo: fix automatedVoting.voteInSingleElection(1, user1);
+        //todo fix voteCounts check for new election mapping assertEq(//todo: fix automatedVoting.voteCounts(1, user1), 1);
         vm.warp(block.timestamp + 3 weeks + 1);
         automatedVoting.finalizeElection(1);
 

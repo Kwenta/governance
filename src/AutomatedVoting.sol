@@ -102,24 +102,6 @@ contract AutomatedVoting is IAutomatedVoting {
         _;
     }
 
-    modifier onlySingleElection(uint256 _election) {
-        require(
-            elections[_election].theElectionType ==
-                Enums.electionType.single,
-            "Election not a single election"
-        );
-        _;
-    }
-
-    modifier onlyFullElection(uint256 _election) {
-        require(
-                elections[_election].theElectionType ==
-                Enums.electionType.scheduled || elections[_election].theElectionType == Enums.electionType.community,
-            "Election not a full election"
-        );
-        _;
-    }
-
     //todo: modifier onlyActiveElections (for when an election gets canceled and finalized)
 
     //todo: change to stakingV2
@@ -262,10 +244,10 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    /// @notice nominates a candidate for a single election
+    /// @notice nominates a candidate
     /// @param _election the election to nominate a candidate for
     /// @param candidate the candidate to nominate
-    function nominateInSingleElection( //todo: remove access controls, single nominate
+    function nominateCandidate( //todo: remove access controls, single nominate
         uint256 _election,
         address candidate
     )
@@ -273,16 +255,35 @@ contract AutomatedVoting is IAutomatedVoting {
         override
         onlyStaker
         onlyDuringNomination(_election)
-        onlySingleElection(_election)
     {
         elections[_election].candidateAddresses.push(candidate);
         elections[_election].isNominated[candidate] = true;
     }
 
+    /// @notice nominates multiple candidates
+    /// @param _election the election to nominate candidates for
+    /// @param candidates the candidates to nominate
+    function nominateMultipleCandidates(
+        uint256 _election,
+        address[] calldata candidates
+    )
+        public
+        override
+        onlyStaker
+        onlyDuringNomination(_election)
+    {
+        for (uint256 i = 0; i < candidates.length; i++) {
+            //todo: optimize this to not repeat the same candidates
+            // likely check if candidate is already nominated with mapping
+            elections[_election].candidateAddresses.push(candidates[i]);
+            elections[_election].isNominated[candidates[i]] = true;
+        }
+    }
+
     /// @notice votes for a candidate in a single election
     /// @param _election the election to vote in
     /// @param candidate the candidate to vote for
-    function voteInSingleElection(
+    function vote(
         uint256 _election,
         address candidate
     )
@@ -290,7 +291,6 @@ contract AutomatedVoting is IAutomatedVoting {
         override
         onlyStaker
         onlyDuringVoting(_election)
-        onlySingleElection(_election)
     {
         if (elections[_election].hasVoted[msg.sender]) {
             revert AlreadyVoted();
@@ -306,54 +306,6 @@ contract AutomatedVoting is IAutomatedVoting {
         // }
         elections[_election].hasVoted[msg.sender] = true;
         elections[_election].voteCounts[candidate]++;
-    }
-
-    /// @notice nominates candidates for a full election
-    /// @param _election the election to nominate candidates for
-    /// @param candidates the candidates to nominate
-    function nominateInFullElection(
-        uint256 _election,
-        address[] calldata candidates
-    )
-        public
-        override
-        onlyStaker
-        onlyDuringNomination(_election)
-        onlyFullElection(_election)
-    {
-        for (uint256 i = 0; i < candidates.length; i++) {
-            //todo: optimize this to not repeat the same candidates
-            elections[_election].candidateAddresses.push(candidates[i]);
-            elections[_election].isNominated[candidates[i]] = true;
-        }
-    }
-
-    /// @notice votes for candidates in a full election
-    /// @param _election the election to vote in
-    /// @param candidates the candidates to vote for
-    function voteInFullElection(
-        uint256 _election,
-        address[] calldata candidates //todo: only vote for 1
-    )
-        public
-        override
-        onlyStaker
-        onlyDuringVoting(_election)
-        onlyFullElection(_election)
-    {
-        if (candidates.length > 5) {
-            revert TooManyCandidates();
-        }
-        if (elections[_election].hasVoted[msg.sender]) {
-            revert AlreadyVoted();
-        }
-        if (!_candidatesAreNominated(_election, candidates)) {
-            revert CandidateNotNominated();
-        }
-        elections[_election].hasVoted[msg.sender] = true;
-        for (uint256 i = 0; i < candidates.length; i++) {
-            elections[_election].voteCounts[candidates[i]]++;
-        }
     }
 
     /// @dev starts an election internally by recording state
