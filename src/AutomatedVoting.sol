@@ -269,10 +269,10 @@ contract AutomatedVoting is IAutomatedVoting {
         onlyDuringNomination(_election)
     {
         for (uint256 i = 0; i < candidates.length; i++) {
-            //todo: optimize this to not repeat the same candidates
-            // likely check if candidate is already nominated with mapping
-            elections[_election].candidateAddresses.push(candidates[i]);
-            elections[_election].isNominated[candidates[i]] = true;
+            if(!elections[_election].isNominated[candidates[i]]) {
+                elections[_election].candidateAddresses.push(candidates[i]);
+                elections[_election].isNominated[candidates[i]] = true;
+            }
         }
     }
 
