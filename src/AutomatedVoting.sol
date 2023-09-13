@@ -26,6 +26,9 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @notice tracker for timestamp start of last community election
     uint256 public lastCommunityElection;
 
+    /// @notice tracker for the last finalized election
+    uint256 public lastFinalizedElection;
+
     /// @notice staking rewards V2 contract
     IStakingRewardsV2 public immutable stakingRewardsV2;
 
@@ -446,19 +449,12 @@ contract AutomatedVoting is IAutomatedVoting {
 
     /// @dev internal helper function cancel ongoing elections when a scheduled election starts
     function _cancelOngoingElections() internal {
-        //todo: optimize this
-        for (uint i = 0; i < electionNumbers; i++) {
+        for (uint i = lastFinalizedElection; i < electionNumbers; i++) {
             if (elections[i].isFinalized == false) {
                 elections[i].isFinalized = true;
             }
         }
-        //todo:
-        // for (uint i = lastFinalizedElection; i < currentElectionNumber; i++) {
-        //     if (elections[i].isFinalized == false) {
-        //         elections[i].isFinalized = true;
-        //     }
-        // }
-        // //lastFinalizedElection = currentElectionNumber;
+        lastFinalizedElection = electionNumbers;
     }
 
     //todo: make sure someone can't become a council member twice
