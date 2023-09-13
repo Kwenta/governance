@@ -187,6 +187,12 @@ contract AutomatedVoting is IAutomatedVoting {
         address _memberToRemove
     ) public override onlyCouncil notDuringScheduledElection {
         //todo: integrate with safe here
+        // burn member rights
+        for (uint i = 0; i < council.length; i++) {
+            if (council[i] == _memberToRemove) {
+                delete council[i];
+            }
+        }
         _startElection(Enums.electionType.single);
     }
 
