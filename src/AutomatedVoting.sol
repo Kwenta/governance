@@ -32,8 +32,6 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @notice staking rewards V2 contract
     IStakingRewardsV2 public immutable stakingRewardsV2;
 
-    // mapping(uint256 => uint256) public stakedAmountsForQuorum;
-
     /// @notice constant for election duration
     /// @dev 1 week nomination, 2 weeks voting
     uint256 constant ELECTION_DURATION = 3 weeks;
@@ -47,6 +45,7 @@ contract AutomatedVoting is IAutomatedVoting {
         mapping(address => uint256) voteCounts;
         mapping(address => bool) isNominated;
         mapping(address => bool) hasVoted;
+        uint256 stakedAmountsForQuorum;
     }
 
     modifier onlyCouncil() {
@@ -296,10 +295,10 @@ contract AutomatedVoting is IAutomatedVoting {
         if (!_candidatesAreNominated(_election, candidates)) {
             revert CandidateNotNominated();
         }
-        // if (elections[_election].theElectionType == Enums.electionType.community) {
-        //     uint256 userStaked = stakingRewards.balanceOf(msg.sender);
-        //     stakedAmountsForQuorum[_election] += userStaked;
-        // }
+        if (elections[_election].theElectionType == Enums.electionType.community) {
+            uint256 userStaked = stakingRewardsV2.balanceAtTime(msg.sender, elections[_election].startTime);
+            elections[_election].stakedAmountsForQuorum += userStaked;
+        }
         elections[_election].hasVoted[msg.sender] = true;
         elections[_election].voteCounts[candidate]++;
     }
@@ -352,9 +351,14 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    function _checkIfQuorumReached(uint256 _election) internal returns (bool) {
-        //todo: check if quorum reached
-        //todo: if quorum reached, finalize election _finalizeElection(_election)
+    function _checkIfQuorumReached(uint256 _election) internal view returns (bool) {
+        uint256 electionStartTime = elections[_election].startTime;
+        uint256 quorumPercentage = elections[_election].stakedAmountsForQuorum * 100 / stakingRewardsV2.totalSupplyAtTime(electionStartTime);
+                if (quorumPercentage < 40) {
+                    return false;
+                } else {
+                    return true;
+                }
     }
 
     /// @dev internal function to finalize elections depending on type
@@ -370,13 +374,14 @@ contract AutomatedVoting is IAutomatedVoting {
             council = winners;
         } else if (elections[_election].theElectionType ==
             Enums.electionType.community) {
-            // if (elections[_election].theElectionType == Enums.electionType.single) {
-            //     uint256 quorumPercentage = stakedAmountsForQuorum[_election] * 100 / stakingRewards.totalSupply();
-            //     if (quorumPercentage < 40) {
-            //         //todo: emit event that quorum was not reached
-            //         return;
-            //     }
-            // }
+            if(_checkIfQuorumReached(_election)){
+                /// @dev this is for a full election
+            (address[] memory winners, ) = getWinners(_election, 5);
+            council = winners;
+            } else {
+                /// @dev do nothing because quorum not reached
+                //todo: emit event
+            }
         }else if (
             elections[_election].theElectionType ==
             Enums.electionType.single

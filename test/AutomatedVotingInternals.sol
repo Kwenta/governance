@@ -12,7 +12,7 @@ contract AutomatedVotingInternals is AutomatedVoting {
         return _wasStakedBeforeElection(voter, _election);
     }
 
-    function checkIfQuorumReached(uint256 _election) public returns (bool) {
+    function checkIfQuorumReached(uint256 _election) public view returns (bool) {
         return _checkIfQuorumReached(_election);
     }
 
