@@ -8,8 +8,8 @@ contract AutomatedVotingInternals is AutomatedVoting {
         address _stakingRewards
     ) AutomatedVoting(_stakingRewards) {}
 
-    function isStaker(address voter) public view returns (bool) {
-        return _isStaker(voter);
+    function wasStakedBeforeElectionInternal(address voter, uint256 _election) public view returns (bool) {
+        return _wasStakedBeforeElection(voter, _election);
     }
 
     function checkIfQuorumReached(uint256 _election) public returns (bool) {

@@ -28,6 +28,9 @@ interface IAutomatedVoting {
     /// @notice emitted when the caller is not staked
     error CallerNotStaked();
 
+    /// @notice emitted when the caller is not staked before the election start
+    error CallerWasNotStakedBeforeElectionStart();
+
     /// @notice emitted when the member specified is not on the council
     error MemberNotOnCouncil();
 

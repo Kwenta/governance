@@ -2,7 +2,7 @@
 pragma solidity ^0.8.19;
 
 import {IAutomatedVoting} from "./interfaces/IAutomatedVoting.sol";
-import {IStakingRewards} from "../lib/token/contracts/interfaces/IStakingRewards.sol";
+import {IStakingRewardsV2} from "../lib/token/contracts/interfaces/IStakingRewardsV2.sol";
 import {Enums} from "./Enums.sol";
 
 //todo: integrate with safe module here
@@ -26,8 +26,8 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @notice tracker for timestamp start of last community election
     uint256 public lastCommunityElection;
 
-    /// @notice staking rewards contract
-    IStakingRewards public stakingRewards;
+    /// @notice staking rewards V2 contract
+    IStakingRewardsV2 public immutable stakingRewardsV2;
 
     // mapping(uint256 => uint256) public stakedAmountsForQuorum;
 
@@ -56,18 +56,12 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    modifier onlyStaker() {
-        if (_isStaker(msg.sender)) {
+    modifier wasStakedBeforeElection(uint256 _election) {
+        if(_wasStakedBeforeElection(msg.sender, _election)) {
             _;
         } else {
-            revert CallerNotStaked();
+            revert CallerWasNotStakedBeforeElectionStart();
         }
-    }
-
-    modifier wasStaked(uint256 _election) {
-        //todo: add historical check for staker
-        // based off when election started
-        _;
     }
 
     modifier notDuringScheduledElection() {
@@ -105,9 +99,9 @@ contract AutomatedVoting is IAutomatedVoting {
     //todo: modifier onlyActiveElections (for when an election gets canceled and finalized)
 
     //todo: change to stakingV2
-    constructor(address _stakingRewards) {
+    constructor(address _stakingRewardsV2) {
         council = new address[](5);
-        stakingRewards = IStakingRewards(_stakingRewards);
+        stakingRewardsV2 = IStakingRewardsV2(_stakingRewardsV2);
         /// @dev start a scheduled election
         /// (bypasses election 0 not finalized check)
         lastScheduledElectionStartTime = block.timestamp;
@@ -201,9 +195,11 @@ contract AutomatedVoting is IAutomatedVoting {
     function startCommunityElection()
         public
         override
-        onlyStaker
         notDuringScheduledElection
     {
+        if (stakingRewardsV2.balanceOf(msg.sender) == 0) {
+            revert CallerNotStaked();
+        } 
         /// @dev if a community election is ongoing, revert
         if (block.timestamp < lastCommunityElection + 3 weeks) {
             revert ElectionNotReadyToBeStarted();
@@ -253,7 +249,7 @@ contract AutomatedVoting is IAutomatedVoting {
     )
         public
         override
-        onlyStaker
+        wasStakedBeforeElection(_election)
         onlyDuringNomination(_election)
     {
         elections[_election].candidateAddresses.push(candidate);
@@ -269,7 +265,7 @@ contract AutomatedVoting is IAutomatedVoting {
     )
         public
         override
-        onlyStaker
+        wasStakedBeforeElection(_election)
         onlyDuringNomination(_election)
     {
         for (uint256 i = 0; i < candidates.length; i++) {
@@ -289,7 +285,7 @@ contract AutomatedVoting is IAutomatedVoting {
     )
         public
         override
-        onlyStaker
+        wasStakedBeforeElection(_election)
         onlyDuringVoting(_election)
     {
         if (elections[_election].hasVoted[msg.sender]) {
@@ -346,9 +342,10 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    /// @dev helper function to determine if a voter is a staker
-    function _isStaker(address voter) internal view returns (bool isStaker) {
-        if (stakingRewards.balanceOf(voter) > 0) {
+    /// @dev helper function to determine if a voter was staked before the election start
+    function _wasStakedBeforeElection(address voter, uint256 _election) internal view returns (bool isStaker) {
+        uint256 electionStartTime = elections[_election].startTime;
+        if (stakingRewardsV2.balanceAtTime(voter, electionStartTime) > 0) {
             return true;
         } else {
             return false;
