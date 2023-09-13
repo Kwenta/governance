@@ -314,6 +314,7 @@ contract AutomatedVoting is IAutomatedVoting {
         }
         elections[_election].hasVoted[msg.sender] = true;
         elections[_election].voteCounts[candidate]++;
+        _sortCandidates(_election, candidate, elections[_election].voteCounts[candidate]);
     }
 
     /// @dev starts an election internally by recording state
@@ -388,14 +389,24 @@ contract AutomatedVoting is IAutomatedVoting {
             elections[_election].theElectionType == Enums.electionType.scheduled
         ) {
             /// @dev this is for a full election
-            (address[] memory winners, ) = getWinners(_election, 5);
+            address[] memory winners = new address[](5);
+            winners[0] = elections[_election].candidateAddresses[0];
+            winners[1] = elections[_election].candidateAddresses[1];
+            winners[2] = elections[_election].candidateAddresses[2];
+            winners[3] = elections[_election].candidateAddresses[3];
+            winners[4] = elections[_election].candidateAddresses[4];
             council = winners;
         } else if (
             elections[_election].theElectionType == Enums.electionType.community
         ) {
             if (_checkIfQuorumReached(_election)) {
                 /// @dev this is for a full election
-                (address[] memory winners, ) = getWinners(_election, 5);
+                address[] memory winners = new address[](5);
+                winners[0] = elections[_election].candidateAddresses[0];
+                winners[1] = elections[_election].candidateAddresses[1];
+                winners[2] = elections[_election].candidateAddresses[2];
+                winners[3] = elections[_election].candidateAddresses[3];
+                winners[4] = elections[_election].candidateAddresses[4];
                 council = winners;
             } else {
                 /// @dev do nothing because quorum not reached
@@ -405,69 +416,52 @@ contract AutomatedVoting is IAutomatedVoting {
             elections[_election].theElectionType == Enums.electionType.single
         ) {
             /// @dev this is for a single election
-            (address[] memory winners, ) = getWinners(_election, 1);
+            address winner = elections[_election].candidateAddresses[0];
             for (uint i = 0; i < council.length; i++) {
                 if (council[i] == address(0)) {
-                    council[i] = winners[0];
+                    council[i] = winner;
                     break;
                 }
             }
         }
     }
 
-    /// @notice calculates the winners of an election
-    /// @param electionId the election to calculate winners for
-    /// @param numberOfWinners the number of winners to calculate
-    /// @return winners the addresses of the winners
-    /// @return voteCountsOfWinners the vote counts of the winners
-    function getWinners(
-        uint256 electionId,
-        uint256 numberOfWinners
-    ) public view returns (address[] memory, uint256[] memory) {
-        require(elections[electionId].isFinalized, "Election not finalized");
+    /// @notice The 1 sweep O(n) sorting algorithm
+    /// @dev (this only works because only 1 item is unsorted each time):
+    function _sortCandidates(
+        uint256 _election,
+        address voteeName,
+        uint256 newNumOfVotes
+    ) internal view returns (address[] memory newCandidates) {
+        address[] memory candidates = elections[_election].candidateAddresses;
+        newCandidates = new address[](candidates.length);
+        bool hasSwapped = false;
+        bool hasReachedVotee = false;
 
-        address[] memory winners = new address[](numberOfWinners);
-        uint256[] memory voteCountsOfWinners = new uint256[](numberOfWinners);
-
-        for (uint256 i = 0; i < numberOfWinners; i++) {
-            address bestCandidate;
-            uint256 maxVotes = 0;
-
-            for (
-                uint256 j = 0;
-                j < elections[electionId].candidateAddresses.length;
-                j++
+        for (uint256 i = 0; i < candidates.length; i++) {
+            address candidate = candidates[i];
+            // keep it in place
+            if (elections[_election].voteCounts[candidate] >= newNumOfVotes)
+                newCandidates[i] = candidate;
+                // either swap, get previous one, or keep it in place depending on stage in sweep
+            else if (
+                elections[_election].voteCounts[candidate] < newNumOfVotes
             ) {
-                address candidate = elections[electionId].candidateAddresses[j];
-                if (
-                    elections[electionId].voteCounts[candidate] > maxVotes &&
-                    !isWinner(candidate, winners, i)
-                ) {
-                    maxVotes = elections[electionId].voteCounts[candidate];
-                    bestCandidate = candidate;
-                }
+                if (!hasSwapped) {
+                    // swap it (first iteration in this block)
+                    newCandidates[i] = voteeName;
+                    hasSwapped = true;
+                    // get previous one (from 2nd iteration in this block until we reach the votee)
+                } else if (!hasReachedVotee)
+                    newCandidates[i] = candidates[i - 1];
+                    // keep it in place (all iterations in this block after the votee)
+                else newCandidates[i] = candidate;
             }
-
-            winners[i] = bestCandidate;
-            voteCountsOfWinners[i] = maxVotes;
-        }
-
-        return (winners, voteCountsOfWinners);
-    }
-
-    /// @dev internal helper function to determine if the candidate is already a winner for this election
-    /// this is to prevent double winning
-    function isWinner(
-        address candidate,
-        address[] memory winners,
-        uint256 upToIndex
-    ) internal pure returns (bool) {
-        for (uint256 i = 0; i < upToIndex; i++) {
-            if (candidate == winners[i]) {
-                return true;
+            if (candidate == voteeName) {
+                hasReachedVotee = true;
             }
         }
-        return false;
+        return newCandidates;
     }
 
     /// @dev internal helper function cancel ongoing elections when a scheduled election starts
