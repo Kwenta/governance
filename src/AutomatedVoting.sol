@@ -466,7 +466,4 @@ contract AutomatedVoting is IAutomatedVoting {
         }
         lastFinalizedElection = electionNumbers;
     }
-
-    //todo: make sure someone can't become a council member twice
-    // check this on single elections
 }
