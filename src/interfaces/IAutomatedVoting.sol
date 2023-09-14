@@ -82,6 +82,12 @@ interface IAutomatedVoting {
         uint256 election
     ) external view returns (uint256);
 
+    /// @notice gets the vote counts of a nominee in an election
+    /// @param _election the election to check
+    /// @param nominee the nominee to check
+    /// @return count the vote counts of a nominee in an election
+    function getVoteCounts(uint256 _election, address nominee) external view returns (uint256);
+
     /// @notice returns the current council
     function getCouncil() external view returns (address[] memory);
 

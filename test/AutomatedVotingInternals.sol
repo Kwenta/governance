@@ -27,8 +27,8 @@ contract AutomatedVotingInternals is AutomatedVoting {
         uint256 _election,
         address voteeName,
         uint256 newNumOfVotes
-    ) public view returns (uint256) {
-        _sortCandidates(_election, voteeName, newNumOfVotes);
+    ) public view returns (address[] memory) {
+        return _sortCandidates(_election, voteeName, newNumOfVotes);
     }
 
     function cancelOngoingElectionsInternal() public {
