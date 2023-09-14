@@ -982,6 +982,29 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
     }
 
+    function testSortCandidatesPositionChangesFromLastToIndex0() public {
+        vm.warp(block.timestamp + 21 weeks);
+        automatedVotingInternals.startScheduledElection();
+        fundAccountAndStakeV2(user1, 1);
+        vm.startPrank(user1);
+        automatedVotingInternals.nominateMultipleCandidates(1, council);
+        
+        assertEq(automatedVotingInternals.getCandidateAddress(1, 0), user1);
+        assertEq(automatedVotingInternals.getCandidateAddress(1, 1), user2);
+        assertEq(automatedVotingInternals.getCandidateAddress(1, 2), user3);
+        assertEq(automatedVotingInternals.getCandidateAddress(1, 3), user4);
+        assertEq(automatedVotingInternals.getCandidateAddress(1, 4), user5);
+
+        address[] memory result = automatedVotingInternals.sortCandidates(1, user5, 1);
+
+        /// @dev make last place went to first place
+        assertEq(result[0], user5);
+        assertEq(result[1], user1);
+        assertEq(result[2], user2);
+        assertEq(result[3], user3);
+        assertEq(result[4], user4);
+    }
+
     // _cancelOngoingElections()
 
     function testCancelOngoingElectionsStepDown() public {
