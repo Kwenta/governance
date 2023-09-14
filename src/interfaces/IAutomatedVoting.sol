@@ -94,6 +94,12 @@ interface IAutomatedVoting {
     /// @return isNominated if the address is nominated in an election
     function getIsNominated(uint256 _election, address nominee) external view returns (bool);
 
+    /// @notice returns if an address has voted in an election
+    /// @param _election the election to check
+    /// @param voter the voter to check
+    /// @return hasVoted if the address has voted in an election
+    function getHasVoted(uint256 _election, address voter) external view returns (bool);
+
     /// @notice returns the current council
     function getCouncil() external view returns (address[] memory);
 

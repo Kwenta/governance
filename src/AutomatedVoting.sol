@@ -151,6 +151,11 @@ contract AutomatedVoting is IAutomatedVoting {
         return elections[_election].isNominated[nominee];
     }
 
+    /// @inheritdoc IAutomatedVoting
+    function getHasVoted(uint256 _election, address voter) public view override returns (bool hasVoted) {
+        return elections[_election].hasVoted[voter];
+    }
+
     /// @notice gets the current council
     /// @return address[] the current council
     function getCouncil() public view override returns (address[] memory) {
