@@ -37,7 +37,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
         /// @dev set up council for automatedVoting and automatedVotingInternals
         automatedVoting = new AutomatedVoting(address(stakingRewardsV2));
-        automatedVotingInternals = new AutomatedVotingInternals(address(stakingRewardsV2));
+        automatedVotingInternals = new AutomatedVotingInternals(
+            address(stakingRewardsV2)
+        );
         fundAccountAndStakeV2(admin, 1);
         vm.startPrank(admin);
         automatedVoting.startScheduledElection();
@@ -48,8 +50,8 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.vote(0, user1);
         automatedVotingInternals.vote(0, user1);
         vm.warp(block.timestamp + 2 weeks);
-        automatedVoting.finalizeElection(0);  
-        automatedVotingInternals.finalizeElection(0);   
+        automatedVoting.finalizeElection(0);
+        automatedVotingInternals.finalizeElection(0);
         vm.stopPrank();
     }
 
@@ -270,7 +272,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
-        assertEq(automatedVoting.lastScheduledElectionStartTime(), block.timestamp);
+        assertEq(
+            automatedVoting.lastScheduledElectionStartTime(),
+            block.timestamp
+        );
         assertEq(automatedVoting.electionNumbers(), 2);
         (
             uint256 electionStartTime,
@@ -323,7 +328,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.startScheduledElection();
     }
 
-    function testFuzzStartScheduledElectionLastElectionIsntFinalized(uint128 time) public {
+    function testFuzzStartScheduledElectionLastElectionIsntFinalized(
+        uint128 time
+    ) public {
         vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + time);
@@ -356,7 +363,6 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
     // startCouncilElection()
 
-
     // startCommunityElection()
 
     function testStartCommunityElectionSuccess() public {
@@ -366,7 +372,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
         /// @dev check election
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
-        assertEq(automatedVoting.lastScheduledElectionStartTime(), block.timestamp - 3 weeks);
+        assertEq(
+            automatedVoting.lastScheduledElectionStartTime(),
+            block.timestamp - 3 weeks
+        );
         assertEq(automatedVoting.electionNumbers(), 2);
         (
             uint256 electionStartTime,
@@ -434,7 +443,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.startCommunityElection();
     }
 
-    function testFuzzStartCommunityElectionDuringScheduledElection(uint128 time) public {
+    function testFuzzStartCommunityElectionDuringScheduledElection(
+        uint128 time
+    ) public {
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
         vm.warp(block.timestamp + 21 weeks);
@@ -620,7 +631,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.prank(user2);
         automatedVoting.stepDown();
         vm.expectRevert(
-            abi.encodeWithSelector(IAutomatedVoting.CallerWasNotStakedBeforeElectionStart.selector)
+            abi.encodeWithSelector(
+                IAutomatedVoting.CallerWasNotStakedBeforeElectionStart.selector
+            )
         );
         automatedVoting.nominateCandidate(1, user1);
     }
@@ -641,7 +654,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.prank(user2);
         automatedVoting.stepDown();
         vm.expectRevert(
-            abi.encodeWithSelector(IAutomatedVoting.CandidateIsAlreadyCouncilMember.selector)
+            abi.encodeWithSelector(
+                IAutomatedVoting.CandidateIsAlreadyCouncilMember.selector
+            )
         );
         vm.startPrank(user1);
         automatedVoting.nominateCandidate(1, user1);
@@ -667,7 +682,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.prank(user2);
         automatedVoting.stepDown();
         vm.expectRevert(
-            abi.encodeWithSelector(IAutomatedVoting.CallerWasNotStakedBeforeElectionStart.selector)
+            abi.encodeWithSelector(
+                IAutomatedVoting.CallerWasNotStakedBeforeElectionStart.selector
+            )
         );
         automatedVoting.vote(1, user1);
     }
@@ -715,9 +732,11 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.prank(user2);
         automatedVoting.stepDown();
         vm.warp(block.timestamp + 1 weeks + 1);
-        
+
         vm.expectRevert(
-            abi.encodeWithSelector(IAutomatedVoting.CandidateNotNominated.selector)
+            abi.encodeWithSelector(
+                IAutomatedVoting.CandidateNotNominated.selector
+            )
         );
         vm.prank(user1);
         automatedVoting.vote(1, user1);
@@ -745,7 +764,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.expectRevert(
-            abi.encodeWithSelector(IAutomatedVoting.CallerWasNotStakedBeforeElectionStart.selector)
+            abi.encodeWithSelector(
+                IAutomatedVoting.CallerWasNotStakedBeforeElectionStart.selector
+            )
         );
         automatedVoting.nominateMultipleCandidates(1, council);
     }
@@ -755,7 +776,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
         vm.expectRevert(
-            abi.encodeWithSelector(IAutomatedVoting.CallerWasNotStakedBeforeElectionStart.selector)
+            abi.encodeWithSelector(
+                IAutomatedVoting.CallerWasNotStakedBeforeElectionStart.selector
+            )
         );
         automatedVoting.nominateMultipleCandidates(1, new address[](5));
     }
@@ -782,7 +805,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.vote(1, user1);
 
         //todo: check the candidateAddresses array
-        //todo fix voteCounts check for new election mapping 
+        //todo fix voteCounts check for new election mapping
         // uint user1Votes = //todo: fix automatedVoting.voteCounts(1, user1);
         // assertEq(user1Votes, 1);
         // uint user2Votes = //todo: fix automatedVoting.voteCounts(1, user2);
@@ -801,7 +824,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         vm.expectRevert(
-            abi.encodeWithSelector(IAutomatedVoting.CallerWasNotStakedBeforeElectionStart.selector)
+            abi.encodeWithSelector(
+                IAutomatedVoting.CallerWasNotStakedBeforeElectionStart.selector
+            )
         );
         vm.startPrank(user1);
         automatedVoting.vote(1, user1);
@@ -813,7 +838,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.startPrank(user1);
         /// @dev when there is no election, this is the error that is thrown
         vm.expectRevert(
-            abi.encodeWithSelector(IAutomatedVoting.CallerWasNotStakedBeforeElectionStart.selector)
+            abi.encodeWithSelector(
+                IAutomatedVoting.CallerWasNotStakedBeforeElectionStart.selector
+            )
         );
         automatedVoting.vote(1, user1);
     }
@@ -849,7 +876,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.startPrank(user1);
         vm.warp(block.timestamp + 1 weeks);
         vm.expectRevert(
-            abi.encodeWithSelector(IAutomatedVoting.CandidateNotNominated.selector)
+            abi.encodeWithSelector(
+                IAutomatedVoting.CandidateNotNominated.selector
+            )
         );
         automatedVoting.vote(1, user1);
     }
@@ -887,7 +916,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVotingInternals.getCouncil(), council);
     }
 
-        function testFinalizeElectionInternalStepDown() public {
+    function testFinalizeElectionInternalStepDown() public {
         vm.warp(block.timestamp + 21 weeks);
         fundAccountAndStakeV2(user1, 1);
         vm.prank(user2);
@@ -917,8 +946,6 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(councilAfter[4], user5);
     }
 
-
-
     // _sortCandidates()
 
     // _cancelOngoingElections()
@@ -930,12 +957,8 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.prank(user2);
         automatedVotingInternals.stepDown();
         assertEq(automatedVotingInternals.isElectionFinalized(2), false);
-        (
-            ,
-            ,
-            Enums.electionType theElectionType,
-
-        ) = automatedVotingInternals.elections(1);
+        (, , Enums.electionType theElectionType, ) = automatedVotingInternals
+            .elections(1);
         assertTrue(theElectionType == Enums.electionType.single);
         automatedVotingInternals.cancelOngoingElectionsInternal();
         assertEq(automatedVotingInternals.isElectionFinalized(1), true);
@@ -947,25 +970,15 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.startPrank(user1);
         automatedVotingInternals.startCommunityElection();
         assertEq(automatedVotingInternals.isElectionFinalized(1), false);
-        (
-            ,
-            ,
-            Enums.electionType theElectionType,
-
-        ) = automatedVotingInternals.elections(1);
+        (, , Enums.electionType theElectionType, ) = automatedVotingInternals
+            .elections(1);
         assertTrue(theElectionType == Enums.electionType.community);
         automatedVotingInternals.cancelOngoingElectionsInternal();
         assertEq(automatedVotingInternals.isElectionFinalized(1), true);
     }
 
-    //todo: test isWinner for the < upToIndex change
-
     //todo: test everything with when a non-existent election is put in
-
-    //todo: test onlyFullElection
 
     //todo: test elections 1ike Community reelection for when another re-election
     // is started right at 3 weeks end but the first election is not finalized yet
-
-    //todo: test more of the membersUpForRemoval in startCouncil
 }
