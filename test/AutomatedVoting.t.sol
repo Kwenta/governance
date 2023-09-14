@@ -622,8 +622,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
         vm.startPrank(user1);
         automatedVoting.nominateCandidate(1, user6);
-        //todo: check new way from struct assertEq(automatedVoting.isNominated(0, user1), true);
-        //assertEq(automatedVoting.elections(1).isNominated(0, user1), true);
+        assertEq(automatedVoting.getIsNominated(1, user6), true);
+        /// @dev sanity check
+        assertEq(automatedVoting.getIsNominated(1, user1), false);
     }
 
     function testNominateInSingleElectionNotStaked() public {
@@ -674,7 +675,12 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.nominateCandidate(1, user6);
         vm.warp(block.timestamp + 1 weeks);
         automatedVoting.vote(1, user6);
-        //todo fix voteCounts check for new election mapping assertEq(//todo: fix automatedVoting.voteCounts(1, user1), 1);
+        assertEq(automatedVoting.getVoteCounts(1, user6), 1);
+        assertEq(automatedVoting.getVoteCounts(1, user1), 0);
+        assertTrue(automatedVoting.getIsNominated(1, user6));
+        assertFalse(automatedVoting.getIsNominated(1, user1));
+        assertTrue(automatedVoting.getHasVoted(1, user1));
+        assertFalse(automatedVoting.getHasVoted(1, user6));
     }
 
     function testVoteInSingleElectionNotStaked() public {
@@ -751,13 +757,16 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.startPrank(user1);
         automatedVoting.nominateMultipleCandidates(1, council);
 
-        //todo: check the candidateAddresses array
-        //todo: check new way from struct
-        // assertEq(automatedVoting.isNominated(0, user1), true);
-        // assertEq(automatedVoting.isNominated(0, user2), true);
-        // assertEq(automatedVoting.isNominated(0, user3), true);
-        // assertEq(automatedVoting.isNominated(0, user4), true);
-        // assertEq(automatedVoting.isNominated(0, user5), true);
+        assertEq(automatedVoting.getCandidateAddress(1, 0), user1);
+        assertEq(automatedVoting.getCandidateAddress(1, 1), user2);
+        assertEq(automatedVoting.getCandidateAddress(1, 2), user3);
+        assertEq(automatedVoting.getCandidateAddress(1, 3), user4);
+        assertEq(automatedVoting.getCandidateAddress(1, 4), user5);
+        assertTrue(automatedVoting.getIsNominated(1, user1));
+        assertTrue(automatedVoting.getIsNominated(1, user2));
+        assertTrue(automatedVoting.getIsNominated(1, user3));
+        assertTrue(automatedVoting.getIsNominated(1, user4));
+        assertTrue(automatedVoting.getIsNominated(1, user5));
     }
 
     function testNominateInFullElectionNotStaked() public {
@@ -802,22 +811,23 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.startPrank(user1);
         automatedVoting.nominateMultipleCandidates(1, council);
         vm.warp(block.timestamp + 1 weeks);
+
+        assertEq(automatedVoting.getCandidateAddress(1, 0), user1);
+        assertEq(automatedVoting.getCandidateAddress(1, 1), user2);
+        assertEq(automatedVoting.getCandidateAddress(1, 2), user3);
+        assertEq(automatedVoting.getCandidateAddress(1, 3), user4);
+        assertEq(automatedVoting.getCandidateAddress(1, 4), user5);
+
         automatedVoting.vote(1, user1);
 
-        //todo: check the candidateAddresses array
-        //todo fix voteCounts check for new election mapping
-        // uint user1Votes = //todo: fix automatedVoting.voteCounts(1, user1);
-        // assertEq(user1Votes, 1);
-        // uint user2Votes = //todo: fix automatedVoting.voteCounts(1, user2);
-        // assertEq(user2Votes, 1);
-        // uint user3Votes = //todo: fix automatedVoting.voteCounts(1, user3);
-        // assertEq(user3Votes, 1);
-        // uint user4Votes = //todo: fix automatedVoting.voteCounts(1, user4);
-        // assertEq(user4Votes, 1);
-        // uint user5Votes = //todo: fix automatedVoting.voteCounts(1, user5);
-        // assertEq(user5Votes, 1);
-        // uint adminVotes = //todo: fix automatedVoting.voteCounts(1, admin);
-        // assertEq(adminVotes, 0);
+        /// @dev make sure voting didnt change the order
+        assertEq(automatedVoting.getCandidateAddress(1, 0), user1);
+        assertEq(automatedVoting.getCandidateAddress(1, 1), user2);
+        assertEq(automatedVoting.getCandidateAddress(1, 2), user3);
+        assertEq(automatedVoting.getCandidateAddress(1, 3), user4);
+        assertEq(automatedVoting.getCandidateAddress(1, 4), user5);
+
+        assertEq(automatedVoting.getVoteCounts(1, user1), 1);
     }
 
     function testVoteInScheduledElectionNotStaked() public {
@@ -925,7 +935,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVotingInternals.nominateCandidate(1, user6);
         vm.warp(block.timestamp + 1 weeks);
         automatedVotingInternals.vote(1, user6);
-        //todo fix voteCounts check for new election mapping assertEq(//todo: fix automatedVotingInternals.voteCounts(1, user6), 1);
+        automatedVotingInternals.getVoteCounts(1, user6);
 
         address[] memory councilBefore = automatedVotingInternals.getCouncil();
         assertEq(councilBefore.length, 5);
