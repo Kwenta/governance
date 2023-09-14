@@ -279,9 +279,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVoting.electionNumbers(), 2);
         (
             uint256 electionStartTime,
+            uint256 stakedAmountsForQuorum,
             bool isFinalized,
-            Enums.electionType theElectionType,
-            uint256 stakedAmountsForQuorum
+            Enums.electionType theElectionType
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
         assertEq(isFinalized, false);
@@ -379,9 +379,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVoting.electionNumbers(), 2);
         (
             uint256 electionStartTime,
+            uint256 stakedAmountsForQuorum,
             bool isFinalized,
-            Enums.electionType theElectionType,
-            uint256 stakedAmountsForQuorum
+            Enums.electionType theElectionType
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
         assertEq(isFinalized, false);
@@ -482,9 +482,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVoting.electionNumbers(), 2);
         (
             uint256 electionStartTime,
+            uint256 stakedAmountsForQuorum,
             bool isFinalized,
-            Enums.electionType theElectionType,
-            uint256 stakedAmountsForQuorum
+            Enums.electionType theElectionType
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
         assertEq(isFinalized, false);
@@ -957,7 +957,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.prank(user2);
         automatedVotingInternals.stepDown();
         assertEq(automatedVotingInternals.isElectionFinalized(2), false);
-        (, , Enums.electionType theElectionType, ) = automatedVotingInternals
+        (, , , Enums.electionType theElectionType) = automatedVotingInternals
             .elections(1);
         assertTrue(theElectionType == Enums.electionType.single);
         automatedVotingInternals.cancelOngoingElectionsInternal();
@@ -970,7 +970,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.startPrank(user1);
         automatedVotingInternals.startCommunityElection();
         assertEq(automatedVotingInternals.isElectionFinalized(1), false);
-        (, , Enums.electionType theElectionType, ) = automatedVotingInternals
+        (, , , Enums.electionType theElectionType) = automatedVotingInternals
             .elections(1);
         assertTrue(theElectionType == Enums.electionType.community);
         automatedVotingInternals.cancelOngoingElectionsInternal();

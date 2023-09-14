@@ -38,14 +38,13 @@ contract AutomatedVoting is IAutomatedVoting {
 
     struct Election {
         uint256 startTime;
+        uint256 stakedAmountsForQuorum;
         bool isFinalized;
         Enums.electionType theElectionType;
-        address[] candidateAddresses; // Array of candidate addresses for this election
-        //todo: remove winningCandidates and use only candidateAddresses and actively rearrange when voting happens
+        address[] candidateAddresses;
         mapping(address => uint256) voteCounts;
         mapping(address => bool) isNominated;
         mapping(address => bool) hasVoted;
-        uint256 stakedAmountsForQuorum;
     }
 
     modifier onlyCouncil() {
