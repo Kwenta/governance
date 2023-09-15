@@ -14,24 +14,29 @@ contract AutomatedVoting is IAutomatedVoting {
 
     /// @notice array of council members
     address[] public council;
+    //todo: check cant change size of array
+    //dynamic array not that good
 
     /// @notice mapping of election number to election
     mapping(uint256 => Election) public elections;
 
     /// @notice counter for elections
     /// @dev always stores the next election number
-    uint256 public electionNumbers;
+    uint256 public electionNumbers; //todo: eleciton counter or ID
 
     /// @notice tracker for timestamp start of last scheduled election
     uint256 public lastScheduledElectionStartTime;
 
     /// @notice tracker for last scheduled election number
+    /// @dev prevents elections from overlapping active scheduled elections
     uint256 public lastScheduledElectionNumber;
 
     /// @notice tracker for timestamp start of last community election
+    /// @dev prevents stakers calling within the 3 week cooldown period
     uint256 public lastCommunityElection;
 
     /// @notice tracker for the last finalized election
+    /// @dev decreases the looping necessary to _cancelOngoingElections
     uint256 public lastFinalizedElection;
 
     /// @notice staking rewards V2 contract
@@ -43,7 +48,7 @@ contract AutomatedVoting is IAutomatedVoting {
 
     struct Election {
         uint256 startTime;
-        uint256 stakedAmountsForQuorum;
+        uint256 totalVote; ///@dev for quorum calculation
         bool isFinalized;
         Enums.electionType theElectionType;
         address[] candidateAddresses;
@@ -73,8 +78,8 @@ contract AutomatedVoting is IAutomatedVoting {
         /// @dev isElectionFinalized is for edge case when a scheduled election is over 3 weeks but
         /// has not been finalized yet (scheduled election will be the last election in the array)
         if (
-            block.timestamp >= lastScheduledElectionStartTime + 3 weeks &&
-            isElectionFinalized(lastScheduledElectionNumber)
+            block.timestamp >= lastScheduledElectionStartTime + 3 weeks && //todo: check if mutation testing removes sub conditions
+            isElectionFinalized(lastScheduledElectionNumber) //@todo remove first check
         ) {
             _;
         } else {
@@ -85,14 +90,17 @@ contract AutomatedVoting is IAutomatedVoting {
     modifier onlyDuringNomination(uint256 _election) {
         require(
             block.timestamp >= elections[_election].startTime &&
-                block.timestamp <= elections[_election].startTime + 1 weeks,
+                block.timestamp < elections[_election].startTime + 1 weeks,
             "Election not in nomination state"
         );
         _;
     }
 
+    //todo: add view functions below and above
+
+    //todo: inclusive of the end but not the beginning
     modifier onlyDuringVoting(uint256 _election) {
-        require(
+        require( //todo: these overlaps are not good
             block.timestamp >= elections[_election].startTime + 1 weeks &&
                 block.timestamp <= electionEndTime(_election),
             "Election not in voting state"
@@ -108,12 +116,18 @@ contract AutomatedVoting is IAutomatedVoting {
     //     _;
     // }
 
-    //todo: modifier onlyActiveElections (for when an election gets canceled and finalized)
+    //todo: put all safe stuff on governor module
 
     constructor(address _stakingRewardsV2) {
-        council = new address[](5);
+        council = new address[](5);//todo: not dynamic
         stakingRewardsV2 = IStakingRewardsV2(_stakingRewardsV2);
         // safeProxy = Safe(payable(address(_safeProxy)));
+
+        //todo: make a strict timeline for elections
+        // strict start date set in constructor
+
+        //todo: 1 scheduled election per period 
+        // truncate by 6 months and make an "epochID"
     }
 
     function electionEndTime(
@@ -374,6 +388,7 @@ contract AutomatedVoting is IAutomatedVoting {
             newNumberOfVotes
         );
         elections[_election].voteCounts[candidate] = newNumberOfVotes;
+        //todo: staked quantity is your vote
     }
 
     /// @dev starts an election internally by recording state
@@ -511,6 +526,8 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     /// @dev internal helper function cancel ongoing elections when a scheduled election starts
+    /// @dev we assume there is always a motivated party to finalize finished elections promptly
+    /// otherwise previous elections will be nullified
     function _cancelOngoingElections() internal {
         for (uint i = lastFinalizedElection; i < electionNumbers; i++) {
             if (elections[i].isFinalized == false) {
