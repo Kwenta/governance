@@ -1094,11 +1094,44 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
         address[] memory result = automatedVotingInternals.sortCandidates(1, user5, 1);
 
-        /// @dev make sure index 5 swapped with 4
+        /// @dev make sure index 4 swapped with 3
         assertEq(result[0], user1);
         assertEq(result[1], user2);
         assertEq(result[2], user3);
         assertEq(result[3], user5);
+        assertEq(result[4], user4);
+    }
+
+    function testSortCandidatesPositionChangesFromIndex4ToIndex2() public {
+        vm.warp(block.timestamp + 21 weeks);
+        automatedVotingInternals.startScheduledElection();
+        fundAccountAndStakeV2(user1, 1);
+        fundAccountAndStakeV2(user2, 1);
+        fundAccountAndStakeV2(user3, 1);
+        fundAccountAndStakeV2(user4, 1);
+        fundAccountAndStakeV2(user5, 1);
+        vm.prank(user1);
+        automatedVotingInternals.nominateMultipleCandidates(1, council);
+        vm.warp(block.timestamp + 1 weeks);
+
+        vm.prank(user1);
+        automatedVotingInternals.vote(1, user1);
+        vm.prank(user2);
+        automatedVotingInternals.vote(1, user2);
+
+        assertEq(automatedVotingInternals.getCandidateAddress(1, 0), user1);
+        assertEq(automatedVotingInternals.getCandidateAddress(1, 1), user2);
+        assertEq(automatedVotingInternals.getCandidateAddress(1, 2), user3);
+        assertEq(automatedVotingInternals.getCandidateAddress(1, 3), user4);
+        assertEq(automatedVotingInternals.getCandidateAddress(1, 4), user5);
+
+        address[] memory result = automatedVotingInternals.sortCandidates(1, user5, 1);
+
+        /// @dev make sure index 4 swapped with 2
+        assertEq(result[0], user1);
+        assertEq(result[1], user2);
+        assertEq(result[2], user5);
+        assertEq(result[3], user3);
         assertEq(result[4], user4);
     }
 
