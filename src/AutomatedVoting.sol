@@ -4,9 +4,14 @@ pragma solidity ^0.8.19;
 import {IAutomatedVoting} from "./interfaces/IAutomatedVoting.sol";
 import {IStakingRewardsV2} from "../lib/token/contracts/interfaces/IStakingRewardsV2.sol";
 import {Enums} from "./Enums.sol";
+import {Safe} from "safe-contracts/Safe.sol";
+import {Enum} from "safe-contracts/common/Enum.sol";
 
 //todo: integrate with safe module here
 contract AutomatedVoting is IAutomatedVoting {
+    // /// @notice safeProxy contract
+    // Safe public safeProxy;
+
     /// @notice array of council members
     address[] public council;
 
@@ -95,11 +100,20 @@ contract AutomatedVoting is IAutomatedVoting {
         _;
     }
 
+    // modifier onlySafe() {
+    //     require(
+    //         safeProxy.isOwner(msg.sender),
+    //         "AutomatedVoting: caller is not a safe owner"
+    //     );
+    //     _;
+    // }
+
     //todo: modifier onlyActiveElections (for when an election gets canceled and finalized)
 
     constructor(address _stakingRewardsV2) {
         council = new address[](5);
         stakingRewardsV2 = IStakingRewardsV2(_stakingRewardsV2);
+        // safeProxy = Safe(payable(address(_safeProxy)));
     }
 
     function electionEndTime(
@@ -198,7 +212,6 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    //todo: integrate with safe module here
     /// @notice vote in a council election
     /// @notice a 3/5 threshold of calling this function must be reached
     /// @dev rather than starting an election with a time
@@ -206,8 +219,21 @@ contract AutomatedVoting is IAutomatedVoting {
     function startCouncilElection(
         address _memberToRemove
     ) public override onlyCouncil notDuringScheduledElection {
-        //todo: integrate with safe here
-        // burn member rights
+        // /// @dev burn member rights
+        // //todo: figure out how to get prevOwner
+        // address prevOwner = address(0);
+        // bytes memory addOwner = abi.encodeWithSignature(
+        //     "removeOwner(address,address,uint256)",
+        //     prevOwner,
+        //     _memberToRemove,
+        //     3
+        // );
+        // safeProxy.execTransactionFromModule(
+        //     address(safeProxy),
+        //     0,
+        //     addOwner,
+        //     Enum.Operation.Call
+        // );
         for (uint i = 0; i < council.length; i++) {
             if (council[i] == _memberToRemove) {
                 delete council[i];
@@ -341,12 +367,13 @@ contract AutomatedVoting is IAutomatedVoting {
             elections[_election].stakedAmountsForQuorum += userStaked;
         }
         elections[_election].hasVoted[msg.sender] = true;
-        elections[_election].voteCounts[candidate]++;
+        uint newNumberOfVotes = elections[_election].voteCounts[candidate] + 1;
         elections[_election].candidateAddresses = _sortCandidates(
             _election,
             candidate,
-            elections[_election].voteCounts[candidate]
+            newNumberOfVotes
         );
+        elections[_election].voteCounts[candidate] = newNumberOfVotes;
     }
 
     /// @dev starts an election internally by recording state
@@ -466,7 +493,7 @@ contract AutomatedVoting is IAutomatedVoting {
             else if (
                 elections[_election].voteCounts[candidate] < newNumOfVotes
             ) {
-                if (!hasSwapped) {
+                if (!hasSwapped && !hasReachedVotee) {
                     // swap it (first iteration in this block)
                     newCandidates[i] = voteeName;
                     hasSwapped = true;
@@ -478,7 +505,6 @@ contract AutomatedVoting is IAutomatedVoting {
             }
             if (candidate == voteeName) {
                 hasReachedVotee = true;
-                hasSwapped = true;
             }
         }
         return newCandidates;
