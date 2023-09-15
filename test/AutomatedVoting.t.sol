@@ -171,7 +171,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     // getCouncil()
 
     function testGetCouncil() public {
-        address[] memory result = automatedVoting.getCouncil();
+        address[5] memory result = automatedVoting.getCouncil();
         assertEq(result.length, 5);
         assertEq(result[0], user1);
     }
@@ -923,7 +923,12 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVotingInternals.isElectionFinalized(1), true);
 
         /// @dev check if the council changed
-        assertEq(automatedVotingInternals.getCouncil(), council);
+        address[5] memory result = automatedVotingInternals.getCouncil();
+        assertEq(result[0], council[0]);
+        assertEq(result[1], council[1]);
+        assertEq(result[2], council[2]);
+        assertEq(result[3], council[3]);
+        assertEq(result[4], council[4]);
     }
 
     function testFinalizeElectionInternalStepDown() public {
@@ -937,7 +942,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVotingInternals.vote(1, user6);
         automatedVotingInternals.getVoteCounts(1, user6);
 
-        address[] memory councilBefore = automatedVotingInternals.getCouncil();
+        address[5] memory councilBefore = automatedVotingInternals.getCouncil();
         assertEq(councilBefore.length, 5);
         assertEq(councilBefore[0], user1);
         assertEq(councilBefore[1], address(0));
@@ -947,7 +952,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVotingInternals.isElectionFinalized(1), false);
         automatedVotingInternals.finalizeElectionInternal(1);
         assertEq(automatedVotingInternals.isElectionFinalized(1), true);
-        address[] memory councilAfter = automatedVotingInternals.getCouncil();
+        address[5] memory councilAfter = automatedVotingInternals.getCouncil();
         assertEq(councilAfter.length, 5);
         assertEq(councilAfter[0], user1);
         assertEq(councilAfter[1], user6);

@@ -13,9 +13,7 @@ contract AutomatedVoting is IAutomatedVoting {
     // Safe public safeProxy;
 
     /// @notice array of council members
-    address[] public council;
-    //todo: check cant change size of array
-    //dynamic array not that good
+    address[5] public council;
 
     /// @notice mapping of election number to election
     mapping(uint256 => Election) public elections;
@@ -90,7 +88,7 @@ contract AutomatedVoting is IAutomatedVoting {
     modifier onlyDuringNomination(uint256 _election) {
         require(
             block.timestamp >= elections[_election].startTime &&
-                block.timestamp < elections[_election].startTime + 1 weeks,
+                block.timestamp <= elections[_election].startTime + 1 weeks,
             "Election not in nomination state"
         );
         _;
@@ -119,7 +117,6 @@ contract AutomatedVoting is IAutomatedVoting {
     //todo: put all safe stuff on governor module
 
     constructor(address _stakingRewardsV2) {
-        council = new address[](5);//todo: not dynamic
         stakingRewardsV2 = IStakingRewardsV2(_stakingRewardsV2);
         // safeProxy = Safe(payable(address(_safeProxy)));
 
@@ -194,7 +191,7 @@ contract AutomatedVoting is IAutomatedVoting {
 
     /// @notice gets the current council
     /// @return address[] the current council
-    function getCouncil() public view override returns (address[] memory) {
+    function getCouncil() public view override returns (address[5] memory) {
         return council;
     }
 
@@ -378,7 +375,7 @@ contract AutomatedVoting is IAutomatedVoting {
                 msg.sender,
                 elections[_election].startTime
             );
-            elections[_election].stakedAmountsForQuorum += userStaked;
+            elections[_election].totalVote += userStaked;
         }
         elections[_election].hasVoted[msg.sender] = true;
         uint newNumberOfVotes = elections[_election].voteCounts[candidate] + 1;
@@ -434,7 +431,7 @@ contract AutomatedVoting is IAutomatedVoting {
     ) internal view returns (bool) {
         uint256 electionStartTime = elections[_election].startTime;
         uint256 quorumPercentage = (elections[_election]
-            .stakedAmountsForQuorum * 100) /
+            .totalVote * 100) /
             stakingRewardsV2.totalSupplyAtTime(electionStartTime);
         if (quorumPercentage < 40) {
             return false;
@@ -450,7 +447,7 @@ contract AutomatedVoting is IAutomatedVoting {
             elections[_election].theElectionType == Enums.electionType.scheduled
         ) {
             /// @dev this is for a full election
-            address[] memory winners = new address[](5);
+            address[5] memory winners;
             winners[0] = elections[_election].candidateAddresses[0];
             winners[1] = elections[_election].candidateAddresses[1];
             winners[2] = elections[_election].candidateAddresses[2];
@@ -462,7 +459,7 @@ contract AutomatedVoting is IAutomatedVoting {
         ) {
             if (_checkIfQuorumReached(_election)) {
                 /// @dev this is for a full election
-                address[] memory winners = new address[](5);
+                address[5] memory winners;
                 winners[0] = elections[_election].candidateAddresses[0];
                 winners[1] = elections[_election].candidateAddresses[1];
                 winners[2] = elections[_election].candidateAddresses[2];

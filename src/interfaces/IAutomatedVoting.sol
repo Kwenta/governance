@@ -110,7 +110,7 @@ interface IAutomatedVoting {
     function getHasVoted(uint256 _election, address voter) external view returns (bool);
 
     /// @notice returns the current council
-    function getCouncil() external view returns (address[] memory);
+    function getCouncil() external view returns (address[5] memory);
 
     /// @notice returns if the election is finalized
     /// @param election the election to check
