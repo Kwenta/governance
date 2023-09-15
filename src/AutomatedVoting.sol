@@ -342,7 +342,7 @@ contract AutomatedVoting is IAutomatedVoting {
         }
         elections[_election].hasVoted[msg.sender] = true;
         elections[_election].voteCounts[candidate]++;
-        _sortCandidates(
+        elections[_election].candidateAddresses = _sortCandidates(
             _election,
             candidate,
             elections[_election].voteCounts[candidate]
@@ -478,6 +478,7 @@ contract AutomatedVoting is IAutomatedVoting {
             }
             if (candidate == voteeName) {
                 hasReachedVotee = true;
+                hasSwapped = true;
             }
         }
         return newCandidates;
