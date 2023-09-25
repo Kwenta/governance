@@ -44,6 +44,11 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @dev 1 week nomination, 2 weeks voting
     uint256 constant ELECTION_DURATION = 3 weeks;
 
+    /// @notice constant for quorum
+    /// @dev 40% of total supply has to vote to make a community election valid
+    /// @dev this is constant but open to be changed in an upgrade
+    uint256 constant QUORUM = 40;
+
     struct Election {
         uint256 startTime;
         uint256 totalVote; ///@dev for quorum calculation
@@ -63,7 +68,6 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    //todo remove?
     modifier wasStakedBeforeElection(uint256 _election) {
         if (_wasStakedBeforeElection(msg.sender, _election)) {
             _;
@@ -77,7 +81,7 @@ contract AutomatedVoting is IAutomatedVoting {
         /// @dev isElectionFinalized is for edge case when a scheduled election is over 3 weeks but
         /// has not been finalized yet (scheduled election will be the last election in the array)
         if (
-            block.timestamp >= lastScheduledElectionStartTime + 3 weeks && //todo: check if mutation testing removes sub conditions
+            block.timestamp >= lastScheduledElectionStartTime + 3 weeks && //todo: check if mutation testing removes sub conditions from if statements (out of curiosity)
             isElectionFinalized(lastScheduledElectionNumber) //@todo remove first check
         ) {
             _;
@@ -403,14 +407,16 @@ contract AutomatedVoting is IAutomatedVoting {
             elections[_election].totalVote += userStaked;
         }
         elections[_election].hasVoted[msg.sender] = true;
-        uint newNumberOfVotes = elections[_election].voteCounts[candidate] + 1;
+        uint newNumberOfVotes = elections[_election].voteCounts[candidate] + stakingRewardsV2.balanceAtTime( //todo: test for staking amounts addition
+                msg.sender,
+                elections[_election].startTime
+            );
         elections[_election].candidateAddresses = _sortCandidates(
             _election,
             candidate,
             newNumberOfVotes
         );
         elections[_election].voteCounts[candidate] = newNumberOfVotes;
-        //todo: staked quantity is your vote
     }
 
     /// @dev starts an election internally by recording state
@@ -457,8 +463,7 @@ contract AutomatedVoting is IAutomatedVoting {
         uint256 electionStartTime = elections[_election].startTime;
         uint256 quorumPercentage = (elections[_election].totalVote * 100) /
             stakingRewardsV2.totalSupplyAtTime(electionStartTime);
-        if (quorumPercentage < 40) {
-            //todo: make quorum adjustable
+        if (quorumPercentage < QUORUM) {
             return false;
         } else {
             return true;
@@ -493,13 +498,12 @@ contract AutomatedVoting is IAutomatedVoting {
                 council = winners;
             } else {
                 /// @dev do nothing because quorum not reached
-                //todo: emit event
+                //todo: maybe emit an event that quorum was not reached
             }
         } else if (
             elections[_election].theElectionType == Enums.electionType.single
         ) {
             /// @dev this is for a single election
-            //todo: if winner is already council member, take next one
             address winner = elections[_election].candidateAddresses[0];
             for (uint i = 0; i < council.length; i++) {
                 if (council[i] == address(0)) {
@@ -517,6 +521,8 @@ contract AutomatedVoting is IAutomatedVoting {
         address voteeName,
         uint256 newNumOfVotes
     ) internal view returns (address[] memory newCandidates) {
+        //todo: redo with new linked list system
+
         address[] memory candidates = elections[_election].candidateAddresses;
         newCandidates = new address[](candidates.length);
         bool hasSwapped = false;
