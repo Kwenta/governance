@@ -47,7 +47,7 @@ contract AutomatedVoting is IAutomatedVoting {
     struct Election {
         uint256 startTime;
         uint256 totalVote; ///@dev for quorum calculation
-        bool isFinalized;
+        bool isFinalized; //todo: enum status, ongoing, invalid, finalized //todo: set elections to ongoing
         Enums.electionType theElectionType;
         address[] candidateAddresses;
         mapping(address => uint256) voteCounts;
@@ -63,6 +63,7 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
+    //todo remove?
     modifier wasStakedBeforeElection(uint256 _election) {
         if (_wasStakedBeforeElection(msg.sender, _election)) {
             _;
@@ -86,24 +87,19 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     modifier onlyDuringNomination(uint256 _election) {
-        require(
-            block.timestamp >= elections[_election].startTime &&
-                block.timestamp <= elections[_election].startTime + 1 weeks,
-            "Election not in nomination state"
-        );
-        _;
+        if (isDuringNomination(_election)){
+            _;
+        } else {
+            revert ElectionNotDuringNomination();
+        }
     }
 
-    //todo: add view functions below and above
-
-    //todo: inclusive of the end but not the beginning
     modifier onlyDuringVoting(uint256 _election) {
-        require( //todo: these overlaps are not good
-            block.timestamp >= elections[_election].startTime + 1 weeks &&
-                block.timestamp <= electionEndTime(_election),
-            "Election not in voting state"
-        );
-        _;
+        if (isDuringVoting(_election)){
+            _;
+        } else {
+            revert ElectionNotDuringVoting();
+        }
     }
 
     // modifier onlySafe() {
@@ -125,6 +121,21 @@ contract AutomatedVoting is IAutomatedVoting {
 
         //todo: 1 scheduled election per period 
         // truncate by 6 months and make an "epochID"
+    }
+
+    /// @inheritdoc IAutomatedVoting
+    function isDuringNomination(uint256 _election) public view override returns (bool) {
+        return block.timestamp > elections[_election].startTime &&
+            block.timestamp <= elections[_election].startTime + 1 weeks;
+    }
+
+    //todo:
+    ///@dev remove inclusivity
+
+    /// @inheritdoc IAutomatedVoting
+    function isDuringVoting(uint256 _election) public view override returns (bool) {
+        return block.timestamp > elections[_election].startTime + 1 weeks &&
+            block.timestamp <= electionEndTime(_election);
     }
 
     function electionEndTime(
@@ -433,7 +444,7 @@ contract AutomatedVoting is IAutomatedVoting {
         uint256 quorumPercentage = (elections[_election]
             .totalVote * 100) /
             stakingRewardsV2.totalSupplyAtTime(electionStartTime);
-        if (quorumPercentage < 40) {
+        if (quorumPercentage < 40) { //todo: make quorum adjustable
             return false;
         } else {
             return true;
@@ -474,6 +485,7 @@ contract AutomatedVoting is IAutomatedVoting {
             elections[_election].theElectionType == Enums.electionType.single
         ) {
             /// @dev this is for a single election
+            //todo: if winner is already council member, take next one
             address winner = elections[_election].candidateAddresses[0];
             for (uint i = 0; i < council.length; i++) {
                 if (council[i] == address(0)) {

@@ -34,6 +34,12 @@ interface IAutomatedVoting {
     /// @notice emitted when the member specified is not on the council
     error MemberNotOnCouncil();
 
+    /// @notice emitted when the election is not during nomination
+    error ElectionNotDuringNomination();
+
+    /// @notice emitted when the election is not during voting
+    error ElectionNotDuringVoting();
+
     /// @notice emitted when the election is not ready to be finalized
     error ElectionNotReadyToBeFinalized();
 
@@ -63,6 +69,12 @@ interface IAutomatedVoting {
     error ScheduledElectionInProgress();
 
     // View Functions
+
+    /// @notice returns if an election is during nomination
+    function isDuringNomination(uint256 _election) external view returns (bool);
+
+    /// @notice returns if an election is during voting
+    function isDuringVoting(uint256 _election) external view returns (bool);
 
     /// @notice returns the end time of an election
     function electionEndTime(uint256 _election) external view returns (uint256);
