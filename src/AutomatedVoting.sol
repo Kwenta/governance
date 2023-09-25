@@ -87,7 +87,7 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     modifier onlyDuringNomination(uint256 _election) {
-        if (isDuringNomination(_election)){
+        if (isDuringNomination(_election)) {
             _;
         } else {
             revert ElectionNotDuringNomination();
@@ -95,7 +95,7 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     modifier onlyDuringVoting(uint256 _election) {
-        if (isDuringVoting(_election)){
+        if (isDuringVoting(_election)) {
             _;
         } else {
             revert ElectionNotDuringVoting();
@@ -119,13 +119,16 @@ contract AutomatedVoting is IAutomatedVoting {
         //todo: make a strict timeline for elections
         // strict start date set in constructor
 
-        //todo: 1 scheduled election per period 
+        //todo: 1 scheduled election per period
         // truncate by 6 months and make an "epochID"
     }
 
     /// @inheritdoc IAutomatedVoting
-    function isDuringNomination(uint256 _election) public view override returns (bool) {
-        return block.timestamp > elections[_election].startTime &&
+    function isDuringNomination(
+        uint256 _election
+    ) public view override returns (bool) {
+        return
+            block.timestamp > elections[_election].startTime &&
             block.timestamp <= elections[_election].startTime + 1 weeks;
     }
 
@@ -133,8 +136,11 @@ contract AutomatedVoting is IAutomatedVoting {
     ///@dev remove inclusivity
 
     /// @inheritdoc IAutomatedVoting
-    function isDuringVoting(uint256 _election) public view override returns (bool) {
-        return block.timestamp > elections[_election].startTime + 1 weeks &&
+    function isDuringVoting(
+        uint256 _election
+    ) public view override returns (bool) {
+        return
+            block.timestamp > elections[_election].startTime + 1 weeks &&
             block.timestamp <= electionEndTime(_election);
     }
 
@@ -186,17 +192,26 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     /// @inheritdoc IAutomatedVoting
-    function getVoteCounts(uint256 _election, address nominee) public view override returns (uint256 count) {
+    function getVoteCounts(
+        uint256 _election,
+        address nominee
+    ) public view override returns (uint256 count) {
         return elections[_election].voteCounts[nominee];
     }
 
     /// @inheritdoc IAutomatedVoting
-    function getIsNominated(uint256 _election, address nominee) public view override returns (bool isNominated) {
+    function getIsNominated(
+        uint256 _election,
+        address nominee
+    ) public view override returns (bool isNominated) {
         return elections[_election].isNominated[nominee];
     }
 
     /// @inheritdoc IAutomatedVoting
-    function getHasVoted(uint256 _election, address voter) public view override returns (bool hasVoted) {
+    function getHasVoted(
+        uint256 _election,
+        address voter
+    ) public view override returns (bool hasVoted) {
         return elections[_election].hasVoted[voter];
     }
 
@@ -221,7 +236,7 @@ contract AutomatedVoting is IAutomatedVoting {
         if (
             block.timestamp < lastScheduledElectionStartTime + 24 weeks ||
             (lastScheduledElectionNumber != 0 &&
-            !isElectionFinalized(lastScheduledElectionNumber))
+                !isElectionFinalized(lastScheduledElectionNumber))
         ) {
             revert ElectionNotReadyToBeStarted();
         } else {
@@ -353,7 +368,7 @@ contract AutomatedVoting is IAutomatedVoting {
         /// @dev this prevent a council member from being nominated in a single election (becoming member twice)
         if (
             elections[election].theElectionType == Enums.electionType.single &&
-            isCouncilMember(candidate) 
+            isCouncilMember(candidate)
         ) {
             revert CandidateIsAlreadyCouncilMember();
         }
@@ -441,10 +456,10 @@ contract AutomatedVoting is IAutomatedVoting {
         uint256 _election
     ) internal view returns (bool) {
         uint256 electionStartTime = elections[_election].startTime;
-        uint256 quorumPercentage = (elections[_election]
-            .totalVote * 100) /
+        uint256 quorumPercentage = (elections[_election].totalVote * 100) /
             stakingRewardsV2.totalSupplyAtTime(electionStartTime);
-        if (quorumPercentage < 40) { //todo: make quorum adjustable
+        if (quorumPercentage < 40) {
+            //todo: make quorum adjustable
             return false;
         } else {
             return true;
