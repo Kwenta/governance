@@ -20,7 +20,7 @@ contract AutomatedVoting is IAutomatedVoting {
 
     /// @notice counter for elections
     /// @dev always stores the next election number
-    uint256 public electionNumbers; //todo: eleciton counter or ID
+    uint256 public electionCounter;
 
     /// @notice tracker for timestamp start of last scheduled election
     uint256 public lastScheduledElectionStartTime;
@@ -128,18 +128,17 @@ contract AutomatedVoting is IAutomatedVoting {
         uint256 _election
     ) public view override returns (bool) {
         return
+            /// @dev not inclusive of the start to prevent nomination during startTime
             block.timestamp > elections[_election].startTime &&
             block.timestamp <= elections[_election].startTime + 1 weeks;
     }
-
-    //todo:
-    ///@dev remove inclusivity
 
     /// @inheritdoc IAutomatedVoting
     function isDuringVoting(
         uint256 _election
     ) public view override returns (bool) {
         return
+            /// @dev not inclusive of the start to prevent nomination during voting
             block.timestamp > elections[_election].startTime + 1 weeks &&
             block.timestamp <= electionEndTime(_election);
     }
@@ -175,7 +174,7 @@ contract AutomatedVoting is IAutomatedVoting {
         /// @dev if the election is over or the election number is greater than the number of elections, return 0
         if (
             electionEndTime(_election) <= block.timestamp ||
-            _election >= electionNumbers
+            _election >= electionCounter
         ) {
             return 0;
         } else {
@@ -241,7 +240,7 @@ contract AutomatedVoting is IAutomatedVoting {
             revert ElectionNotReadyToBeStarted();
         } else {
             lastScheduledElectionStartTime = block.timestamp;
-            lastScheduledElectionNumber = electionNumbers;
+            lastScheduledElectionNumber = electionCounter;
             /// @dev cancel ongoing elections before _startElection so
             /// this scheduled election isnt cancelled
             _cancelOngoingElections();
@@ -416,8 +415,8 @@ contract AutomatedVoting is IAutomatedVoting {
 
     /// @dev starts an election internally by recording state
     function _startElection(Enums.electionType electionType) internal {
-        uint256 electionNumber = electionNumbers;
-        electionNumbers++;
+        uint256 electionNumber = electionCounter;
+        electionCounter++;
         elections[electionNumber].startTime = block.timestamp;
         elections[electionNumber].isFinalized = false;
         elections[electionNumber].theElectionType = electionType;
@@ -553,11 +552,11 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @dev we assume there is always a motivated party to finalize finished elections promptly
     /// otherwise previous elections will be nullified
     function _cancelOngoingElections() internal {
-        for (uint i = lastFinalizedElection; i < electionNumbers; i++) {
+        for (uint i = lastFinalizedElection; i < electionCounter; i++) {
             if (elections[i].isFinalized == false) {
                 elections[i].isFinalized = true;
             }
         }
-        lastFinalizedElection = electionNumbers;
+        lastFinalizedElection = electionCounter;
     }
 }

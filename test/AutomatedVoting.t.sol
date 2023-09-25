@@ -295,7 +295,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
             automatedVoting.lastScheduledElectionStartTime(),
             block.timestamp
         );
-        assertEq(automatedVoting.electionNumbers(), 2);
+        assertEq(automatedVoting.electionCounter(), 2);
         (
             uint256 electionStartTime,
             uint256 stakedAmountsForQuorum,
@@ -396,7 +396,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
             automatedVoting.lastScheduledElectionStartTime(),
             block.timestamp - 3 weeks
         );
-        assertEq(automatedVoting.electionNumbers(), 2);
+        assertEq(automatedVoting.electionCounter(), 2);
         (
             uint256 electionStartTime,
             uint256 stakedAmountsForQuorum,
@@ -500,7 +500,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
         assertFalse(automatedVoting.isCouncilMember(user1));
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
-        assertEq(automatedVoting.electionNumbers(), 2);
+        assertEq(automatedVoting.electionCounter(), 2);
         (
             uint256 electionStartTime,
             uint256 stakedAmountsForQuorum,
