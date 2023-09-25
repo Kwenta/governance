@@ -220,8 +220,8 @@ contract AutomatedVoting is IAutomatedVoting {
     function startScheduledElection() public override {
         if (
             block.timestamp < lastScheduledElectionStartTime + 24 weeks ||
-            (!isElectionFinalized(lastScheduledElectionNumber) &&
-                lastScheduledElectionNumber != 0)
+            (lastScheduledElectionNumber != 0 &&
+            !isElectionFinalized(lastScheduledElectionNumber))
         ) {
             revert ElectionNotReadyToBeStarted();
         } else {
@@ -352,8 +352,8 @@ contract AutomatedVoting is IAutomatedVoting {
         }
         /// @dev this prevent a council member from being nominated in a single election (becoming member twice)
         if (
-            isCouncilMember(candidate) &&
-            elections[election].theElectionType == Enums.electionType.single
+            elections[election].theElectionType == Enums.electionType.single &&
+            isCouncilMember(candidate) 
         ) {
             revert CandidateIsAlreadyCouncilMember();
         }
