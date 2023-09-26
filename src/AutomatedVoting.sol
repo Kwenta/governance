@@ -18,6 +18,9 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @notice mapping of election number to election
     mapping(uint256 => Election) public elections;
 
+    /// @notice epoch start time for scheduled elections
+    uint256 public epochStartTime;
+
     /// @notice counter for elections
     /// @dev always stores the next election number
     uint256 public electionCounter;
@@ -43,6 +46,10 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @notice constant for election duration
     /// @dev 1 week nomination, 2 weeks voting
     uint256 constant ELECTION_DURATION = 3 weeks;
+
+    /// @notice constant for 6 months
+    /// @dev used for epoch calculation
+    uint256 constant SIX_MONTHS = 24 weeks;
 
     /// @notice constant for quorum
     /// @dev 40% of total supply has to vote to make a community election valid
@@ -116,7 +123,7 @@ contract AutomatedVoting is IAutomatedVoting {
 
     //todo: put all safe stuff on governor module
 
-    constructor(address _stakingRewardsV2) {
+    constructor(address _stakingRewardsV2, uint256 startTime) {
         stakingRewardsV2 = IStakingRewardsV2(_stakingRewardsV2);
         // safeProxy = Safe(payable(address(_safeProxy)));
 
@@ -125,6 +132,8 @@ contract AutomatedVoting is IAutomatedVoting {
 
         //todo: 1 scheduled election per period
         // truncate by 6 months and make an "epochID"
+        // epochID = startTime / 24 weeks * 24 weeks;
+        epochStartTime = startTime;
     }
 
     /// @inheritdoc IAutomatedVoting
@@ -184,6 +193,15 @@ contract AutomatedVoting is IAutomatedVoting {
         } else {
             return electionEndTime(_election) - block.timestamp;
         }
+    }
+
+    function getCurrentEpoch() public view returns (uint256) {
+        uint256 elapsedTime = block.timestamp - epochStartTime;
+        return elapsedTime / SIX_MONTHS;
+    }
+
+    function getCurrentEpochStartTime() public view returns (uint256) {
+        return epochStartTime + (getCurrentEpoch() * SIX_MONTHS);
     }
 
     /// @inheritdoc IAutomatedVoting

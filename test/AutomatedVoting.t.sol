@@ -36,9 +36,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         council[4] = user5;
 
         /// @dev set up council for automatedVoting and automatedVotingInternals
-        automatedVoting = new AutomatedVoting(address(stakingRewardsV2));
+        startTime = block.timestamp;
+        automatedVoting = new AutomatedVoting(address(stakingRewardsV2), startTime);
         automatedVotingInternals = new AutomatedVotingInternals(
-            address(stakingRewardsV2)
+            address(stakingRewardsV2), startTime
         );
         fundAccountAndStakeV2(admin, 1);
         vm.startPrank(admin);
@@ -219,7 +220,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         );
     }
 
-    // timeUntilElectionStateEnd(1
+    // timeUntilElectionStateEnd()
 
     function testTimeUntilElectionStateEndNoElection() public {
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 0);
@@ -283,6 +284,58 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.warp(block.timestamp + 3 weeks);
         automatedVoting.finalizeElection(1);
         assertEq(automatedVoting.isElectionFinalized(1), true);
+    }
+
+    // getCurrentEpoch()
+
+    function testGetCurrentEpochRightBefore() public {
+        assertEq(automatedVoting.getCurrentEpoch(), 0);
+        /// @dev 21 weeks instead of 24 because of 3 weeks warp in setup
+        vm.warp(block.timestamp + 21 weeks - 1);
+        assertEq(automatedVoting.getCurrentEpoch(), 0);
+    }
+
+    function testGetCurrentEpochRightAtChange() public {
+        assertEq(automatedVoting.getCurrentEpoch(), 0);
+        /// @dev 21 weeks instead of 24 because of 3 weeks warp in setup
+        vm.warp(block.timestamp + 21 weeks);
+        assertEq(automatedVoting.getCurrentEpoch(), 1);
+    }
+
+    function testFuzzGetCurrentEpochDuring(uint time) public {
+        vm.assume(time < 21 weeks);
+        assertEq(automatedVoting.getCurrentEpoch(), 0);
+        /// @dev 21 weeks instead of 24 because of 3 weeks warp in setup
+        vm.warp(block.timestamp + 21 weeks);
+        assertEq(automatedVoting.getCurrentEpoch(), 1);
+        vm.warp(block.timestamp + time);
+        assertEq(automatedVoting.getCurrentEpoch(), 1);
+    }
+
+    // getCurrentEpochStartTime()
+
+    function testGetCurrentEpochStartTimeRightBefore() public {
+        assertEq(automatedVoting.getCurrentEpochStartTime(), startTime);
+        /// @dev 21 weeks instead of 24 because of 3 weeks warp in setup
+        vm.warp(block.timestamp + 21 weeks - 1);
+        assertEq(automatedVoting.getCurrentEpochStartTime(), startTime);
+    }
+
+    function testGetCurrentEpochStartTimeRightAtChange() public {
+        assertEq(automatedVoting.getCurrentEpochStartTime(), startTime);
+        /// @dev 21 weeks instead of 24 because of 3 weeks warp in setup
+        vm.warp(block.timestamp + 21 weeks);
+        assertEq(automatedVoting.getCurrentEpochStartTime(), startTime + 24 weeks);
+    }
+
+    function testFuzzGetCurrentEpochStartTimeDuring(uint time) public {
+        vm.assume(time < 21 weeks);
+        assertEq(automatedVoting.getCurrentEpochStartTime(), startTime);
+        /// @dev 21 weeks instead of 24 because of 3 weeks warp in setup
+        vm.warp(block.timestamp + 21 weeks);
+        assertEq(automatedVoting.getCurrentEpochStartTime(), startTime + 24 weeks);
+        vm.warp(block.timestamp + time);
+        assertEq(automatedVoting.getCurrentEpochStartTime(), startTime + 24 weeks);
     }
 
     // startScheduledElection()

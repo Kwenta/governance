@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import {AutomatedVoting} from "../src/AutomatedVoting.sol";
 
 contract AutomatedVotingInternals is AutomatedVoting {
-    constructor(address _stakingRewards) AutomatedVoting(_stakingRewards) {}
+    constructor(address _stakingRewards, uint256 startTime) AutomatedVoting(_stakingRewards, startTime) {}
 
     function wasStakedBeforeElectionInternal(
         address voter,
