@@ -7,4 +7,9 @@ contract Enums {
         community,
         replacement
     }
+    enum status {
+        ongoing,
+        invalid,
+        finalized
+    }
 }

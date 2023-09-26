@@ -299,11 +299,11 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         (
             uint256 electionStartTime,
             uint256 stakedAmountsForQuorum,
-            bool isFinalized,
+            Enums.status status,
             Enums.electionType theElectionType
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
-        assertEq(isFinalized, false);
+        assertTrue(status == Enums.status.ongoing);
         assertTrue(theElectionType == Enums.electionType.scheduled);
         assertEq(stakedAmountsForQuorum, 0);
     }
@@ -400,11 +400,11 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         (
             uint256 electionStartTime,
             uint256 stakedAmountsForQuorum,
-            bool isFinalized,
+            Enums.status status,
             Enums.electionType theElectionType
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
-        assertEq(isFinalized, false);
+        assertTrue(status == Enums.status.ongoing);
         assertTrue(theElectionType == Enums.electionType.community);
         assertEq(stakedAmountsForQuorum, 0);
     }
@@ -504,11 +504,11 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         (
             uint256 electionStartTime,
             uint256 stakedAmountsForQuorum,
-            bool isFinalized,
+            Enums.status status,
             Enums.electionType theElectionType
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
-        assertEq(isFinalized, false);
+        assertTrue(status == Enums.status.ongoing);
         assertTrue(theElectionType == Enums.electionType.replacement);
         assertEq(stakedAmountsForQuorum, 0);
 
@@ -1286,6 +1286,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
             .elections(1);
         assertTrue(theElectionType == Enums.electionType.replacement);
         automatedVotingInternals.cancelOngoingElectionsInternal();
+        (, , Enums.status status, ) = automatedVotingInternals
+            .elections(1);
+        assertTrue(status == Enums.status.invalid);
         assertEq(automatedVotingInternals.isElectionFinalized(1), true);
         assertEq(automatedVotingInternals.isElectionFinalized(2), true);
     }

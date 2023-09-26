@@ -52,7 +52,7 @@ contract AutomatedVoting is IAutomatedVoting {
     struct Election {
         uint256 startTime;
         uint256 totalVote; ///@dev for quorum calculation
-        bool isFinalized; //todo: enum status, ongoing, invalid, finalized //todo: set elections to ongoing
+        Enums.status status;
         Enums.electionType theElectionType;
         address[] candidateAddresses;
         mapping(address => uint256) voteCounts;
@@ -230,7 +230,11 @@ contract AutomatedVoting is IAutomatedVoting {
     function isElectionFinalized(
         uint256 _election
     ) public view override returns (bool) {
-        return elections[_election].isFinalized;
+        if (elections[_election].status == Enums.status.finalized || elections[_election].status == Enums.status.invalid) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /// @notice starts the scheduled election
@@ -322,7 +326,7 @@ contract AutomatedVoting is IAutomatedVoting {
     /// @notice finalizes an election
     /// @param _election the election to finalize
     function finalizeElection(uint256 _election) public override {
-        if (elections[_election].isFinalized) {
+        if (isElectionFinalized(_election)) {
             revert ElectionAlreadyFinalized();
         } else if (block.timestamp >= electionEndTime(_election)) {
             _finalizeElection(_election);
@@ -424,7 +428,7 @@ contract AutomatedVoting is IAutomatedVoting {
         uint256 electionNumber = electionCounter;
         electionCounter++;
         elections[electionNumber].startTime = block.timestamp;
-        elections[electionNumber].isFinalized = false;
+        elections[electionNumber].status = Enums.status.ongoing;
         elections[electionNumber].theElectionType = electionType;
     }
 
@@ -472,7 +476,7 @@ contract AutomatedVoting is IAutomatedVoting {
 
     /// @dev internal function to finalize elections depending on type
     function _finalizeElection(uint256 _election) internal {
-        elections[_election].isFinalized = true;
+        elections[_election].status = Enums.status.finalized;
         if (
             elections[_election].theElectionType == Enums.electionType.scheduled
         ) {
@@ -559,8 +563,8 @@ contract AutomatedVoting is IAutomatedVoting {
     /// otherwise previous elections will be nullified
     function _cancelOngoingElections() internal {
         for (uint i = lastFinalizedElection; i < electionCounter; i++) {
-            if (elections[i].isFinalized == false) {
-                elections[i].isFinalized = true;
+            if (!isElectionFinalized(i)) {
+                elections[i].status = Enums.status.invalid;
             }
         }
         lastFinalizedElection = electionCounter;
