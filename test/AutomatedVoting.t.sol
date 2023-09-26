@@ -509,7 +509,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         ) = automatedVoting.elections(1);
         assertEq(electionStartTime, block.timestamp);
         assertEq(isFinalized, false);
-        assertTrue(theElectionType == Enums.electionType.single);
+        assertTrue(theElectionType == Enums.electionType.replacement);
         assertEq(stakedAmountsForQuorum, 0);
 
         council = automatedVoting.getCouncil();
@@ -639,7 +639,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
     // nominateCandidate()
 
-    function testNominateInSingleElectionSuccess() public {
+    function testNominateInReplacementElectionSuccess() public {
         fundAccountAndStakeV2(user1, 1);
         vm.prank(user2);
         automatedVoting.stepDown();
@@ -652,7 +652,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVoting.getIsNominated(1, user1), false);
     }
 
-    function testNominateInSingleElectionNotStaked() public {
+    function testNominateInReplacementElectionNotStaked() public {
         vm.warp(block.timestamp + 21 weeks);
         vm.prank(user2);
         automatedVoting.stepDown();
@@ -664,7 +664,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.nominateCandidate(1, user1);
     }
 
-    function testNominateInSingleElectionNotDuringNomination() public {
+    function testNominateInReplacementElectionNotDuringNomination() public {
         vm.warp(block.timestamp + 21 weeks);
         fundAccountAndStakeV2(user1, 1);
         vm.prank(user2);
@@ -679,7 +679,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.nominateCandidate(1, user1);
     }
 
-    function testNominateInSingleElectionAlreadyMember() public {
+    function testNominateInReplacementElectionAlreadyMember() public {
         fundAccountAndStakeV2(user1, 1);
         vm.prank(user2);
         automatedVoting.stepDown();
@@ -693,9 +693,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.nominateCandidate(1, user1);
     }
 
-    // voteInSingleElection()
+    // voteInReplacementElection()
 
-    function testVoteInSingleElectionSuccess() public {
+    function testVoteInReplacementElectionSuccess() public {
         vm.warp(block.timestamp + 21 weeks);
         fundAccountAndStakeV2(user1, 1);
         vm.prank(user2);
@@ -714,7 +714,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertFalse(automatedVoting.getHasVoted(1, user6));
     }
 
-    function testVoteInSingleElectionNotStaked() public {
+    function testVoteInReplacementElectionNotStaked() public {
         vm.warp(block.timestamp + 21 weeks);
         vm.prank(user2);
         automatedVoting.stepDown();
@@ -726,7 +726,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.vote(1, user1);
     }
 
-    function testVoteInSingleElectionNotDuringVoting() public {
+    function testVoteInReplacementElectionNotDuringVoting() public {
         vm.warp(block.timestamp + 21 weeks);
         fundAccountAndStakeV2(user1, 1);
         vm.prank(user2);
@@ -741,7 +741,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.vote(1, user1);
     }
 
-    function testVoteInSingleElectionAlreadyEnded() public {
+    function testVoteInReplacementElectionAlreadyEnded() public {
         vm.warp(block.timestamp + 21 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
@@ -755,7 +755,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.vote(1, user1);
     }
 
-    function testVoteInSingleElectionAlreadyVoted() public {
+    function testVoteInReplacementElectionAlreadyVoted() public {
         vm.warp(block.timestamp + 21 weeks);
         fundAccountAndStakeV2(user1, 1);
         vm.prank(user2);
@@ -772,7 +772,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.vote(1, user6);
     }
 
-    function testVoteInSingleElectionCandidateNotNominated() public {
+    function testVoteInReplacementElectionCandidateNotNominated() public {
         vm.warp(block.timestamp + 21 weeks);
         fundAccountAndStakeV2(user1, 1);
         vm.prank(user2);
@@ -1284,7 +1284,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVotingInternals.isElectionFinalized(2), false);
         (, , , Enums.electionType theElectionType) = automatedVotingInternals
             .elections(1);
-        assertTrue(theElectionType == Enums.electionType.single);
+        assertTrue(theElectionType == Enums.electionType.replacement);
         automatedVotingInternals.cancelOngoingElectionsInternal();
         assertEq(automatedVotingInternals.isElectionFinalized(1), true);
         assertEq(automatedVotingInternals.isElectionFinalized(2), true);

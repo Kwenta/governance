@@ -5,6 +5,6 @@ contract Enums {
     enum electionType {
         scheduled,
         community,
-        single //todo: make replacement election
+        replacement
     }
 }

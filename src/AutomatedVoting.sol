@@ -279,7 +279,7 @@ contract AutomatedVoting is IAutomatedVoting {
                 delete council[i];
             }
         }
-        _startElection(Enums.electionType.single);
+        _startElection(Enums.electionType.replacement);
     }
 
     /// @notice starts a community election
@@ -316,7 +316,7 @@ contract AutomatedVoting is IAutomatedVoting {
             }
         }
         // start election state
-        _startElection(Enums.electionType.single);
+        _startElection(Enums.electionType.replacement);
     }
 
     /// @notice finalizes an election
@@ -368,9 +368,9 @@ contract AutomatedVoting is IAutomatedVoting {
         if (elections[election].isNominated[candidate]) {
             revert CandidateAlreadyNominated();
         }
-        /// @dev this prevent a council member from being nominated in a single election (becoming member twice)
+        /// @dev this prevent a council member from being nominated in a replacement election (becoming member twice)
         if (
-            elections[election].theElectionType == Enums.electionType.single &&
+            elections[election].theElectionType == Enums.electionType.replacement &&
             isCouncilMember(candidate)
         ) {
             revert CandidateIsAlreadyCouncilMember();
@@ -379,7 +379,7 @@ contract AutomatedVoting is IAutomatedVoting {
         elections[election].isNominated[candidate] = true;
     }
 
-    /// @notice votes for a candidate in a single election
+    /// @notice votes for a candidate in a replacement election
     /// @param _election the election to vote in
     /// @param candidate the candidate to vote for
     function vote(
@@ -501,9 +501,9 @@ contract AutomatedVoting is IAutomatedVoting {
                 //todo: maybe emit an event that quorum was not reached
             }
         } else if (
-            elections[_election].theElectionType == Enums.electionType.single
+            elections[_election].theElectionType == Enums.electionType.replacement
         ) {
-            /// @dev this is for a single election
+            /// @dev this is for a replacement election
             address winner = elections[_election].candidateAddresses[0];
             for (uint i = 0; i < council.length; i++) {
                 if (council[i] == address(0)) {
