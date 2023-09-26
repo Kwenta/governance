@@ -127,13 +127,10 @@ contract AutomatedVoting is IAutomatedVoting {
         stakingRewardsV2 = IStakingRewardsV2(_stakingRewardsV2);
         // safeProxy = Safe(payable(address(_safeProxy)));
 
-        //todo: make a strict timeline for elections
-        // strict start date set in constructor
-
-        //todo: 1 scheduled election per period
-        // truncate by 6 months and make an "epochID"
-        // epochID = startTime / 24 weeks * 24 weeks;
         epochStartTime = startTime;
+
+        //todo: other elections can be started before the start time
+        // but this needs to be fixed to be like startScheduledElection
     }
 
     /// @inheritdoc IAutomatedVoting
@@ -259,9 +256,13 @@ contract AutomatedVoting is IAutomatedVoting {
     /// can only be started every 24 weeks
     function startScheduledElection() public override {
         if (
-            block.timestamp < lastScheduledElectionStartTime + 24 weeks ||
-            (lastScheduledElectionNumber != 0 &&
-                !isElectionFinalized(lastScheduledElectionNumber))
+            /// @dev if a scheduled election has started within this 6 month period, revert
+            /// OR if the last scheduled election has not been finalized, revert
+            /// OR if this is the first scheduled election and before the start time, revert
+            lastScheduledElectionStartTime >= getCurrentEpochStartTime() ||
+            (lastScheduledElectionNumber != 0 && !isElectionFinalized(lastScheduledElectionNumber)) ||
+                (lastScheduledElectionNumber == 0 &&
+                    block.timestamp < epochStartTime)
         ) {
             revert ElectionNotReadyToBeStarted();
         } else {
