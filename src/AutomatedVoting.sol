@@ -192,12 +192,14 @@ contract AutomatedVoting is IAutomatedVoting {
         }
     }
 
-    function getCurrentEpoch() public view returns (uint256) {
+    /// @inheritdoc IAutomatedVoting
+    function getCurrentEpoch() public view override returns (uint256) {
         uint256 elapsedTime = block.timestamp - epochStartTime;
         return elapsedTime / SIX_MONTHS;
     }
 
-    function getCurrentEpochStartTime() public view returns (uint256) {
+    /// @inheritdoc IAutomatedVoting
+    function getCurrentEpochStartTime() public view override returns (uint256) {
         return epochStartTime + (getCurrentEpoch() * SIX_MONTHS);
     }
 

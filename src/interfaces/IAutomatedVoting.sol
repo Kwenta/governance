@@ -94,6 +94,14 @@ interface IAutomatedVoting {
         uint256 election
     ) external view returns (uint256);
 
+    /// @notice returns the number of the current 6 month "epoch"
+    /// @dev this is for tracking scheduled elections
+    function getCurrentEpoch() external view returns (uint256);
+
+    /// @notice returns the start time of the current epoch
+    /// @dev this is for tracking scheduled elections
+    function getCurrentEpochStartTime() external view returns (uint256);
+
     /// @notice returns the candidate at an index in an election
     /// @param _election the election to check
     /// @param index the index to check
