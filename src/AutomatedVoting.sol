@@ -245,7 +245,10 @@ contract AutomatedVoting is IAutomatedVoting {
     function isElectionFinalized(
         uint256 _election
     ) public view override returns (bool) {
-        if (elections[_election].status == Enums.status.finalized || elections[_election].status == Enums.status.invalid) {
+        if (
+            elections[_election].status == Enums.status.finalized ||
+            elections[_election].status == Enums.status.invalid
+        ) {
             return true;
         } else {
             return false;
@@ -260,9 +263,10 @@ contract AutomatedVoting is IAutomatedVoting {
             /// OR if the last scheduled election has not been finalized, revert
             /// OR if this is the first scheduled election and before the start time, revert
             lastScheduledElectionStartTime >= getCurrentEpochStartTime() ||
-            (lastScheduledElectionNumber != 0 && !isElectionFinalized(lastScheduledElectionNumber)) ||
-                (lastScheduledElectionNumber == 0 &&
-                    block.timestamp < epochStartTime)
+            (lastScheduledElectionNumber != 0 &&
+                !isElectionFinalized(lastScheduledElectionNumber)) ||
+            (lastScheduledElectionNumber == 0 &&
+                block.timestamp < epochStartTime)
         ) {
             revert ElectionNotReadyToBeStarted();
         } else {
@@ -393,7 +397,8 @@ contract AutomatedVoting is IAutomatedVoting {
         }
         /// @dev this prevent a council member from being nominated in a replacement election (becoming member twice)
         if (
-            elections[election].theElectionType == Enums.electionType.replacement &&
+            elections[election].theElectionType ==
+            Enums.electionType.replacement &&
             isCouncilMember(candidate)
         ) {
             revert CandidateIsAlreadyCouncilMember();
@@ -430,7 +435,8 @@ contract AutomatedVoting is IAutomatedVoting {
             elections[_election].totalVote += userStaked;
         }
         elections[_election].hasVoted[msg.sender] = true;
-        uint newNumberOfVotes = elections[_election].voteCounts[candidate] + stakingRewardsV2.balanceAtTime( //todo: test for staking amounts addition
+        uint newNumberOfVotes = elections[_election].voteCounts[candidate] +
+            stakingRewardsV2.balanceAtTime( //todo: test for staking amounts addition
                 msg.sender,
                 elections[_election].startTime
             );
@@ -524,7 +530,8 @@ contract AutomatedVoting is IAutomatedVoting {
                 //todo: maybe emit an event that quorum was not reached
             }
         } else if (
-            elections[_election].theElectionType == Enums.electionType.replacement
+            elections[_election].theElectionType ==
+            Enums.electionType.replacement
         ) {
             /// @dev this is for a replacement election
             address winner = elections[_election].candidateAddresses[0];

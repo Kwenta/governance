@@ -107,19 +107,28 @@ interface IAutomatedVoting {
     /// @param _election the election to check
     /// @param nominee the nominee to check
     /// @return count the vote counts of a nominee in an election
-    function getVoteCounts(uint256 _election, address nominee) external view returns (uint256);
+    function getVoteCounts(
+        uint256 _election,
+        address nominee
+    ) external view returns (uint256);
 
     /// @notice returns if an address is nominated in an election
     /// @param _election the election to check
     /// @param nominee the nominee to check
     /// @return isNominated if the address is nominated in an election
-    function getIsNominated(uint256 _election, address nominee) external view returns (bool);
+    function getIsNominated(
+        uint256 _election,
+        address nominee
+    ) external view returns (bool);
 
     /// @notice returns if an address has voted in an election
     /// @param _election the election to check
     /// @param voter the voter to check
     /// @return hasVoted if the address has voted in an election
-    function getHasVoted(uint256 _election, address voter) external view returns (bool);
+    function getHasVoted(
+        uint256 _election,
+        address voter
+    ) external view returns (bool);
 
     /// @notice returns the current council
     function getCouncil() external view returns (address[5] memory);
@@ -153,10 +162,7 @@ interface IAutomatedVoting {
     /// @notice nominate someone
     /// @param _election the election to nominate in
     /// @param candidate the nominee to nominate
-    function nominateCandidate(
-        uint256 _election,
-        address candidate
-    ) external;
+    function nominateCandidate(uint256 _election, address candidate) external;
 
     /// @notice nominate multiple candidates
     /// @param _election the election to nominate in
@@ -166,12 +172,8 @@ interface IAutomatedVoting {
         address[] memory candidates
     ) external;
 
-    /// @notice vote for a nominee 
+    /// @notice vote for a nominee
     /// @param _election the election to vote in
     /// @param candidate the nominee to vote for
-    function vote(
-        uint256 _election,
-        address candidate
-    ) external;
-
+    function vote(uint256 _election, address candidate) external;
 }

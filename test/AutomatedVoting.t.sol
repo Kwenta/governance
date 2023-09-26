@@ -37,9 +37,13 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
         /// @dev set up council for automatedVoting and automatedVotingInternals
         startTime = block.timestamp;
-        automatedVoting = new AutomatedVoting(address(stakingRewardsV2), startTime);
+        automatedVoting = new AutomatedVoting(
+            address(stakingRewardsV2),
+            startTime
+        );
         automatedVotingInternals = new AutomatedVotingInternals(
-            address(stakingRewardsV2), startTime
+            address(stakingRewardsV2),
+            startTime
         );
         fundAccountAndStakeV2(admin, 1);
         vm.startPrank(admin);
@@ -325,7 +329,10 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVoting.getCurrentEpochStartTime(), startTime);
         /// @dev 21 weeks instead of 24 because of 3 weeks warp in setup
         vm.warp(block.timestamp + 21 weeks);
-        assertEq(automatedVoting.getCurrentEpochStartTime(), startTime + 24 weeks);
+        assertEq(
+            automatedVoting.getCurrentEpochStartTime(),
+            startTime + 24 weeks
+        );
     }
 
     function testFuzzGetCurrentEpochStartTimeDuring(uint time) public {
@@ -333,9 +340,15 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVoting.getCurrentEpochStartTime(), startTime);
         /// @dev 21 weeks instead of 24 because of 3 weeks warp in setup
         vm.warp(block.timestamp + 21 weeks);
-        assertEq(automatedVoting.getCurrentEpochStartTime(), startTime + 24 weeks);
+        assertEq(
+            automatedVoting.getCurrentEpochStartTime(),
+            startTime + 24 weeks
+        );
         vm.warp(block.timestamp + time);
-        assertEq(automatedVoting.getCurrentEpochStartTime(), startTime + 24 weeks);
+        assertEq(
+            automatedVoting.getCurrentEpochStartTime(),
+            startTime + 24 weeks
+        );
     }
 
     // startScheduledElection()
@@ -1076,14 +1089,18 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.startPrank(user1);
         vm.warp(block.timestamp + 1);
         automatedVotingInternals.nominateMultipleCandidates(1, council);
-        
+
         assertEq(automatedVotingInternals.getCandidateAddress(1, 0), user1);
         assertEq(automatedVotingInternals.getCandidateAddress(1, 1), user2);
         assertEq(automatedVotingInternals.getCandidateAddress(1, 2), user3);
         assertEq(automatedVotingInternals.getCandidateAddress(1, 3), user4);
         assertEq(automatedVotingInternals.getCandidateAddress(1, 4), user5);
 
-        address[] memory result = automatedVotingInternals.sortCandidates(1, user1, 1);
+        address[] memory result = automatedVotingInternals.sortCandidates(
+            1,
+            user1,
+            1
+        );
 
         /// @dev make sure voting didnt change the order
         assertEq(result[0], user1);
@@ -1091,7 +1108,6 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(result[2], user3);
         assertEq(result[3], user4);
         assertEq(result[4], user5);
-
     }
 
     function testSortCandidatesPositionChangesFromLastToIndex0() public {
@@ -1101,14 +1117,18 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.startPrank(user1);
         vm.warp(block.timestamp + 1);
         automatedVotingInternals.nominateMultipleCandidates(1, council);
-        
+
         assertEq(automatedVotingInternals.getCandidateAddress(1, 0), user1);
         assertEq(automatedVotingInternals.getCandidateAddress(1, 1), user2);
         assertEq(automatedVotingInternals.getCandidateAddress(1, 2), user3);
         assertEq(automatedVotingInternals.getCandidateAddress(1, 3), user4);
         assertEq(automatedVotingInternals.getCandidateAddress(1, 4), user5);
 
-        address[] memory result = automatedVotingInternals.sortCandidates(1, user5, 1);
+        address[] memory result = automatedVotingInternals.sortCandidates(
+            1,
+            user5,
+            1
+        );
 
         /// @dev make last place went to first place
         assertEq(result[0], user5);
@@ -1140,7 +1160,11 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVotingInternals.getCandidateAddress(1, 3), user4);
         assertEq(automatedVotingInternals.getCandidateAddress(1, 4), user5);
 
-        address[] memory result = automatedVotingInternals.sortCandidates(1, user4, 1);
+        address[] memory result = automatedVotingInternals.sortCandidates(
+            1,
+            user4,
+            1
+        );
 
         /// @dev make sure index 3 went to index 1 then shifted
         assertEq(result[0], user1);
@@ -1172,7 +1196,11 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVotingInternals.getCandidateAddress(1, 3), user4);
         assertEq(automatedVotingInternals.getCandidateAddress(1, 4), user5);
 
-        address[] memory result = automatedVotingInternals.sortCandidates(1, user3, 1);
+        address[] memory result = automatedVotingInternals.sortCandidates(
+            1,
+            user3,
+            1
+        );
 
         /// @dev make sure index 2 went to index 1 then shifted
         assertEq(result[0], user1);
@@ -1208,7 +1236,11 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVotingInternals.getCandidateAddress(1, 3), user4);
         assertEq(automatedVotingInternals.getCandidateAddress(1, 4), user5);
 
-        address[] memory result = automatedVotingInternals.sortCandidates(1, user5, 1);
+        address[] memory result = automatedVotingInternals.sortCandidates(
+            1,
+            user5,
+            1
+        );
 
         /// @dev make sure index 4 swapped with 3
         assertEq(result[0], user1);
@@ -1242,7 +1274,11 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVotingInternals.getCandidateAddress(1, 3), user4);
         assertEq(automatedVotingInternals.getCandidateAddress(1, 4), user5);
 
-        address[] memory result = automatedVotingInternals.sortCandidates(1, user5, 1);
+        address[] memory result = automatedVotingInternals.sortCandidates(
+            1,
+            user5,
+            1
+        );
 
         /// @dev make sure index 4 swapped with 2
         assertEq(result[0], user1);
@@ -1280,7 +1316,11 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVotingInternals.getCandidateAddress(1, 3), user4);
         assertEq(automatedVotingInternals.getCandidateAddress(1, 4), user5);
 
-        address[] memory result = automatedVotingInternals.sortCandidates(1, user5, 1);
+        address[] memory result = automatedVotingInternals.sortCandidates(
+            1,
+            user5,
+            1
+        );
 
         /// @dev make sure index 4 doesnt move
         assertEq(result[0], user1);
@@ -1316,7 +1356,11 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         assertEq(automatedVotingInternals.getCandidateAddress(1, 3), user4);
         assertEq(automatedVotingInternals.getCandidateAddress(1, 4), user5);
 
-        address[] memory result = automatedVotingInternals.sortCandidates(1, user4, 1);
+        address[] memory result = automatedVotingInternals.sortCandidates(
+            1,
+            user4,
+            1
+        );
 
         /// @dev make sure index 3 doesnt move
         assertEq(result[0], user1);
@@ -1339,8 +1383,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
             .elections(1);
         assertTrue(theElectionType == Enums.electionType.replacement);
         automatedVotingInternals.cancelOngoingElectionsInternal();
-        (, , Enums.status status, ) = automatedVotingInternals
-            .elections(1);
+        (, , Enums.status status, ) = automatedVotingInternals.elections(1);
         assertTrue(status == Enums.status.invalid);
         assertEq(automatedVotingInternals.isElectionFinalized(1), true);
         assertEq(automatedVotingInternals.isElectionFinalized(2), true);
