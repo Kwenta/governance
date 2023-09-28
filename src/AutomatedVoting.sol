@@ -6,9 +6,10 @@ import {IStakingRewardsV2} from "../lib/token/contracts/interfaces/IStakingRewar
 import {Enums} from "./Enums.sol";
 import {Safe} from "safe-contracts/Safe.sol";
 import {Enum} from "safe-contracts/common/Enum.sol";
+import {GovernorModule} from "./GovernorModule.sol";
 
 //todo: integrate with safe module here
-contract AutomatedVoting is IAutomatedVoting {
+contract AutomatedVoting is IAutomatedVoting, GovernorModule {
     // /// @notice safeProxy contract
     // Safe public safeProxy;
 
@@ -123,9 +124,8 @@ contract AutomatedVoting is IAutomatedVoting {
 
     //todo: put all safe stuff on governor module
 
-    constructor(address _stakingRewardsV2, uint256 startTime) {
+    constructor(address _stakingRewardsV2, uint256 startTime, address _safeProxy) GovernorModule(_safeProxy) {
         stakingRewardsV2 = IStakingRewardsV2(_stakingRewardsV2);
-        // safeProxy = Safe(payable(address(_safeProxy)));
 
         epochStartTime = startTime;
 

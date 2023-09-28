@@ -6,8 +6,9 @@ import {AutomatedVoting} from "../src/AutomatedVoting.sol";
 contract AutomatedVotingInternals is AutomatedVoting {
     constructor(
         address _stakingRewards,
-        uint256 startTime
-    ) AutomatedVoting(_stakingRewards, startTime) {}
+        uint256 startTime,
+        address _safeProxy
+    ) AutomatedVoting(_stakingRewards, startTime, _safeProxy) {}
 
     function wasStakedBeforeElectionInternal(
         address voter,
@@ -37,4 +38,21 @@ contract AutomatedVotingInternals is AutomatedVoting {
     function cancelOngoingElectionsInternal() public {
         _cancelOngoingElections();
     }
+
+    function replaceOwnerInternal(address oldOwner, address newOwner) public {
+        replaceOwner(oldOwner, newOwner);
+    }
+
+    function addOwnerWithThresholdInternal(address newOwner) public {
+        addOwnerWithThreshold(newOwner);
+    }
+
+    function removeOwnerInternal(
+        address prevOwner,
+        address owner,
+        uint256 threshold
+    ) public {
+        removeOwner(prevOwner, owner, threshold);
+    }
+
 }

@@ -39,11 +39,13 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         startTime = block.timestamp;
         automatedVoting = new AutomatedVoting(
             address(stakingRewardsV2),
-            startTime
+            startTime,
+            address(0) /// @dev address(0) because Safe implementation is tested in GovernorModule.t.sol
         );
         automatedVotingInternals = new AutomatedVotingInternals(
             address(stakingRewardsV2),
-            startTime
+            startTime,
+            address(0) /// @dev address(0) because Safe implementation is tested in GovernorModule.t.sol
         );
         fundAccountAndStakeV2(admin, 1);
         vm.startPrank(admin);

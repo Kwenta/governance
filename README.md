@@ -126,6 +126,11 @@ test/Counter.t.sol ^0.8.13
 +----------------------------+---------------+---------------+---------------+---------------+
 ```
 
+## Run tests
+```
+forge test --fork-url $(grep MAINNET_RPC_URL .env | cut -d '=' -f2) -vvv
+```
+
 ## Deployment Addresses
 
 #### Optimism
