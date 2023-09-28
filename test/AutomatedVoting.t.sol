@@ -80,7 +80,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     // onlyDuringNomination()
 
     function testOnlyDuringNominationAtStart() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.warp(block.timestamp + 1);
@@ -91,7 +91,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     function testFuzzOnlyDuringNomination(uint128 time) public {
         vm.assume(time <= 1 weeks);
         vm.assume(time > 0);
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
@@ -100,7 +100,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testOnlyDuringNominationLastSecond() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         fundAccountAndStakeV2(user1, 1);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 1 weeks);
@@ -109,7 +109,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testOnlyDuringNominationPassed() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         fundAccountAndStakeV2(user1, 1);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 1 weeks + 1);
@@ -125,7 +125,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     // onlyDuringVoting()
 
     function testOnlyDuringVotingAtStart() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.warp(block.timestamp + 1);
@@ -138,7 +138,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     function testFuzzOnlyDuringVoting(uint128 time) public {
         vm.assume(time <= 2 weeks);
         vm.assume(time > 0);
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.warp(block.timestamp + 1 weeks);
@@ -149,7 +149,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testOnlyDuringVotingLastSecond() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.warp(block.timestamp + 1 weeks);
@@ -160,7 +160,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testOnlyDuringVotingPassed() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
@@ -176,7 +176,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testOnlyDuringVotingNotVotingYet() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
@@ -202,25 +202,25 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     // timeUntilNextScheduledElection()
 
     function testTimeUntilNextScheduledElection() public {
-        assertEq(automatedVoting.timeUntilNextScheduledElection(), 21 weeks);
+        assertEq(automatedVoting.timeUntilNextScheduledElection(), 23 weeks);
     }
 
     function testTimeUntilNextScheduledElectionOverdue() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         assertEq(automatedVoting.timeUntilNextScheduledElection(), 0);
     }
 
     function testTimeUntilNextScheduledElectionRightBeforeOverdue() public {
-        vm.warp(block.timestamp + 21 weeks - 1);
+        vm.warp(block.timestamp + 23 weeks - 1);
         assertEq(automatedVoting.timeUntilNextScheduledElection(), 1);
     }
 
     function testFuzzTimeUntilNextScheduledElection(uint128 time) public {
-        vm.assume(time < 21 weeks);
+        vm.assume(time < 23 weeks);
         vm.warp(block.timestamp + time);
         assertEq(
             automatedVoting.timeUntilNextScheduledElection(),
-            21 weeks - time
+            23 weeks - time
         );
     }
 
@@ -231,23 +231,23 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testTimeUntilElectionStateEndNewScheduledElection() public {
-        /// @dev warp forward 21 weeks to get past the cooldown
-        vm.warp(block.timestamp + 21 weeks);
+        /// @dev warp forward 23 weeks to get past the cooldown
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
     }
 
     function testTimeUntilElectionStateEndFinishedElection() public {
-        /// @dev warp forward 21 weeks to get past the cooldown
-        vm.warp(block.timestamp + 21 weeks);
+        /// @dev warp forward 23 weeks to get past the cooldown
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 3 weeks);
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 0);
     }
 
     function testTimeUntilElectionStateEndRightBeforeFinish() public {
-        /// @dev warp forward 21 weeks to get past the cooldown
-        vm.warp(block.timestamp + 21 weeks);
+        /// @dev warp forward 23 weeks to get past the cooldown
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 3 weeks - 1);
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 1);
@@ -257,7 +257,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         uint128 time
     ) public {
         vm.assume(time < 3 weeks);
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + time);
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks - time);
@@ -270,15 +270,15 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testIsElectionFinalizedNewElection() public {
-        /// @dev warp forward 21 weeks to get past the cooldown
-        vm.warp(block.timestamp + 21 weeks);
+        /// @dev warp forward 23 weeks to get past the cooldown
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         assertEq(automatedVoting.isElectionFinalized(1), false);
     }
 
     function testIsElectionFinalizedFinishedElection() public {
-        /// @dev warp forward 21 weeks to get past the cooldown
-        vm.warp(block.timestamp + 21 weeks);
+        /// @dev warp forward 23 weeks to get past the cooldown
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         /// @dev nominate so we can finalize and not get index out of bounds
         fundAccountAndStakeV2(user1, 1);
@@ -294,23 +294,23 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
     function testGetCurrentEpochRightBefore() public {
         assertEq(automatedVoting.getCurrentEpoch(), 0);
-        /// @dev 21 weeks instead of 24 because of 3 weeks warp in setup
-        vm.warp(block.timestamp + 21 weeks - 1);
+        /// @dev 23 weeks instead of 26 because of 3 weeks warp in setup
+        vm.warp(block.timestamp + 23 weeks - 1);
         assertEq(automatedVoting.getCurrentEpoch(), 0);
     }
 
     function testGetCurrentEpochRightAtChange() public {
         assertEq(automatedVoting.getCurrentEpoch(), 0);
-        /// @dev 21 weeks instead of 24 because of 3 weeks warp in setup
-        vm.warp(block.timestamp + 21 weeks);
+        /// @dev 23 weeks instead of 26 because of 3 weeks warp in setup
+        vm.warp(block.timestamp + 23 weeks);
         assertEq(automatedVoting.getCurrentEpoch(), 1);
     }
 
     function testFuzzGetCurrentEpochDuring(uint time) public {
-        vm.assume(time < 21 weeks);
+        vm.assume(time < 23 weeks);
         assertEq(automatedVoting.getCurrentEpoch(), 0);
-        /// @dev 21 weeks instead of 24 because of 3 weeks warp in setup
-        vm.warp(block.timestamp + 21 weeks);
+        /// @dev 23 weeks instead of 26 because of 3 weeks warp in setup
+        vm.warp(block.timestamp + 23 weeks);
         assertEq(automatedVoting.getCurrentEpoch(), 1);
         vm.warp(block.timestamp + time);
         assertEq(automatedVoting.getCurrentEpoch(), 1);
@@ -320,41 +320,41 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
     function testGetCurrentEpochStartTimeRightBefore() public {
         assertEq(automatedVoting.getCurrentEpochStartTime(), startTime);
-        /// @dev 21 weeks instead of 24 because of 3 weeks warp in setup
-        vm.warp(block.timestamp + 21 weeks - 1);
+        /// @dev 23 weeks instead of 26 because of 3 weeks warp in setup
+        vm.warp(block.timestamp + 23 weeks - 1);
         assertEq(automatedVoting.getCurrentEpochStartTime(), startTime);
     }
 
     function testGetCurrentEpochStartTimeRightAtChange() public {
         assertEq(automatedVoting.getCurrentEpochStartTime(), startTime);
-        /// @dev 21 weeks instead of 24 because of 3 weeks warp in setup
-        vm.warp(block.timestamp + 21 weeks);
+        /// @dev 23 weeks instead of 26 because of 3 weeks warp in setup
+        vm.warp(block.timestamp + 23 weeks);
         assertEq(
             automatedVoting.getCurrentEpochStartTime(),
-            startTime + 24 weeks
+            startTime + 26 weeks
         );
     }
 
     function testFuzzGetCurrentEpochStartTimeDuring(uint time) public {
-        vm.assume(time < 21 weeks);
+        vm.assume(time < 23 weeks);
         assertEq(automatedVoting.getCurrentEpochStartTime(), startTime);
-        /// @dev 21 weeks instead of 24 because of 3 weeks warp in setup
-        vm.warp(block.timestamp + 21 weeks);
+        /// @dev 23 weeks instead of 26 because of 3 weeks warp in setup
+        vm.warp(block.timestamp + 23 weeks);
         assertEq(
             automatedVoting.getCurrentEpochStartTime(),
-            startTime + 24 weeks
+            startTime + 26 weeks
         );
         vm.warp(block.timestamp + time);
         assertEq(
             automatedVoting.getCurrentEpochStartTime(),
-            startTime + 24 weeks
+            startTime + 26 weeks
         );
     }
 
     // startScheduledElection()
 
     function testStartScheduledElectionSuccess() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         assertEq(automatedVoting.timeUntilElectionStateEnd(1), 3 weeks);
         assertEq(
@@ -375,7 +375,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testFuzzStartScheduledElectionNotReady(uint128 time) public {
-        vm.assume(time < 21 weeks);
+        vm.assume(time < 23 weeks);
         vm.warp(block.timestamp + time);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -386,7 +386,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testStartScheduledElectionNotReady() public {
-        vm.warp(block.timestamp + 21 weeks - 1);
+        vm.warp(block.timestamp + 23 weeks - 1);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAutomatedVoting.ElectionNotReadyToBeStarted.selector
@@ -396,14 +396,14 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testStartScheduledElectionLastElectionIsntFinalized() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         /// @dev nominate so we can finalize and not get index out of bounds
         fundAccountAndStakeV2(user1, 1);
         vm.prank(user1);
         vm.warp(block.timestamp + 1);
         automatedVoting.nominateMultipleCandidates(1, council);
-        vm.warp(block.timestamp + 24 weeks);
+        vm.warp(block.timestamp + 26 weeks);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAutomatedVoting.ElectionNotReadyToBeStarted.selector
@@ -417,7 +417,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     function testFuzzStartScheduledElectionLastElectionIsntFinalized(
         uint128 time
     ) public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + time);
         vm.expectRevert(
@@ -432,7 +432,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.prank(user1);
         automatedVoting.stepDown();
         assertEq(automatedVoting.isElectionFinalized(1), false);
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         assertEq(automatedVoting.isElectionFinalized(1), true);
     }
@@ -442,7 +442,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         vm.startPrank(user1);
         automatedVoting.startCommunityElection();
         assertEq(automatedVoting.isElectionFinalized(1), false);
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         assertEq(automatedVoting.isElectionFinalized(1), true);
     }
@@ -519,7 +519,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     function testStartCommunityElectionScheduledElectionJustStarted() public {
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -534,7 +534,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     ) public {
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + time);
         vm.expectRevert(
@@ -548,7 +548,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     function testStartCommunityElectionScheduledElectionJustEnded() public {
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 1);
         /// @dev nominate so we can finalize and not get index out of bounds
@@ -608,7 +608,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testStepDownScheduledElectionJustStarted() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -620,7 +620,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testFuzzStepDownDuringScheduledElection(uint128 time) public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + time);
         vm.expectRevert(
@@ -633,7 +633,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testStepDownScheduledElectionJustEnded() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
@@ -648,7 +648,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     // finalizeElection()
 
     function testFinalizeElectionAlreadyFinalized() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
@@ -666,7 +666,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testFinalizeElection() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
@@ -680,7 +680,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
     function testFuzzFinalizeElectionNotReady(uint128 time) public {
         vm.assume(time < 3 weeks);
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + time);
         vm.expectRevert(
@@ -692,7 +692,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testFinalizeElectionNotReady() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         vm.warp(block.timestamp + 3 weeks - 1);
         vm.expectRevert(
@@ -719,7 +719,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testNominateInReplacementElectionNotStaked() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         vm.prank(user2);
         automatedVoting.stepDown();
         vm.expectRevert(
@@ -731,7 +731,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testNominateInReplacementElectionNotDuringNomination() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         fundAccountAndStakeV2(user1, 1);
         vm.prank(user2);
         automatedVoting.stepDown();
@@ -762,7 +762,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     // voteInReplacementElection()
 
     function testVoteInReplacementElectionSuccess() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         fundAccountAndStakeV2(user1, 1);
         vm.prank(user2);
         automatedVoting.stepDown();
@@ -781,7 +781,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testVoteInReplacementElectionNotStaked() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         vm.prank(user2);
         automatedVoting.stepDown();
         vm.expectRevert(
@@ -793,7 +793,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testVoteInReplacementElectionNotDuringVoting() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         fundAccountAndStakeV2(user1, 1);
         vm.prank(user2);
         automatedVoting.stepDown();
@@ -808,7 +808,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testVoteInReplacementElectionAlreadyEnded() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.warp(block.timestamp + 3 weeks + 1);
@@ -822,7 +822,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testVoteInReplacementElectionAlreadyVoted() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         fundAccountAndStakeV2(user1, 1);
         vm.prank(user2);
         automatedVoting.stepDown();
@@ -839,7 +839,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testVoteInReplacementElectionCandidateNotNominated() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         fundAccountAndStakeV2(user1, 1);
         vm.prank(user2);
         automatedVoting.stepDown();
@@ -857,7 +857,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     // nominateMultipleCandidates()
 
     function testNominateInFullElectionSuccess() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
@@ -877,7 +877,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testNominateInFullElectionNotStaked() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -900,7 +900,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testNominateInFullElectionNominatingEnded() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.warp(block.timestamp + 1 weeks + 1);
@@ -916,7 +916,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     // vote()
 
     function testVoteInScheduledElectionSuccess() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
@@ -943,7 +943,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testVoteInScheduledElectionNotStaked() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -955,7 +955,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testVoteInScheduledElectionNotElection() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
         /// @dev when there is no election, this is the error that is thrown
@@ -968,7 +968,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testVoteInScheduledElectionAlreadyEnded() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.warp(block.timestamp + 3 weeks + 1);
@@ -982,7 +982,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testVoteInScheduledElectionAlreadyVoted() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
@@ -997,7 +997,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testVoteInScheduledElectionCandidateNotNominated() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVoting.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
@@ -1027,7 +1027,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     // _finalizeElection()
 
     function testFinalizeElectionInternal() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVotingInternals.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
@@ -1050,7 +1050,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testFinalizeElectionInternalStepDown() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         fundAccountAndStakeV2(user1, 1);
         vm.prank(user2);
         automatedVotingInternals.stepDown();
@@ -1083,7 +1083,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     // _sortCandidates()
 
     function testSortCandidatesPositionStaysAtIndex0() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVotingInternals.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
@@ -1111,7 +1111,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testSortCandidatesPositionChangesFromLastToIndex0() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVotingInternals.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         vm.startPrank(user1);
@@ -1139,7 +1139,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testSortCandidatesPositionChangesFromIndex3ToIndex1() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVotingInternals.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         fundAccountAndStakeV2(user2, 1);
@@ -1175,7 +1175,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testSortCandidatesPositionChangesFromIndex2ToIndex1() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVotingInternals.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         fundAccountAndStakeV2(user2, 1);
@@ -1211,7 +1211,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testSortCandidatesPositionChangesFromIndex4ToIndex3() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVotingInternals.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         fundAccountAndStakeV2(user2, 1);
@@ -1251,7 +1251,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testSortCandidatesPositionChangesFromIndex4ToIndex2() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVotingInternals.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         fundAccountAndStakeV2(user2, 1);
@@ -1289,7 +1289,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testSortCandidatesPositionStaysAtIndex4() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVotingInternals.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         fundAccountAndStakeV2(user2, 1);
@@ -1331,7 +1331,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
     }
 
     function testSortCandidatesPositionStaysAtIndex3() public {
-        vm.warp(block.timestamp + 21 weeks);
+        vm.warp(block.timestamp + 23 weeks);
         automatedVotingInternals.startScheduledElection();
         fundAccountAndStakeV2(user1, 1);
         fundAccountAndStakeV2(user2, 1);

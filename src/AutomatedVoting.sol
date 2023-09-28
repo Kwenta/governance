@@ -49,7 +49,7 @@ contract AutomatedVoting is IAutomatedVoting {
 
     /// @notice constant for 6 months
     /// @dev used for epoch calculation
-    uint256 constant SIX_MONTHS = 24 weeks;
+    uint256 constant SIX_MONTHS = 26 weeks;
 
     /// @notice constant for quorum
     /// @dev 40% of total supply has to vote to make a community election valid
@@ -167,11 +167,11 @@ contract AutomatedVoting is IAutomatedVoting {
         override
         returns (uint256)
     {
-        if (block.timestamp >= lastScheduledElectionStartTime + 24 weeks) {
+        if (block.timestamp >= lastScheduledElectionStartTime + SIX_MONTHS) {
             return 0;
         } else {
             return
-                24 weeks - (block.timestamp - lastScheduledElectionStartTime);
+                SIX_MONTHS - (block.timestamp - lastScheduledElectionStartTime);
         }
     }
 
@@ -258,7 +258,7 @@ contract AutomatedVoting is IAutomatedVoting {
     }
 
     /// @notice starts the scheduled election
-    /// can only be started every 24 weeks
+    /// can only be started every 26 weeks
     function startScheduledElection() public override {
         if (
             /// @dev if a scheduled election has started within this 6 month period, revert
