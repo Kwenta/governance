@@ -2,6 +2,9 @@
 pragma solidity ^0.8.19;
 
 //todo: fix with stakingV2
+// this is all commented out because the deployment process
+// is different now because AutomatedVoting now uses StakingRewardsV2
+
 // import {AutomatedVoting} from "../src/AutomatedVoting.sol";
 // import {StakingRewards} from "../lib/token/contracts/StakingRewards.sol";
 // import {Kwenta} from "../lib/token/contracts/Kwenta.sol";
