@@ -14,6 +14,7 @@
 
 ## Council Member Elections
 - Single Election that replaces 1 council member
+- The council member's rights are removed at the start of the election
 - Council members require a majority threshold (typically 3/5) to boot another council member and trigger an election
 - Completely implemented through GnosisSafe functionality
     - because of OwnerManage.sol requirements, threshold has to be revised as needed when removing members in single elections
@@ -30,6 +31,7 @@
 
 ## Council Member Steps Down
 - Single Election that replaces 1 council member
+- The council member's rights are removed at the start of the election
 - Council member can step down at any time (except during a scheduled election), triggering a single election to replace the member
 - Cannot step down if last member
     - due to a Safe requirement, there must always be at least 1 owner
