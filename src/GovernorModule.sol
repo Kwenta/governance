@@ -11,10 +11,10 @@ contract GovernorModule {
         safeProxy = Safe(payable(address(_safeProxy)));
     }
 
-    function replaceOwner(address oldOwner, address newOwner) internal {
+    function replaceOwner(address prevOwner, address oldOwner, address newOwner) internal {
         bytes memory swapOwner = abi.encodeWithSignature(
             "swapOwner(address,address,address)",
-            address(0x1),
+            prevOwner,
             oldOwner,
             newOwner
         );
@@ -26,11 +26,11 @@ contract GovernorModule {
         );
     }
 
-    function addOwnerWithThreshold(address newOwner) internal {
+    function addOwnerWithThreshold(address newOwner, uint256 threshold) internal {
         bytes memory addOwner = abi.encodeWithSignature(
             "addOwnerWithThreshold(address,uint256)",
             newOwner,
-            2
+            threshold
         );
         safeProxy.execTransactionFromModule(
             address(safeProxy),

@@ -24,6 +24,10 @@ contract GovernorModuleTest is DefaultStakingV2Setup {
     uint256 owner2PrivateKey = 456;
     address Owner2 = vm.addr(owner2PrivateKey);
 
+    //todo: probably change this test file to fork Optimism Mainnet instead
+    // then change the Safe addresses above, and use live StakingV2 contracts
+    // instead of deploying with the DefaultStakingV2Setup
+
     // BLOCK_NUMBER corresponds to Jul-25-2023 08:49:11 PM +UTC - Ethereum Mainnet
     uint256 constant BLOCK_NUMBER = 17_772_593;
 
@@ -123,7 +127,7 @@ contract GovernorModuleTest is DefaultStakingV2Setup {
     function testReplaceOwner() public {
         assertFalse(safeProxy.isOwner(address(this)));
         // replace owner
-        automatedVotingInternals.replaceOwnerInternal(Owner1, address(this));
+        automatedVotingInternals.replaceOwnerInternal(address(0x1), Owner1, address(this));
         // check if owner was replaced
         assertEq(address(this), safeProxy.getOwners()[0]);
         assertTrue(safeProxy.isOwner(address(this)));
@@ -133,7 +137,7 @@ contract GovernorModuleTest is DefaultStakingV2Setup {
     function testAddOwnerWithThreshold() public {
         // add owner
         vm.prank(Owner1);
-        automatedVotingInternals.addOwnerWithThresholdInternal(Owner2);
+        automatedVotingInternals.addOwnerWithThresholdInternal(Owner2, 2);
         // check if owner was added
         assertTrue(safeProxy.isOwner(Owner2));
     }
@@ -142,7 +146,7 @@ contract GovernorModuleTest is DefaultStakingV2Setup {
     function testAddThenRemoveAnOwner() public {
         // add Owner2
         vm.prank(Owner1);
-        automatedVotingInternals.addOwnerWithThresholdInternal(Owner2);
+        automatedVotingInternals.addOwnerWithThresholdInternal(Owner2, 2);
         // check if Owner2 was added
         assertTrue(safeProxy.isOwner(Owner2));
 
@@ -158,13 +162,13 @@ contract GovernorModuleTest is DefaultStakingV2Setup {
 
     /// @notice test that a newly added owner can execute a transaction
     function testReplacedOwnerCanExecTransaction() public {
-        automatedVotingInternals.replaceOwnerInternal(Owner1, Owner2);
+        automatedVotingInternals.replaceOwnerInternal(address(0x1), Owner1, Owner2);
         execTransactionTransfer(Owner2, owner2PrivateKey);
     }
 
     /// @notice test that a removed owner CANT execute a transaction
     function testFailRemovedOwnerCantExecTransaction() public {
-        automatedVotingInternals.replaceOwnerInternal(Owner1, Owner2);
+        automatedVotingInternals.replaceOwnerInternal(address(0x1), Owner1, Owner2);
         execTransactionTransfer(Owner1, owner1PrivateKey);
     }
 

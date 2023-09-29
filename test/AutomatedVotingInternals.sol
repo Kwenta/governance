@@ -39,12 +39,12 @@ contract AutomatedVotingInternals is AutomatedVoting {
         _cancelOngoingElections();
     }
 
-    function replaceOwnerInternal(address oldOwner, address newOwner) public {
-        replaceOwner(oldOwner, newOwner);
+    function replaceOwnerInternal(address prevOwner, address oldOwner, address newOwner) public {
+        replaceOwner(prevOwner, oldOwner, newOwner);
     }
 
-    function addOwnerWithThresholdInternal(address newOwner) public {
-        addOwnerWithThreshold(newOwner);
+    function addOwnerWithThresholdInternal(address newOwner, uint256 threshold) public {
+        addOwnerWithThreshold(newOwner, threshold);
     }
 
     function removeOwnerInternal(
