@@ -40,6 +40,8 @@
 - common ideas: scheduled elections cancel current elections, and halt new elections from starting during its 3 week time frame. Also community re-elections can't start if one was started within the last 3 weeks
 - explanation: this is to prevent sticky elections - results are applied from elections when finalizeElection() is called, so if a new election were to start and end before the previous one is finalized, the results of the previous election could be finalized and applied now (making the results of the new election overwritten, which is undesired)
 
+- CI is currently broken because a contract in the token repo uses a hardhat dependency whereas this repo uses foundry (and we want to keep this repo purely foundry). This has been bandaged locally temporarily by going into lib/token, then installing npm dependencies, and then adding this to the foundry.toml ```@openzeppelin/=lib/token/node_modules/@openzeppelin```
+
 - todo: community re-elections should not be able to start if the last one !isElectionFinalized()
     - currently its if the last one was started within the last 3 weeks. this is innacurate though because overlapping could happen like specified above
 

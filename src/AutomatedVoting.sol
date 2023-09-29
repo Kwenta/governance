@@ -125,6 +125,8 @@ contract AutomatedVoting is IAutomatedVoting, GovernorModule {
     //todo: put all safe stuff on governor module
 
     constructor(address _stakingRewardsV2, uint256 startTime, address _safeProxy) GovernorModule(_safeProxy) {
+        //todo: do tests with startTime in the future and past
+        // not sure if startTime in the past should be allowed
         stakingRewardsV2 = IStakingRewardsV2(_stakingRewardsV2);
 
         epochStartTime = startTime;
@@ -491,6 +493,9 @@ contract AutomatedVoting is IAutomatedVoting, GovernorModule {
         address voter,
         uint256 _election
     ) internal view returns (bool isStaker) {
+        //todo: change to startTime - 1 and fix tests accordingly
+        // should be the second before the election starts
+        // to prevent attacks
         uint256 electionStartTime = elections[_election].startTime;
         if (stakingRewardsV2.balanceAtTime(voter, electionStartTime) > 0) {
             return true;
@@ -499,6 +504,7 @@ contract AutomatedVoting is IAutomatedVoting, GovernorModule {
         }
     }
 
+    /// @notice internal function to check if quorum is reached
     function _checkIfQuorumReached(
         uint256 _election
     ) internal view returns (bool) {
