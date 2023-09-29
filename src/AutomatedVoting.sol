@@ -308,6 +308,10 @@ contract AutomatedVoting is IAutomatedVoting, GovernorModule {
                 delete council[i];
             }
         }
+        // remove owner from safe
+        //todo: removeSingleOwner(msg.sender);
+        //todo: commented out because tests need to be fixed (AutomatedVoting.t.sol needs safe setup)
+        // start election state
         _startElection(Enums.electionType.replacement);
     }
 
@@ -331,6 +335,7 @@ contract AutomatedVoting is IAutomatedVoting, GovernorModule {
 
     /// @notice function for council member to step down
     /// @dev cannot step down if there is only one council member
+    /// this is a built in Safe precaution
     function stepDown() public override onlyCouncil notDuringScheduledElection {
         uint councilMemberCount = 0;
         for (uint i = 0; i < council.length; i++) {
@@ -338,12 +343,18 @@ contract AutomatedVoting is IAutomatedVoting, GovernorModule {
                 councilMemberCount++;
             }
         }
+        if (councilMemberCount == 1) {
+            revert CannotStepDown();
+        }
         // burn msg.sender rights
         for (uint i = 0; i < council.length; i++) {
             if (council[i] == msg.sender) {
                 delete council[i];
             }
         }
+        // remove owner from safe
+        //todo: removeSingleOwner(msg.sender);
+        //todo: commented out because tests need to be fixed (AutomatedVoting.t.sol needs safe setup)
         // start election state
         _startElection(Enums.electionType.replacement);
     }
@@ -508,6 +519,7 @@ contract AutomatedVoting is IAutomatedVoting, GovernorModule {
             elections[_election].theElectionType == Enums.electionType.scheduled
         ) {
             /// @dev this is for a full election
+            //todo: consider what happens if 5 or more people are never nominated
             address[5] memory winners;
             winners[0] = elections[_election].candidateAddresses[0];
             winners[1] = elections[_election].candidateAddresses[1];
@@ -515,11 +527,15 @@ contract AutomatedVoting is IAutomatedVoting, GovernorModule {
             winners[3] = elections[_election].candidateAddresses[3];
             winners[4] = elections[_election].candidateAddresses[4];
             council = winners;
+            /// @dev put the new council into the safe
+            //todo: putInFullElection(winners);
+            //todo: commented out because tests need to be fixed (AutomatedVoting.t.sol needs safe setup)
         } else if (
             elections[_election].theElectionType == Enums.electionType.community
         ) {
             if (_checkIfQuorumReached(_election)) {
                 /// @dev this is for a full election
+                //todo: consider what happens if 5 or more people are never nominated
                 address[5] memory winners;
                 winners[0] = elections[_election].candidateAddresses[0];
                 winners[1] = elections[_election].candidateAddresses[1];
@@ -527,6 +543,9 @@ contract AutomatedVoting is IAutomatedVoting, GovernorModule {
                 winners[3] = elections[_election].candidateAddresses[3];
                 winners[4] = elections[_election].candidateAddresses[4];
                 council = winners;
+                /// @dev put the new council into the safe
+                //todo: putInFullElection(winners);
+                //todo: commented out because tests need to be fixed (AutomatedVoting.t.sol needs safe setup)
             } else {
                 /// @dev do nothing because quorum not reached
                 //todo: maybe emit an event that quorum was not reached
@@ -543,6 +562,9 @@ contract AutomatedVoting is IAutomatedVoting, GovernorModule {
                     break;
                 }
             }
+            /// @dev put the new member into the safe
+            //todo: addSingleOwner(winner);
+            //todo: commented out because tests need to be fixed (AutomatedVoting.t.sol needs safe setup)
         }
     }
 

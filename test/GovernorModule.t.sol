@@ -172,6 +172,27 @@ contract GovernorModuleTest is DefaultStakingV2Setup {
         execTransactionTransfer(Owner1, owner1PrivateKey);
     }
 
+    function testPutInFullElection() public {
+        address[5] memory owners;
+        owners[0] = Owner1;
+        owners[1] = Owner2;
+        owners[2] = address(0x3);
+        owners[3] = address(0x4);
+        owners[4] = address(0x5);
+
+        // put in full election
+        automatedVotingInternals.putInFullElectionInternal(owners);
+        // make sure owners 1-5 are owners
+        assertTrue(safeProxy.isOwner(Owner1));
+        assertTrue(safeProxy.isOwner(Owner2));
+        assertTrue(safeProxy.isOwner(address(0x3)));
+        assertTrue(safeProxy.isOwner(address(0x4)));
+        assertTrue(safeProxy.isOwner(address(0x5)));
+       
+    }
+
+    //todo: do end to end tests of safe functionality with the starting and ending of elections
+
     //util functions
 
     function execTransactionTransfer(

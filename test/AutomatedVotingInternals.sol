@@ -55,4 +55,8 @@ contract AutomatedVotingInternals is AutomatedVoting {
         removeOwner(prevOwner, owner, threshold);
     }
 
+    function putInFullElectionInternal(address[5] memory owners) public {
+        putInFullElection(owners);
+    }
+
 }

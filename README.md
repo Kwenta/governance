@@ -31,6 +31,8 @@
 ## Council Member Steps Down
 - Single Election that replaces 1 council member
 - Council member can step down at any time (except during a scheduled election), triggering a single election to replace the member
+- Cannot step down if last member
+    - due to a Safe requirement, there must always be at least 1 owner
 
 
 # Notes for Continued Implementation:
@@ -40,6 +42,8 @@
 
 - todo: community re-elections should not be able to start if the last one !isElectionFinalized()
     - currently its if the last one was started within the last 3 weeks. this is innacurate though because overlapping could happen like specified above
+
+- council array in AutomatedVoting was chosen to be a fixed array of 5 rather than a dynamic array
 
 - multiple elections can be ongoing, except for scheduled elections
     - meaning the other 3 elections can be ongoing at the same time

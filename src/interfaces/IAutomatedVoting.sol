@@ -55,6 +55,11 @@ interface IAutomatedVoting {
     /// @notice emitted when the caller votes for too many candidates
     error TooManyCandidates();
 
+    /// @notice emitted when the member is the last council member
+    /// and tries to step down
+    /// @dev this is because the Safe requires at least one owner
+    error CannotStepDown();
+
     /// @notice emitted when candidate is not nominated
     error CandidateNotNominated();
 

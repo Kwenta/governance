@@ -13,8 +13,6 @@ contract GovernorModule {
 
     /// @notice this is to call replaceOwner() on the safe
     /// @dev done with execTransactionFromModule() 
-    //todo: check if this function is still needed
-    // we might only need addOwnerWithThreshold(), removeOwner(), and setupOwners()
     function replaceOwner(address prevOwner, address oldOwner, address newOwner) internal {
         bytes memory swapOwner = abi.encodeWithSignature(
             "swapOwner(address,address,address)",
@@ -72,15 +70,15 @@ contract GovernorModule {
     function removeSingleOwner(address owner) internal {
 
         /// @dev this is to get the previous owner param
-        for (int i = 0; i < safeProxy.getOwners().length; i++) {
+        for (uint256 i = 0; i < safeProxy.getOwners().length; i++) {
             //todo: get prevOwner
-            if (safeProxy.getOwner(prevOwner) == owner) {
-                break;
-            }
+            // if (safeProxy.getOwner(prevOwner) == owner) {
+            //     break;
+            // }
         }
 
         //todo: removeOwner and adjust threshold accordingly
-        removeOwner(address(0), owner, 1);
+        // removeOwner(address(0), owner, 1);
     }
 
     /// @notice this is to add one owner to the safe when a replacement election ends
@@ -88,10 +86,14 @@ contract GovernorModule {
     /// should always be majority
     /// exact thresholds are listed in README.md
     function addSingleOwner(address owner) internal {
-        addOwnerWithThreshold(owner, 1);
+        //todo: add owner and adjust threshold accordingly
+        // addOwnerWithThreshold(owner, 1);
     }
 
-    function putInFullElection() internal {
-
+    /// @notice this is to add in the whole council to the safe when a full election ends
+    function putInFullElection(address[5] memory owners) internal {
+        //todo: if current owners are less than 5, add in the rest
+        //todo: replace all current owners
+        // make threshold 3
     }
 }

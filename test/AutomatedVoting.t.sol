@@ -596,7 +596,7 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.stepDown();
     }
 
-    function testEveryoneCanStepDown() public {
+    function testLastMemberCantStepDown() public {
         vm.prank(user1);
         automatedVoting.stepDown();
         vm.prank(user3);
@@ -605,6 +605,9 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
         automatedVoting.stepDown();
         vm.prank(user5);
         automatedVoting.stepDown();
+        vm.expectRevert(
+            abi.encodeWithSelector(IAutomatedVoting.CannotStepDown.selector)
+        );
         vm.prank(user2);
         automatedVoting.stepDown();
     }
