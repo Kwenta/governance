@@ -60,6 +60,9 @@ interface IAutomatedVoting {
     /// @dev this is because the Safe requires at least one owner
     error CannotStepDown();
 
+    /// @notice emitted when the caller is not the Safe
+    error CallerNotSafe();
+
     /// @notice emitted when candidate is not nominated
     error CandidateNotNominated();
 

@@ -8,11 +8,7 @@ import {Safe} from "safe-contracts/Safe.sol";
 import {Enum} from "safe-contracts/common/Enum.sol";
 import {GovernorModule} from "./GovernorModule.sol";
 
-//todo: integrate with safe module here
 contract AutomatedVoting is IAutomatedVoting, GovernorModule {
-    // /// @notice safeProxy contract
-    // Safe public safeProxy;
-
     /// @notice array of council members
     address[5] public council;
 
@@ -114,15 +110,14 @@ contract AutomatedVoting is IAutomatedVoting, GovernorModule {
         }
     }
 
-    // modifier onlySafe() {
-    //     require(
-    //         safeProxy.isOwner(msg.sender),
-    //         "AutomatedVoting: caller is not a safe owner"
-    //     );
-    //     _;
-    // }
-
-    //todo: put all safe stuff on governor module
+    //todo: test onlySafe and startCouncilElection()
+    modifier onlySafe() {
+        if (msg.sender == address(safeProxy)) {
+            _;
+        } else {
+            revert CallerNotSafe();
+        }
+    }
 
     constructor(address _stakingRewardsV2, uint256 startTime, address _safeProxy) GovernorModule(_safeProxy) {
         //todo: do tests with startTime in the future and past
@@ -284,27 +279,13 @@ contract AutomatedVoting is IAutomatedVoting, GovernorModule {
     }
 
     /// @notice vote in a council election
-    /// @notice a 3/5 threshold of calling this function must be reached
-    /// @dev rather than starting an election with a time
+    /// @dev a threshold within the Safe will be reached to call this function
+    /// @dev rather than starting an election based off time
     /// @param _memberToRemove the member to remove from the council
     function startCouncilElection(
         address _memberToRemove
-    ) public override onlyCouncil notDuringScheduledElection {
-        // /// @dev burn member rights
-        // //todo: figure out how to get prevOwner
-        // address prevOwner = address(0);
-        // bytes memory addOwner = abi.encodeWithSignature(
-        //     "removeOwner(address,address,uint256)",
-        //     prevOwner,
-        //     _memberToRemove,
-        //     3
-        // );
-        // safeProxy.execTransactionFromModule(
-        //     address(safeProxy),
-        //     0,
-        //     addOwner,
-        //     Enum.Operation.Call
-        // );
+    ) public override onlySafe notDuringScheduledElection {
+        /// @dev burn member rights
         for (uint i = 0; i < council.length; i++) {
             if (council[i] == _memberToRemove) {
                 delete council[i];
@@ -312,7 +293,7 @@ contract AutomatedVoting is IAutomatedVoting, GovernorModule {
         }
         // remove owner from safe
         //todo: removeSingleOwner(msg.sender);
-        //todo: commented out because tests need to be fixed (AutomatedVoting.t.sol needs safe setup)
+        //todo: commented out because tests need to be fixed (AutomatedVoting.t.sol needs Safe setup)
         // start election state
         _startElection(Enums.electionType.replacement);
     }
