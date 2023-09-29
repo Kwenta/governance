@@ -43,7 +43,7 @@ Notes for Continued Implementation:
 
 - multiple elections can be ongoing, except for scheduled elections
     - meaning the other 3 elections can be ongoing at the same time
-    - multiple single elections can be ongoing at the same time
+    - multiple different single elections can be ongoing at the same time
         - multiple council member elections at the same time
         - multiple step down elections at the same time
     - BUT multiple scheduled elections can't happen at the same time
@@ -73,14 +73,31 @@ Safe Integration:
 AutomatedVoting will inherit from GovernorModule which will have the module logic
 The starting and finalizing of elections should remove and add members to the safe as needed
 GovernorModule will be able to add owners, remove owners, change threshold, and swap owners (for full elections)
-A guard (safe hook) will have to be put in place after enabling the module to prevent any owners from removing the module and circumenting the governance process
+Threshold is default 3/5 but needs to be changed according to the number of owners. There should always be a majority threshold.
+5 owners --> 3/5
+4 owners --> 3/4
+3 owners --> 2/3
+2 owners --> 2/2
+1 owner --> 1/1
+A guard (Safe hook) will have to be put in place after enabling the module to prevent any owners from removing the module and circumenting the governance process
 
 Tentative Deployment Process:
 1. Deploy ```AutomatedVoting.sol```
 2. Enable ```AutomatedVoting.sol``` as a module on the safe
 3. Add a guard to the safe to prevent owners from removing the module/other exploits
 
-Relevant contracts for fundamental understanding: ```Safe.sol```, ```OwnerManager.sol```, ```ModuleManage.sol```, and ```GuardManager.sol```
+Relevant contracts for fundamental understanding: ```StakingRewardsV2.sol```, ```Safe.sol```, ```OwnerManager.sol```, ```ModuleManage.sol```, and ```GuardManager.sol```
+
+TLDR: High Level Overview of TODO:
+1. finish minor TODOs in the AutomatedVoting.sol code (add/fix tests as neccesary)
+2. finish implementing GovenorModule and test
+3. Implement a Safe hook (guard) and test
+4. Add upgradeability to AutomatedVoting.sol
+5. fix echidna invariant testing then run echidna and mutation testing
+6. (minor) fix CI
+7. Polish
+8. Audit
+9. Deploy
 
 # foundry-scaffold
 
