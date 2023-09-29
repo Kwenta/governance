@@ -84,8 +84,9 @@ contract GovernorModule {
     }
 
     /// @notice this is to add one owner to the safe when a replacement election ends
-    /// @dev threshold is justed according to the number of owners
+    /// @dev threshold is adjusted according to the number of owners
     /// should always be majority
+    /// exact thresholds are listed in README.md
     function addSingleOwner(address owner) internal {
         addOwnerWithThreshold(owner, 1);
     }

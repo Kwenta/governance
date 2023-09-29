@@ -33,7 +33,7 @@
 - Council member can step down at any time (except during a scheduled election), triggering a single election to replace the member
 
 
-Notes for Continued Implementation:
+# Notes for Continued Implementation:
 
 - common ideas: scheduled elections cancel current elections, and halt new elections from starting during its 3 week time frame. Also community re-elections can't start if one was started within the last 3 weeks
 - explanation: this is to prevent sticky elections - results are applied from elections when finalizeElection() is called, so if a new election were to start and end before the previous one is finalized, the results of the previous election could be finalized and applied now (making the results of the new election overwritten, which is undesired)
@@ -69,26 +69,27 @@ Notes for Continued Implementation:
 - At the end, AutomatedVoting needs upgradeability
     - details not specified yet
 
-Safe Integration:
-AutomatedVoting will inherit from GovernorModule which will have the module logic
-The starting and finalizing of elections should remove and add members to the safe as needed
-GovernorModule will be able to add owners, remove owners, change threshold, and swap owners (for full elections)
-Threshold is default 3/5 but needs to be changed according to the number of owners. There should always be a majority threshold.
-5 owners --> 3/5
-4 owners --> 3/4
-3 owners --> 2/3
-2 owners --> 2/2
-1 owner --> 1/1
-A guard (Safe hook) will have to be put in place after enabling the module to prevent any owners from removing the module and circumenting the governance process
+## Safe Integration:
+- AutomatedVoting will inherit from GovernorModule which will have the module logic
+- The starting and finalizing of elections should remove and add members to the safe as needed
+- GovernorModule will be able to add owners, remove owners, change threshold, and swap owners (for full elections)
+- Threshold is default 3/5 but needs to be changed according to the number of owners. There should always be a majority threshold.
+    - 5 owners --> 3/5
+    - 4 owners --> 3/4
+    - 3 owners --> 2/3
+    - 2 owners --> 2/2
+    - 1 owner --> 1/1
+- A guard (Safe hook) will have to be put in place after enabling the module to prevent any owners from removing the module and circumenting the governance process
 
-Tentative Deployment Process:
+## Tentative Deployment Process:
 1. Deploy ```AutomatedVoting.sol```
 2. Enable ```AutomatedVoting.sol``` as a module on the safe
 3. Add a guard to the safe to prevent owners from removing the module/other exploits
 
-Relevant contracts for fundamental understanding: ```StakingRewardsV2.sol```, ```Safe.sol```, ```OwnerManager.sol```, ```ModuleManage.sol```, and ```GuardManager.sol```
+## Relevant contracts for fundamental understanding:
+```StakingRewardsV2.sol```, ```Safe.sol```, ```OwnerManager.sol```, ```ModuleManage.sol```, and ```GuardManager.sol```
 
-TLDR: High Level Overview of TODO:
+## TLDR: High Level Overview of TODO:
 1. finish minor TODOs in the AutomatedVoting.sol code (add/fix tests as neccesary)
 2. finish implementing GovenorModule and test
 3. Implement a Safe hook (guard) and test
