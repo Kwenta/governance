@@ -140,9 +140,9 @@ contract GovernorModuleTest is DefaultStakingV2Setup {
         automatedVotingInternals.addOwnerWithThresholdInternal(Owner2, 2);
         // check if owner was added
         assertTrue(safeProxy.isOwner(Owner2));
+        assertTrue(safeProxy.getThreshold() == 2);
     }
 
-    /// @notice test that only safe owners can call the module
     function testAddThenRemoveAnOwner() public {
         // add Owner2
         vm.prank(Owner1);
@@ -164,6 +164,10 @@ contract GovernorModuleTest is DefaultStakingV2Setup {
     function testReplacedOwnerCanExecTransaction() public {
         automatedVotingInternals.replaceOwnerInternal(address(0x1), Owner1, Owner2);
         execTransactionTransfer(Owner2, owner2PrivateKey);
+        // make sure Owner2 is an owner
+        assertTrue(safeProxy.isOwner(Owner2));
+        // make sure Owner1 is not an owner
+        assertFalse(safeProxy.isOwner(Owner1));
     }
 
     /// @notice test that a removed owner CANT execute a transaction
@@ -188,7 +192,7 @@ contract GovernorModuleTest is DefaultStakingV2Setup {
         assertTrue(safeProxy.isOwner(address(0x3)));
         assertTrue(safeProxy.isOwner(address(0x4)));
         assertTrue(safeProxy.isOwner(address(0x5)));
-       
+        //todo: this test currently fails because putInFullElection() needs to be completed
     }
 
     //todo: do end to end tests of safe functionality with the starting and ending of elections
