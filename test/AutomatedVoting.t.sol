@@ -451,6 +451,8 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
     // startCouncilElection()
 
+    //todo: test that an election starts when a safe calls it
+
     // startCommunityElection()
 
     function testStartCommunityElectionSuccess() public {
@@ -1408,6 +1410,6 @@ contract AutomatedVotingTest is DefaultStakingV2Setup {
 
     //todo: test everything with when a non-existent election is put in
 
-    //todo: test elections 1ike Community reelection for when another re-election
-    // is started right at 3 weeks end but the first election is not finalized yet
+    //todo: test edge cases with multiple elections ongoing and finishing/ending
+    // at the same time
 }
