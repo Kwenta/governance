@@ -1,0 +1,17 @@
+{
+  "name": "governance",
+  "version": "1.0.0",
+  "description": "[![Github Actions][gha-badge]][gha]  [![Foundry][foundry-badge]][foundry]  [![License: MIT][license-badge]][license]",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "forge test",
+    "echidna": "echidna test/Echidna.t.sol --config echidna.yaml --contract EchidnaTest",
+    "vertigo": "python3 ../vertigo-rs/vertigo.py run"
+  },
+  "author": "",
+  "license": "ISC"
+}

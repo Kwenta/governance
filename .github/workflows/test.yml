@@ -29,6 +29,57 @@ jobs:
           forge test -vvv
         id: test
 
+  Mutation_Testing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Vertigo
+        run: |
+          git clone https://github.com/RareSkills/vertigo-rs
+          cd vertigo-rs
+          python setup.py develop
+          cd ..
+
+      - name: Run Vertigo
+        run: |
+          python vertigo-rs/vertigo.py run
+
+  Invariant_Testing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Compile contracts
+        run: |
+          forge build --build-info
+
+      - name: Run Echidna
+        uses: crytic/echidna-action@v2
+        with:
+          files: .
+          contract: EchidnaTest
+          crytic-args: --ignore-compile
+
   Coverage:
     runs-on: ubuntu-latest
     steps:
