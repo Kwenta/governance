@@ -1,33 +1,33 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// // SPDX-License-Identifier: UNLICENSED
+// pragma solidity ^0.8.13;
 
-import "forge-std/Script.sol";
+// import "forge-std/Script.sol";
 
-/************************** 
-TESTNET DEPLOYMENT: Optimism Goerli
-**************************/
+// /**************************
+// TESTNET DEPLOYMENT: Optimism Goerli
+// **************************/
 
-contract TestnetDeploy is Script {
-    // contract(s) being deployed
-    
-    // constructor arguments
+// contract TestnetDeploy is Script {
+//     // contract(s) being deployed
 
-    function run() public {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-        vm.startBroadcast(deployerPrivateKey);
+//     // constructor arguments
 
-        // deploy contract(s)
+//     function run() public {
+//         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+//         vm.startBroadcast(deployerPrivateKey);
 
-        vm.stopBroadcast();
-    }
-}
+//         // deploy contract(s)
 
-/**
- * TO DEPLOY:
- *
- * To load the variables in the .env file
- * > source .env
- *
- * To deploy and verify our contract
- * > forge script script/TestnetDeploy.s.sol:TestnetDeploy --rpc-url $OPTIMISM_GOERLI_RPC_URL --broadcast --verify -vvvv
- */
+//         vm.stopBroadcast();
+//     }
+// }
+
+// /**
+//  * TO DEPLOY:
+//  *
+//  * To load the variables in the .env file
+//  * > source .env
+//  *
+//  * To deploy and verify our contract
+//  * > forge script script/TestnetDeploy.s.sol:TestnetDeploy --rpc-url $OPTIMISM_GOERLI_RPC_URL --broadcast --verify -vvvv
+//  */
