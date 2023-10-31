@@ -9,11 +9,13 @@ interface IElectionModule {
 		Community,
 		Replacement
 	}
+
 	enum ElectionStatus {
 		Invalid,
 		Ongoing,
 		Finalized
 	}
+
 	struct Election {
 		uint256 startTime;
 		uint256 totalVotes;
@@ -25,9 +27,10 @@ interface IElectionModule {
 		mapping(address => bool) hasVoted;
 	}
 
-	event ElectionStarted(uint256 indexed electionId);
+	event ElectionStarted(uint256 indexed electionId, ElectionType indexed electionType);
 	event ElectionCanceled(uint256 indexed electionId);
 	event CandidateNominated(uint256 indexed electionId, address indexed candidate);
 	event VoteRecorded(uint256 indexed electionId, address indexed voter, address candidate);
 	event ElectionFinalized(uint256 indexed electionId);
+	event QuorumThresholdSet(uint256 oldThreshold, uint256 newThreshold);
 }
