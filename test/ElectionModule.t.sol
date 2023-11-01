@@ -75,38 +75,56 @@ contract ElectionModuleTest is Test {
 		vm.label(user6, "user6");
 	}
 
-	function generateNominations(ElectionModule _electionModule) public {
+	function generateNominations(IElectionModule.ElectionType _electionType) public {
 		// we start an election and and we nominate enough candidates
 		vm.warp(DEFAULT_START_TIME);
-		_electionModule.startScheduledElection();
-		vm.warp(DEFAULT_START_TIME + 1);
-		_electionModule.nominateCandidate(user1);
-		_electionModule.nominateCandidate(user2);
-		_electionModule.nominateCandidate(user3);
-		_electionModule.nominateCandidate(user4);
-		_electionModule.nominateCandidate(user5);
+		if (_electionType == IElectionModule.ElectionType.Scheduled) {
+			electionModule.startScheduledElection();
+			electionModule.nominateCandidate(user1);
+			electionModule.nominateCandidate(user6);
+		} else if (_electionType == IElectionModule.ElectionType.Community) {
+			vm.prank(user1);
+			electionModule.startCommunityElection();
+			electionModule.nominateCandidate(user1);
+			electionModule.nominateCandidate(user6);
+		} else {
+			vm.prank(address(safeProxy));
+			electionModule.startReplacementElection(user1);
+		}
+
+		electionModule.nominateCandidate(user2);
+		electionModule.nominateCandidate(user3);
+		electionModule.nominateCandidate(user4);
+		electionModule.nominateCandidate(user5);
 
 		// we close the nomination window
-		vm.warp(DEFAULT_START_TIME + NOMINATION_WINDOW + 1);
+		vm.warp(DEFAULT_START_TIME + NOMINATION_WINDOW);
 	}
 
-	function generateElection(ElectionModule _electionModule) public {
-		generateNominations(_electionModule);
+	function generateElection(IElectionModule.ElectionType _electionType) public {
+		generateNominations(_electionType);
+
+		if (_electionType == IElectionModule.ElectionType.Scheduled) {
+			vm.prank(user1);
+			electionModule.vote(user1);
+		} else if (_electionType == IElectionModule.ElectionType.Community) {
+			vm.prank(user1);
+			electionModule.vote(user1);
+		}
 
 		// we vote and election enough candidates
-		vm.prank(user1);
-		_electionModule.vote(user1);
+
 		vm.prank(user2);
-		_electionModule.vote(user2);
+		electionModule.vote(user2);
 		vm.prank(user3);
-		_electionModule.vote(user3);
+		electionModule.vote(user3);
 		vm.prank(user4);
-		_electionModule.vote(user4);
+		electionModule.vote(user4);
 		vm.prank(user5);
-		_electionModule.vote(user5);
+		electionModule.vote(user5);
 
 		// we close the voting window
-		vm.warp(DEFAULT_START_TIME + ELECTION_DURATION + 1);
+		vm.warp(DEFAULT_START_TIME + ELECTION_DURATION);
 	}
 }
 
@@ -151,7 +169,7 @@ contract StartScheduledElection is ElectionModuleTest {
 
 	function test_RevertIf_NotInNewEpochWindow() public {
 		// we start a new scheduled election first and finalize it
-		generateElection(electionModule);
+		generateElection(IElectionModule.ElectionType.Scheduled);
 		electionModule.finalizeElection();
 
 		// we now try call for a new election
@@ -189,7 +207,7 @@ contract StartScheduledElection is ElectionModuleTest {
 
 	function test_StartsElectionAfterFinalised() public {
 		// we start a new scheduled election first and finalize it
-		generateElection(electionModule);
+		generateElection(IElectionModule.ElectionType.Scheduled);
 		electionModule.finalizeElection();
 
 		// we now try call for a new election in the correct window
@@ -651,290 +669,445 @@ contract Vote is ElectionModuleTest {
 		assertTrue(electionModule.getElectionTotalVotes(1) == 2 * DEFAULT_STAKE_AMOUNT);
 	}
 
-	// 	function test_UpdatesWinnerList() public {
-	// 		// we start the election
-	// 		vm.warp(DEFAULT_START_TIME);
-	// 		electionModule.startScheduledElection();
+	function test_UpdatesWinnerListForScheduledElection() public {
+		// we start a scheduled election and nominate the candidates
+		generateNominations(IElectionModule.ElectionType.Scheduled);
 
-	// 		// we nominate 6 candidates
-	// 		vm.warp(DEFAULT_START_TIME + 1);
-	// 		electionModule.nominateCandidate(1, user1);
-	// 		electionModule.nominateCandidate(1, user2);
-	// 		electionModule.nominateCandidate(1, user3);
-	// 		electionModule.nominateCandidate(1, user4);
-	// 		electionModule.nominateCandidate(1, user5);
-	// 		electionModule.nominateCandidate(1, user6);
+		assertFalse(electionModule.isElectionWinner(1, user1));
+		assertTrue(electionModule.getElectionWinners(1).length == 0);
 
-	// 		assertFalse(electionModule.isElectionWinner(1, user1));
-	// 		assertTrue(electionModule.getElectionWinners(1).length == 0);
+		// we vote for user1
+		vm.prank(user1);
+		electionModule.vote(user1);
 
-	// 		// we vote for user1
-	// 		vm.warp(DEFAULT_START_TIME + NOMINATION_WINDOW + 1);
-	// 		vm.prank(user1);
-	// 		electionModule.vote(1, user1);
+		assertTrue(electionModule.isElectionWinner(1, user1));
+		assertTrue(electionModule.getElectionWinners(1).length == 1);
 
-	// 		assertTrue(electionModule.isElectionWinner(1, user1));
-	// 		assertTrue(electionModule.getElectionWinners(1).length == 1);
+		// we vote for user2
+		vm.prank(user2);
+		electionModule.vote(user2);
 
-	// 		// we vote for user2
-	// 		vm.prank(user2);
-	// 		electionModule.vote(1, user2);
+		assertTrue(electionModule.isElectionWinner(1, user2));
+		assertTrue(electionModule.getElectionWinners(1).length == 2);
 
-	// 		assertTrue(electionModule.isElectionWinner(1, user2));
-	// 		assertTrue(electionModule.getElectionWinners(1).length == 2);
+		// we vote for user3
+		vm.prank(user3);
+		electionModule.vote(user3);
 
-	// 		// we vote for user3
-	// 		vm.prank(user3);
-	// 		electionModule.vote(1, user3);
+		assertTrue(electionModule.isElectionWinner(1, user3));
+		assertTrue(electionModule.getElectionWinners(1).length == 3);
 
-	// 		assertTrue(electionModule.isElectionWinner(1, user3));
-	// 		assertTrue(electionModule.getElectionWinners(1).length == 3);
+		// we vote for user4
+		vm.prank(user4);
+		electionModule.vote(user4);
 
-	// 		// we vote for user4
-	// 		vm.prank(user4);
-	// 		electionModule.vote(1, user4);
+		assertTrue(electionModule.isElectionWinner(1, user4));
+		assertTrue(electionModule.getElectionWinners(1).length == 4);
 
-	// 		assertTrue(electionModule.isElectionWinner(1, user4));
-	// 		assertTrue(electionModule.getElectionWinners(1).length == 4);
+		// we vote for user5
+		vm.prank(user5);
+		electionModule.vote(user5);
 
-	// 		// we vote for user5
-	// 		vm.prank(user5);
-	// 		electionModule.vote(1, user5);
+		assertTrue(electionModule.isElectionWinner(1, user5));
+		assertTrue(electionModule.getElectionWinners(1).length == 5);
 
-	// 		assertTrue(electionModule.isElectionWinner(1, user5));
-	// 		assertTrue(electionModule.getElectionWinners(1).length == 5);
+		// we vote for user6 but they don't get added to the winner list
+		// as they get the exact same votes amount
+		vm.prank(user6);
+		electionModule.vote(user6);
 
-	// 		// we vote for user6 but they don't get added to the winner list
-	// 		// as they get the exact same votes amount
-	// 		vm.prank(user6);
-	// 		electionModule.vote(1, user6);
+		assertFalse(electionModule.isElectionWinner(1, user6));
+		assertTrue(electionModule.getElectionWinners(1).length == 5);
 
-	// 		assertFalse(electionModule.isElectionWinner(1, user6));
-	// 		assertTrue(electionModule.getElectionWinners(1).length == 5);
+		// we vote for user6 again, and they now replace user1 in the
+		// winner list
+		vm.startPrank(vm.addr(7));
+		stakingRewards.stake(DEFAULT_STAKE_AMOUNT);
+		electionModule.vote(user6);
 
-	// 		// we vote for user6 again, and they now replace user1 in the
-	// 		// winner list
-	// 		vm.startPrank(vm.addr(7));
-	// 		stakingRewards.stake(DEFAULT_STAKE_AMOUNT);
-	// 		electionModule.vote(1, user6);
+		assertTrue(electionModule.isElectionWinner(1, user6));
+		assertFalse(electionModule.isElectionWinner(1, user1));
+		assertTrue(electionModule.getElectionWinners(1).length == 5);
 
-	// 		assertTrue(electionModule.isElectionWinner(1, user6));
-	// 		assertFalse(electionModule.isElectionWinner(1, user1));
-	// 		assertTrue(electionModule.getElectionWinners(1).length == 5);
+		// we vote for user1 again, and they now replace user5 in the
+		// winner list
+		vm.startPrank(vm.addr(8));
+		stakingRewards.stake(DEFAULT_STAKE_AMOUNT);
+		electionModule.vote(user1);
 
-	// 		// we vote for user1 again, and they now replace user5 in the
-	// 		// winner list
-	// 		vm.startPrank(vm.addr(8));
-	// 		stakingRewards.stake(DEFAULT_STAKE_AMOUNT);
-	// 		electionModule.vote(1, user1);
+		assertTrue(electionModule.isElectionWinner(1, user1));
+		assertFalse(electionModule.isElectionWinner(1, user5));
+		assertTrue(electionModule.getElectionWinners(1).length == 5);
+	}
 
-	// 		assertTrue(electionModule.isElectionWinner(1, user1));
-	// 		assertFalse(electionModule.isElectionWinner(1, user5));
-	// 		assertTrue(electionModule.getElectionWinners(1).length == 5);
-	// 	}
+	function test_UpdatesWinnerListForCommunityElection() public {
+		// we start a community election and nominate the candidates
+		generateNominations(IElectionModule.ElectionType.Community);
+
+		assertFalse(electionModule.isElectionWinner(1, user1));
+		assertTrue(electionModule.getElectionWinners(1).length == 0);
+
+		// we vote for user1
+		vm.prank(user1);
+		electionModule.vote(user1);
+
+		assertTrue(electionModule.isElectionWinner(1, user1));
+		assertTrue(electionModule.getElectionWinners(1).length == 1);
+
+		// we vote for user2
+		vm.prank(user2);
+		electionModule.vote(user2);
+
+		assertTrue(electionModule.isElectionWinner(1, user2));
+		assertTrue(electionModule.getElectionWinners(1).length == 2);
+
+		// we vote for user3
+		vm.prank(user3);
+		electionModule.vote(user3);
+
+		assertTrue(electionModule.isElectionWinner(1, user3));
+		assertTrue(electionModule.getElectionWinners(1).length == 3);
+
+		// we vote for user4
+		vm.prank(user4);
+		electionModule.vote(user4);
+
+		assertTrue(electionModule.isElectionWinner(1, user4));
+		assertTrue(electionModule.getElectionWinners(1).length == 4);
+
+		// we vote for user5
+		vm.prank(user5);
+		electionModule.vote(user5);
+
+		assertTrue(electionModule.isElectionWinner(1, user5));
+		assertTrue(electionModule.getElectionWinners(1).length == 5);
+
+		// we vote for user6 but they don't get added to the winner list
+		// as they get the exact same votes amount
+		vm.prank(user6);
+		electionModule.vote(user6);
+
+		assertFalse(electionModule.isElectionWinner(1, user6));
+		assertTrue(electionModule.getElectionWinners(1).length == 5);
+
+		// we vote for user6 again, and they now replace user1 in the
+		// winner list
+		vm.startPrank(vm.addr(7));
+		stakingRewards.stake(DEFAULT_STAKE_AMOUNT);
+		electionModule.vote(user6);
+
+		assertTrue(electionModule.isElectionWinner(1, user6));
+		assertFalse(electionModule.isElectionWinner(1, user1));
+		assertTrue(electionModule.getElectionWinners(1).length == 5);
+
+		// we vote for user1 again, and they now replace user5 in the
+		// winner list
+		vm.startPrank(vm.addr(8));
+		stakingRewards.stake(DEFAULT_STAKE_AMOUNT);
+		electionModule.vote(user1);
+
+		assertTrue(electionModule.isElectionWinner(1, user1));
+		assertFalse(electionModule.isElectionWinner(1, user5));
+		assertTrue(electionModule.getElectionWinners(1).length == 5);
+	}
+
+	function test_UpdatesWinnerListForReplacementElection() public {
+		// we start a replacement election and nominates the candidates
+		generateNominations(IElectionModule.ElectionType.Replacement);
+
+		assertFalse(electionModule.isElectionWinner(1, user1));
+		assertTrue(electionModule.getElectionWinners(1).length == 0);
+
+		// we vote for user2
+		vm.prank(user2);
+		electionModule.vote(user2);
+
+		assertTrue(electionModule.isElectionWinner(1, user2));
+		assertTrue(electionModule.getElectionWinners(1).length == 1);
+
+		// we vote for user3, which isn't added in the winner list
+		// they've staked the same amount as user2
+		vm.prank(user3);
+		electionModule.vote(user3);
+
+		assertFalse(electionModule.isElectionWinner(1, user3));
+		assertTrue(electionModule.getElectionWinners(1).length == 1);
+
+		// we now vote for user4 making sure they've staked more that the rest
+		// before, so they can be in the winners list
+		vm.startPrank(user4);
+		stakingRewards.stake(DEFAULT_STAKE_AMOUNT);
+		electionModule.vote(user4);
+
+		assertTrue(electionModule.isElectionWinner(1, user4));
+		assertTrue(electionModule.getElectionWinners(1).length == 1);
+
+		vm.stopPrank();
+	}
 }
 
-// contract FinalizeEelection is ElectionModuleTest {
-// 	function test_RevertIf_ElectionNotOngoing() public {
-// 		// we try to finalize a election which wasn't started
-// 		vm.warp(DEFAULT_START_TIME);
-// 		vm.expectRevert(Error.ElectionAlreadyFinalizedOrInvalid.selector);
-// 		electionModule.finalizeElection(1);
-// 	}
+contract FinalizeEelection is ElectionModuleTest {
+	function test_RevertIf_ElectionNotOngoing() public {
+		// we try to finalize a election which wasn't started
+		vm.warp(DEFAULT_START_TIME);
+		vm.expectRevert(Error.ElectionFinalizedOrInvalid.selector);
+		electionModule.finalizeElection();
+	}
 
-// 	function test_RevertIf_AlreadyFinalized() public {
-// 		// we start an election and and we nominate enough candidates
-// 		generateNominations(electionModule);
+	function test_RevertIf_AlreadyFinalized() public {
+		// we start an election and and we nominate enough candidates
+		generateElection(IElectionModule.ElectionType.Scheduled);
+		electionModule.finalizeElection();
 
-// 		vm.expectRevert(Error.ElectionNotCancelable.selector);
-// 		electionModule.cancelElection(1);
+		// we can't finalize it twice
+		vm.expectRevert(Error.ElectionFinalizedOrInvalid.selector);
+		electionModule.finalizeElection();
+	}
 
-// 		// we vote and election enough candidates
-// 		vm.prank(user1);
-// 		electionModule.vote(1, user1);
-// 		vm.prank(user2);
-// 		electionModule.vote(1, user2);
-// 		vm.prank(user3);
-// 		electionModule.vote(1, user3);
-// 		vm.prank(user4);
-// 		electionModule.vote(1, user4);
-// 		vm.prank(user5);
-// 		electionModule.vote(1, user5);
+	function testFuzz_RevertIf_NotElectionEndTime(uint256 _delay) public {
+		vm.assume(_delay < ELECTION_DURATION);
+		// we start an election and try to finalize it before the voting window ends
+		vm.warp(DEFAULT_START_TIME);
+		electionModule.startScheduledElection();
 
-// 		// we finalize the vote
-// 		vm.warp(DEFAULT_START_TIME + ELECTION_DURATION);
-// 		electionModule.finalizeElection(1);
+		vm.warp(DEFAULT_START_TIME + _delay);
+		vm.expectRevert(Error.ElectionNotReadyToBeFinalized.selector);
+		electionModule.finalizeElection();
+	}
 
-// 		// we can't finalize it twice
-// 		vm.expectRevert(Error.ElectionAlreadyFinalizedOrInvalid.selector);
-// 		electionModule.finalizeElection(1);
-// 	}
+	function test_CancelElectionIfNoCandidates() public {
+		// we start an election and and we don't nominate enough candidates
+		vm.warp(DEFAULT_START_TIME);
+		vm.prank(user1);
+		electionModule.startCommunityElection();
 
-// 	function testFuzz_RevertIf_NotElectionEndTime(uint256 _delay) public {
-// 		vm.assume(_delay <= ELECTION_DURATION);
-// 		// we start an election and try to finalize it before the voting window ends
-// 		vm.warp(DEFAULT_START_TIME);
-// 		electionModule.startScheduledElection();
+		electionModule.nominateCandidate(user1);
+		electionModule.nominateCandidate(user2);
+		electionModule.nominateCandidate(user3);
 
-// 		vm.expectRevert(Error.ElectionNotReadyToBeFinalized.selector);
-// 		electionModule.finalizeElection(1);
-// 	}
+		// we close the voting window meaning the election is invalid
+		vm.warp(DEFAULT_START_TIME + ELECTION_DURATION);
+		vm.expectEmit(true, false, false, false);
+		emit ElectionCanceled(1);
+		electionModule.finalizeElection();
+	}
 
-// 	function test_CancelElectionIfNoCandidates() public {
-// 		// we start an election and and we don't nominate enough candidates
-// 		vm.warp(DEFAULT_START_TIME);
-// 		electionModule.startScheduledElection();
-// 		vm.warp(DEFAULT_START_TIME + 1);
-// 		electionModule.nominateCandidate(1, user1);
-// 		electionModule.nominateCandidate(1, user2);
-// 		electionModule.nominateCandidate(1, user3);
+	function test_CancelElectionIfNoVotes() public {
+		// we start an election and and we nominate enough candidates
+		generateNominations(IElectionModule.ElectionType.Replacement);
 
-// 		// we close the voting window meaning there are no votes
-// 		vm.warp(DEFAULT_START_TIME + ELECTION_DURATION);
-// 		vm.expectEmit(true, false, false, false);
-// 		emit ElectionCanceled(1);
-// 		electionModule.finalizeElection(1);
-// 	}
+		// we close the voting window meaning there are no votes
+		vm.warp(DEFAULT_START_TIME + ELECTION_DURATION);
+		vm.expectEmit(true, false, false, false);
+		emit ElectionCanceled(1);
+		electionModule.finalizeElection();
+	}
 
-// 	function test_CancelElectionIfNoVotes() public {
-// 		// we start an election and and we nominate enough candidates
-// 		vm.warp(DEFAULT_START_TIME);
-// 		electionModule.startScheduledElection();
-// 		vm.warp(DEFAULT_START_TIME + 1);
-// 		electionModule.nominateCandidate(1, user1);
-// 		electionModule.nominateCandidate(1, user2);
-// 		electionModule.nominateCandidate(1, user3);
-// 		electionModule.nominateCandidate(1, user4);
-// 		electionModule.nominateCandidate(1, user5);
+	function test_CancelElectionIfNoQuorum() public {
+		// we start a community election
+		generateElection(IElectionModule.ElectionType.Community);
 
-// 		// we close the voting window meaning there are no votes
-// 		vm.warp(DEFAULT_START_TIME + ELECTION_DURATION);
-// 		vm.expectEmit(true, false, false, false);
-// 		emit ElectionCanceled(1);
-// 		electionModule.finalizeElection(1);
-// 	}
+		// we inflate supply of the stakingRewards contract to make sure all the votes don't reach quorum
+		stakingRewards.inflateTotalSupply();
 
-// 	function test_EmitsElectionFinalizedEvent() public {
-// 		generateElection(electionModule);
-// 		vm.expectEmit(true, false, false, false);
-// 		emit ElectionFinalized(1);
-// 		electionModule.finalizeElection(1);
-// 	}
+		// election should get cancelled
+		vm.expectEmit(true, false, false, false);
+		emit ElectionCanceled(1);
+		electionModule.finalizeElection();
+	}
 
-// 	function test_UpdatesElectionStruc() public {
-// 		assertTrue(electionModule.lastFinalizedScheduledElection() == 0);
-// 		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Invalid);
+	function test_FinalizeScheduledElection() public {
+		assertTrue(electionModule.lastFinalizedScheduledElection() == 0);
+		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Invalid);
 
-// 		generateElection(electionModule);
+		generateElection(IElectionModule.ElectionType.Scheduled);
 
-// 		assertTrue(electionModule.lastFinalizedScheduledElection() == 0);
-// 		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Ongoing);
+		assertTrue(electionModule.lastFinalizedScheduledElection() == 0);
+		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Ongoing);
 
-// 		electionModule.finalizeElection(1);
+		vm.expectEmit(true, false, false, false);
+		emit ElectionFinalized(1);
+		electionModule.finalizeElection();
 
-// 		assertTrue(electionModule.lastFinalizedScheduledElection() == 1);
-// 		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Finalized);
-// 	}
+		assertTrue(electionModule.lastFinalizedScheduledElection() == 1);
+		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Finalized);
+	}
 
-// 	function test_InitiatesNewCouncil() public {
-// 		// we check who are the current safe owners pre-election
-// 		assertTrue(safeProxy.getOwners().length == 5);
-// 		assertTrue(safeProxy.getThreshold() == SAFE_THRESHOLD);
-// 		assertTrue(safeProxy.isOwner(user1));
-// 		assertTrue(safeProxy.isOwner(user6));
-// 		assertTrue(safeProxy.isOwner(vm.addr(10)));
-// 		assertTrue(safeProxy.isOwner(vm.addr(11)));
-// 		assertTrue(safeProxy.isOwner(vm.addr(12)));
+	function test_FinalizeCommunityElection() public {
+		assertTrue(electionModule.lastFinalizedScheduledElection() == 0);
+		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Invalid);
 
-// 		generateElection(electionModule);
-// 		electionModule.finalizeElection(1);
+		generateElection(IElectionModule.ElectionType.Community);
 
-// 		assertTrue(safeProxy.getOwners().length == 5);
-// 		assertTrue(safeProxy.getThreshold() == SAFE_THRESHOLD);
-// 		assertTrue(safeProxy.isOwner(user1));
-// 		assertTrue(safeProxy.isOwner(user2));
-// 		assertTrue(safeProxy.isOwner(user3));
-// 		assertTrue(safeProxy.isOwner(user4));
-// 		assertTrue(safeProxy.isOwner(user5));
-// 	}
-// }
+		assertTrue(electionModule.lastFinalizedScheduledElection() == 0);
+		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Ongoing);
 
-// contract CancelElection is ElectionModuleTest {
-// 	function test_RevertIf_NotElection() public {
-// 		vm.expectRevert(Error.ElectionNotCancelable.selector);
-// 		electionModule.cancelElection(0);
+		vm.expectEmit(true, false, false, false);
+		emit ElectionFinalized(1);
+		electionModule.finalizeElection();
 
-// 		vm.expectRevert(Error.ElectionNotCancelable.selector);
-// 		electionModule.cancelElection(1);
-// 	}
+		assertTrue(electionModule.lastFinalizedScheduledElection() == 1);
+		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Finalized);
+	}
 
-// 	function test_RevertIf_NotOngoing() public {
-// 		// we start an election and cancel it because not enough candidates
-// 		vm.warp(DEFAULT_START_TIME);
-// 		electionModule.startScheduledElection();
-// 		vm.warp(DEFAULT_START_TIME + 1);
-// 		electionModule.nominateCandidate(1, user1);
-// 		vm.warp(DEFAULT_START_TIME + NOMINATION_WINDOW + 1);
-// 		electionModule.cancelElection(1);
+	function test_FinalizeReplacementElection() public {
+		assertTrue(electionModule.lastFinalizedScheduledElection() == 0);
+		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Invalid);
 
-// 		// reverts because already set to Invalid
-// 		vm.expectRevert(Error.ElectionNotCancelable.selector);
-// 		electionModule.cancelElection(1);
-// 	}
+		generateElection(IElectionModule.ElectionType.Replacement);
 
-// 	function test_RevertIf_EnoughCandidatesAndVotes() public {
-// 		// we start an election and and we nominate enough candidates
-// 		generateNominations(electionModule);
+		assertTrue(electionModule.lastFinalizedScheduledElection() == 0);
+		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Ongoing);
 
-// 		vm.expectRevert(Error.ElectionNotCancelable.selector);
-// 		electionModule.cancelElection(1);
+		vm.expectEmit(true, false, false, false);
+		emit ElectionFinalized(1);
+		electionModule.finalizeElection();
 
-// 		// we vote and election enough candidates
-// 		vm.prank(user1);
-// 		electionModule.vote(1, user1);
-// 		vm.prank(user2);
-// 		electionModule.vote(1, user2);
-// 		vm.prank(user3);
-// 		electionModule.vote(1, user3);
-// 		vm.prank(user4);
-// 		electionModule.vote(1, user4);
-// 		vm.prank(user5);
-// 		electionModule.vote(1, user5);
+		assertTrue(electionModule.lastFinalizedScheduledElection() == 1);
+		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Finalized);
+	}
 
-// 		// we close the voting window
-// 		vm.warp(DEFAULT_START_TIME + ELECTION_DURATION + 1);
+	function test_InitiateNewCouncilAfterScheduledElection() public {
+		// we check who are the current safe owners pre-election
+		assertTrue(safeProxy.getOwners().length == 5);
+		assertTrue(safeProxy.getThreshold() == SAFE_THRESHOLD);
+		assertTrue(safeProxy.isOwner(user1));
+		assertTrue(safeProxy.isOwner(user6));
+		assertTrue(safeProxy.isOwner(vm.addr(10)));
+		assertTrue(safeProxy.isOwner(vm.addr(11)));
+		assertTrue(safeProxy.isOwner(vm.addr(12)));
 
-// 		vm.expectRevert(Error.ElectionNotCancelable.selector);
-// 		electionModule.cancelElection(1);
-// 	}
+		generateElection(IElectionModule.ElectionType.Scheduled);
+		electionModule.finalizeElection();
 
-// 	function test_EmitsElectionCanceledEvent() public {
-// 		// we start an election and and we don't enough candidates
-// 		vm.warp(DEFAULT_START_TIME);
-// 		electionModule.startScheduledElection();
-// 		vm.warp(DEFAULT_START_TIME + 1);
-// 		electionModule.nominateCandidate(1, user1);
+		assertTrue(safeProxy.getOwners().length == 5);
+		assertTrue(safeProxy.getThreshold() == SAFE_THRESHOLD);
+		assertTrue(safeProxy.isOwner(user1));
+		assertTrue(safeProxy.isOwner(user2));
+		assertTrue(safeProxy.isOwner(user3));
+		assertTrue(safeProxy.isOwner(user4));
+		assertTrue(safeProxy.isOwner(user5));
+	}
 
-// 		// we close the nomination window making the election cancelable
-// 		vm.warp(DEFAULT_START_TIME + NOMINATION_WINDOW + 1);
-// 		vm.expectEmit(true, false, false, false);
-// 		emit ElectionCanceled(1);
-// 		electionModule.cancelElection(1);
-// 	}
+	function test_InitiateNewCouncilAfterCommunityElection() public {
+		// we check who are the current safe owners pre-election
+		assertTrue(safeProxy.getOwners().length == 5);
+		assertTrue(safeProxy.getThreshold() == SAFE_THRESHOLD);
+		assertTrue(safeProxy.isOwner(user1));
+		assertTrue(safeProxy.isOwner(user6));
+		assertTrue(safeProxy.isOwner(vm.addr(10)));
+		assertTrue(safeProxy.isOwner(vm.addr(11)));
+		assertTrue(safeProxy.isOwner(vm.addr(12)));
 
-// 	function test_UpdatesElectionStruc() public {
-// 		// we start an election and and we don't enough candidates
-// 		vm.warp(DEFAULT_START_TIME);
-// 		electionModule.startScheduledElection();
-// 		vm.warp(DEFAULT_START_TIME + 1);
-// 		electionModule.nominateCandidate(1, user1);
+		generateElection(IElectionModule.ElectionType.Community);
+		electionModule.finalizeElection();
 
-// 		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Ongoing);
+		assertTrue(safeProxy.getOwners().length == 5);
+		assertTrue(safeProxy.getThreshold() == SAFE_THRESHOLD);
+		assertTrue(safeProxy.isOwner(user1));
+		assertTrue(safeProxy.isOwner(user2));
+		assertTrue(safeProxy.isOwner(user3));
+		assertTrue(safeProxy.isOwner(user4));
+		assertTrue(safeProxy.isOwner(user5));
+	}
 
-// 		// we close the nomination window making the election cancelable
-// 		vm.warp(DEFAULT_START_TIME + NOMINATION_WINDOW + 1);
-// 		electionModule.cancelElection(1);
+	function test_AddCouncilMemberAfterReplacementElection() public {
+		// we check who are the current safe owners pre-election
+		assertTrue(safeProxy.getOwners().length == 5);
+		assertTrue(safeProxy.getThreshold() == SAFE_THRESHOLD);
+		assertTrue(safeProxy.isOwner(user1));
+		assertTrue(safeProxy.isOwner(user6));
+		assertTrue(safeProxy.isOwner(vm.addr(10)));
+		assertTrue(safeProxy.isOwner(vm.addr(11)));
+		assertTrue(safeProxy.isOwner(vm.addr(12)));
 
-// 		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Invalid);
-// 	}
-// }
+		// we replace user1
+		generateElection(IElectionModule.ElectionType.Replacement);
+
+		assertFalse(safeProxy.isOwner(user1));
+
+		electionModule.finalizeElection();
+
+		assertTrue(safeProxy.getOwners().length == 5);
+		assertTrue(safeProxy.getThreshold() == SAFE_THRESHOLD);
+		assertTrue(safeProxy.isOwner(user2));
+		assertTrue(safeProxy.isOwner(user6));
+		assertTrue(safeProxy.isOwner(vm.addr(10)));
+		assertTrue(safeProxy.isOwner(vm.addr(11)));
+		assertTrue(safeProxy.isOwner(vm.addr(12)));
+	}
+}
+
+contract CancelElection is ElectionModuleTest {
+	function test_RevertIf_NotElection() public {
+		vm.expectRevert(Error.ElectionNotCancelable.selector);
+		electionModule.cancelElection();
+	}
+
+	function test_RevertIf_NotOngoing() public {
+		// we start an election and cancel it because not enough candidates
+		vm.warp(DEFAULT_START_TIME);
+		electionModule.startScheduledElection();
+		electionModule.nominateCandidate(user1);
+		vm.warp(DEFAULT_START_TIME + NOMINATION_WINDOW);
+		electionModule.cancelElection();
+
+		// reverts because already set to Invalid
+		vm.expectRevert(Error.ElectionNotCancelable.selector);
+		electionModule.cancelElection();
+	}
+
+	function test_RevertIf_EnoughCandidatesAndVotes() public {
+		// we start an election and and we nominate enough candidates
+		generateNominations(IElectionModule.ElectionType.Scheduled);
+
+		vm.expectRevert(Error.ElectionNotCancelable.selector);
+		electionModule.cancelElection();
+
+		// we vote for enough candidates
+		vm.prank(user1);
+		electionModule.vote(user1);
+		vm.prank(user2);
+		electionModule.vote(user2);
+		vm.prank(user3);
+		electionModule.vote(user3);
+		vm.prank(user4);
+		electionModule.vote(user4);
+		vm.prank(user5);
+		electionModule.vote(user5);
+
+		// we close the voting window
+		vm.warp(DEFAULT_START_TIME + ELECTION_DURATION);
+
+		vm.expectRevert(Error.ElectionNotCancelable.selector);
+		electionModule.cancelElection();
+	}
+
+	function test_EmitsElectionCanceledEvent() public {
+		// we start an election and and we don't enough candidates
+		vm.warp(DEFAULT_START_TIME);
+		electionModule.startScheduledElection();
+		electionModule.nominateCandidate(user1);
+
+		// we close the nomination window making the election cancelable
+		vm.warp(DEFAULT_START_TIME + NOMINATION_WINDOW);
+		vm.expectEmit(true, false, false, false);
+		emit ElectionCanceled(1);
+		electionModule.cancelElection();
+	}
+
+	function test_UpdatesElectionStruc() public {
+		// we start an election and and we don't enough candidates
+		vm.warp(DEFAULT_START_TIME);
+		electionModule.startScheduledElection();
+		electionModule.nominateCandidate(user1);
+
+		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Ongoing);
+
+		// we close the nomination window making the election cancelable
+		vm.warp(DEFAULT_START_TIME + NOMINATION_WINDOW);
+		electionModule.cancelElection();
+
+		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Invalid);
+	}
+}

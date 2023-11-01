@@ -240,12 +240,13 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 		if (isElectionFinalized()) revert Error.ElectionFinalizedOrInvalid();
 		if (block.timestamp < getElectionEndTime(currentElection)) revert Error.ElectionNotReadyToBeFinalized();
 
+		Election storage election = elections[currentElection];
+
 		/// @dev if there are no votes, or if quorum isn't met for a Community Election then the election is invalid and needs to be canceled
-		uint256 seatsNumber = getAvailableSeatsForElection(elections[currentElection].electionType);
+		uint256 seatsNumber = getAvailableSeatsForElection(election.electionType);
 		if (
-			elections[currentElection].winners.length() < seatsNumber ||
-			(elections[currentElection].electionType == ElectionType.Community &&
-				elections[currentElection].totalVotes < getQuorum(elections[currentElection].startTime))
+			election.winners.length() < seatsNumber ||
+			(election.electionType == ElectionType.Community && election.totalVotes < getQuorum(election.startTime))
 		) {
 			_cancelElection();
 			return;
@@ -253,10 +254,14 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 
 		emit ElectionFinalized(currentElection);
 
-		elections[currentElection].status = ElectionStatus.Finalized;
+		election.status = ElectionStatus.Finalized;
 		lastFinalizedScheduledElection = currentElection;
 
-		_initiateNewCouncil(elections[currentElection].winners);
+		if (election.electionType == ElectionType.Replacement) {
+			_addMemberToCouncil(election.winners.at(0));
+		} else {
+			_initiateNewCouncil(election.winners);
+		}
 	}
 
 	function cancelElection() external {

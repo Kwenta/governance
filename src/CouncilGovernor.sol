@@ -58,6 +58,11 @@ contract CouncilGovernor {
 		}
 	}
 
+	function _addMemberToCouncil(address _winner) internal {
+		if (safeProxy.getOwners().length == COUNCIL_SEATS_NUMBER) revert Error.NoSeatAvailableInCouncil();
+		_addOwnerWithThreshold(_winner, THRESHOLD);
+	}
+
 	function _removeMemberFromCouncil(address _member) internal {
 		address[] memory currentOwners = safeProxy.getOwners();
 		if (currentOwners.length < COUNCIL_SEATS_NUMBER) revert Error.NotEnoughMembersInCouncil();

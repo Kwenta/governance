@@ -19,6 +19,10 @@ contract StakingRewardsV2Mock is IStakingRewardsV2 {
 		return totalSupply;
 	}
 
+	function inflateTotalSupply() external {
+		totalSupply += totalSupply * 10;
+	}
+
 	function stake(uint256 _amount) external {
 		balances[msg.sender] += _amount;
 		totalSupply += _amount;
