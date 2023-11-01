@@ -10,12 +10,16 @@ contract CouncilGovernorPublic is CouncilGovernor {
 
 	constructor(address _safeProxy) CouncilGovernor(_safeProxy) {}
 
-	function initiateNewCouncil(address[] calldata winners) external {
+	function initiateNewCouncil(address[] calldata _winners) external {
 		_resetSet();
-		for (uint256 i = 0; i < winners.length; i++) {
-			winnerSet.add(winners[i]);
+		for (uint256 i = 0; i < _winners.length; i++) {
+			winnerSet.add(_winners[i]);
 		}
 		_initiateNewCouncil(winnerSet);
+	}
+
+	function addMemberToCouncil(address _winner) external {
+		_addMemberToCouncil(_winner);
 	}
 
 	function _resetSet() internal {

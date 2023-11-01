@@ -6,6 +6,8 @@ import { Test } from "forge-std/Test.sol";
 import { CouncilGovernorPublic } from "test/mocks/CouncilGovernorPublic.sol";
 import { SafeProxyMock } from "test/mocks/SafeProxyMock.sol";
 
+import { Error } from "src/libraries/Error.sol";
+
 contract CouncilGovernorTest is Test {
 	SafeProxyMock safeProxy;
 	CouncilGovernorPublic councilGovernor;
@@ -305,5 +307,49 @@ contract initiateNewCouncil is CouncilGovernorTest {
 		assertFalse(safeProxy.isOwner(user3));
 		assertFalse(safeProxy.isOwner(user4));
 		assertFalse(safeProxy.isOwner(user5));
+	}
+}
+
+contract AddMemberToCouncil is CouncilGovernorTest {
+	function test_RevertIf_NoSeatsAvailable() public {
+		// we initialize the safe with 5 owners
+		address[] memory safeOwners = new address[](5);
+		safeOwners[0] = user1;
+		safeOwners[1] = user2;
+		safeOwners[2] = user3;
+		safeOwners[3] = user4;
+		safeOwners[4] = user5;
+
+		safeProxy.initializeOwners(safeOwners, SAFE_THRESHOLD);
+		councilGovernor = new CouncilGovernorPublic(address(safeProxy));
+
+		// we now try to add an extra member
+		vm.expectRevert(Error.NoSeatAvailableInCouncil.selector);
+		councilGovernor.addMemberToCouncil(vm.addr(6));
+	}
+
+	function test_AddMemberToCouncil() public {
+		// we initialize the safe with 4 owners
+		address[] memory safeOwners = new address[](4);
+		safeOwners[0] = user1;
+		safeOwners[1] = user2;
+		safeOwners[2] = user3;
+		safeOwners[3] = user4;
+
+		safeProxy.initializeOwners(safeOwners, SAFE_THRESHOLD - 1);
+		councilGovernor = new CouncilGovernorPublic(address(safeProxy));
+
+		assertFalse(safeProxy.isOwner(user5));
+		assertTrue(safeProxy.getThreshold() == SAFE_THRESHOLD - 1);
+		assertTrue(safeProxy.getOwners().length == 4);
+
+		// we now add a new council member
+		vm.expectEmit(true, false, false, false);
+		emit AddedOwner(user5);
+		councilGovernor.addMemberToCouncil(user5);
+
+		assertTrue(safeProxy.isOwner(user5));
+		assertTrue(safeProxy.getThreshold() == SAFE_THRESHOLD);
+		assertTrue(safeProxy.getOwners().length == 5);
 	}
 }

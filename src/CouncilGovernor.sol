@@ -35,8 +35,8 @@ contract CouncilGovernor {
 			address[] memory currentOwners = safeProxy.getOwners();
 
 			/// @dev if there is a free seat, we add a new owner
-			if (currentOwners.length < _winners.length()) {
-				/// @dev we make sure the threshold isn't too high
+			if (currentOwners.length < COUNCIL_SEATS_NUMBER) {
+				/// @dev we make sure to readjust the threshold
 				uint256 threshold = THRESHOLD > currentOwners.length + 1 ? currentOwners.length + 1 : THRESHOLD;
 				_addOwnerWithThreshold(winner, threshold);
 				/// @dev if no free seats available, we need to swap a current owner by a new elected one
