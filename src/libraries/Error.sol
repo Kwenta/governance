@@ -20,4 +20,7 @@ library Error {
 	error NotEnoughMembersInCouncil();
 	error NoSeatAvailableInCouncil();
 	error NotInCouncil();
+	error CouldNotModifyCouncil();
+	error AddFailed();
+	error RemoveFailed();
 }

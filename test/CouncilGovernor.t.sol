@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable one-contract-per-file, func-name-mixedcase
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
@@ -9,17 +10,17 @@ import { SafeProxyMock } from "test/mocks/SafeProxyMock.sol";
 import { Error } from "src/libraries/Error.sol";
 
 contract CouncilGovernorTest is Test {
-	SafeProxyMock safeProxy;
-	CouncilGovernorPublic councilGovernor;
+	SafeProxyMock public safeProxy;
+	CouncilGovernorPublic public councilGovernor;
 
-	address user1 = vm.addr(1);
-	address user2 = vm.addr(2);
-	address user3 = vm.addr(3);
-	address user4 = vm.addr(4);
-	address user5 = vm.addr(5);
+	address public user1 = vm.addr(1);
+	address public user2 = vm.addr(2);
+	address public user3 = vm.addr(3);
+	address public user4 = vm.addr(4);
+	address public user5 = vm.addr(5);
 
 	uint256 public constant SAFE_THRESHOLD = 3;
-	uint256 constant SEATS_NUMBER = 5;
+	uint256 public constant SEATS_NUMBER = 5;
 
 	event AddedOwner(address indexed owner);
 	event RemovedOwner(address indexed owner);
@@ -29,7 +30,7 @@ contract CouncilGovernorTest is Test {
 	}
 }
 
-contract initiateNewCouncil is CouncilGovernorTest {
+contract InitiateNewCouncil is CouncilGovernorTest {
 	function test_SameCouncilElected() public {
 		// we initialize the safe with 5 owners
 		address[] memory safeOwners = new address[](5);

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// solhint-disable one-contract-per-file, func-name-mixedcase
 pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
@@ -11,21 +12,21 @@ import { SafeProxyMock } from "test/mocks/SafeProxyMock.sol";
 import { Error } from "src/libraries/Error.sol";
 
 contract ElectionModuleTest is Test {
-	address user1 = vm.addr(1);
-	address user2 = vm.addr(2);
-	address user3 = vm.addr(3);
-	address user4 = vm.addr(4);
-	address user5 = vm.addr(5);
-	address user6 = vm.addr(6);
+	address public user1 = vm.addr(1);
+	address public user2 = vm.addr(2);
+	address public user3 = vm.addr(3);
+	address public user4 = vm.addr(4);
+	address public user5 = vm.addr(5);
+	address public user6 = vm.addr(6);
 
 	SafeProxyMock public safeProxy;
 	StakingRewardsV2Mock public stakingRewards;
 	ElectionModule public electionModule;
 
 	uint256 public constant DEFAULT_START_TIME = 1697415594;
-	uint256 constant EPOCH_LENGTH = 26 weeks;
-	uint256 constant ELECTION_DURATION = 3 weeks;
-	uint256 constant NOMINATION_WINDOW = 1 weeks;
+	uint256 public constant EPOCH_LENGTH = 26 weeks;
+	uint256 public constant ELECTION_DURATION = 3 weeks;
+	uint256 public constant NOMINATION_WINDOW = 1 weeks;
 
 	uint256 public constant DEFAULT_STAKE_AMOUNT = 100;
 

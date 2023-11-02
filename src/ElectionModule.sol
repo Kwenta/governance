@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// slither-disable-start timestamp
 pragma solidity ^0.8.19;
 
 import { CouncilGovernor } from "src/CouncilGovernor.sol";
@@ -15,7 +16,7 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 
 	/*///////////////////////////////////////////////////////////////
                               CONSTANTS
-  ///////////////////////////////////////////////////////////////*/
+    ///////////////////////////////////////////////////////////////*/
 
 	uint256 public constant EPOCH_LENGTH = 26 weeks;
 	uint256 public constant NOMINATION_WINDOW = 1 weeks;
@@ -25,10 +26,10 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 
 	/*///////////////////////////////////////////////////////////////
                               	STATE
-  ///////////////////////////////////////////////////////////////*/
+    ///////////////////////////////////////////////////////////////*/
 
 	/// @notice start time for the elections
-	uint256 public startTime;
+	uint256 public immutable startTime;
 
 	/// @notice mapping of election number to election
 	mapping(uint256 => Election) private elections;
@@ -45,7 +46,7 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 
 	/*///////////////////////////////////////////////////////////////
                              CONSTRUCTOR
-  ///////////////////////////////////////////////////////////////*/
+    ///////////////////////////////////////////////////////////////*/
 
 	constructor(address _stakingRewardsV2, address _safeProxy, uint256 _startTime) CouncilGovernor(_safeProxy) {
 		if (_stakingRewardsV2 == address(0)) revert Error.ZeroAddress();
@@ -55,7 +56,7 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 
 	/*///////////////////////////////////////////////////////////////
                               VIEWS
-  ///////////////////////////////////////////////////////////////*/
+    ///////////////////////////////////////////////////////////////*/
 
 	function isNominationWindow() public view returns (bool) {
 		return
@@ -101,7 +102,7 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 	function getElectionWinners(uint256 _electionId) public view returns (address[] memory) {
 		EnumerableSet.AddressSet storage electionWinners = elections[_electionId].winners;
 		address[] memory winnersArray = new address[](electionWinners.length());
-		for (uint i = 0; i < electionWinners.length(); ++i) {
+		for (uint256 i = 0; i < electionWinners.length(); ++i) {
 			winnersArray[i] = electionWinners.at(i);
 		}
 		return winnersArray;
@@ -137,7 +138,9 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 					elections[currentElection].winners.length() < seatsNumber))
 		) {
 			return true;
-		} else return false;
+		} else {
+			return false;
+		}
 	}
 
 	function hasOngoingElection() public view returns (bool) {
@@ -172,7 +175,7 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 
 	/*///////////////////////////////////////////////////////////////
                         MUTATIVE FUNCTIONS
-  ///////////////////////////////////////////////////////////////*/
+    ///////////////////////////////////////////////////////////////*/
 
 	function startScheduledElection() external {
 		if (!canStartScheduledElection()) revert Error.ElectionCannotStart();
@@ -281,8 +284,8 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 	function _startReplacementElection(address _councilMember) internal noElectionOngoing {
 		if (!_isCouncilMember(_councilMember)) revert Error.NotInCouncil();
 
-		_removeMemberFromCouncil(_councilMember);
 		_startElection(ElectionType.Replacement);
+		_removeMemberFromCouncil(_councilMember);
 	}
 
 	function _startElection(ElectionType _electionType) internal {
@@ -310,12 +313,13 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 		if (election.candidates.contains(_candidate)) revert Error.CandidateAlreadyNominated();
 
 		/// @dev this prevent a council member from being nominated in a replacement election (becoming member twice)
-		if (election.electionType == ElectionType.Replacement && _isCouncilMember(_candidate))
+		if (election.electionType == ElectionType.Replacement && _isCouncilMember(_candidate)) {
 			revert Error.CandidateAlreadyInCouncil();
+		}
 
 		emit CandidateNominated(currentElection, _candidate);
 
-		election.candidates.add(_candidate);
+		if (!election.candidates.add(_candidate)) revert Error.AddFailed();
 	}
 
 	function _updateWinnerList(Election storage _election, address _candidate) internal {
@@ -326,15 +330,15 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 
 		/// @dev if the set is not complete yet, we take the first empty seat
 		if (_election.winners.length() < seatsNumber) {
-			_election.winners.add(_candidate);
+			if (!_election.winners.add(_candidate)) revert Error.AddFailed();
 			return;
 		}
 
 		(address leastVotedWinner, uint256 leastVotes) = _findWinnerWithLeastVotes(_election);
 
 		if (_election.voteCounts[_candidate] > leastVotes) {
-			_election.winners.remove(leastVotedWinner);
-			_election.winners.add(_candidate);
+			if (!_election.winners.remove(leastVotedWinner)) revert Error.RemoveFailed();
+			if (!_election.winners.add(_candidate)) revert Error.AddFailed();
 		}
 	}
 
@@ -345,7 +349,7 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 			leastVotedWinner = _election.winners.at(0);
 			leastVotes = _election.voteCounts[leastVotedWinner];
 		} else {
-			leastVotes = type(uint).max;
+			leastVotes = type(uint256).max;
 
 			for (uint256 i = 0; i < _election.winners.length(); ) {
 				address winner = _election.winners.at(i);
@@ -373,3 +377,4 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 		_;
 	}
 }
+// slither-disable-end timestamp

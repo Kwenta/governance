@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import { CouncilGovernor, Safe, Error, EnumerableSet } from "src/CouncilGovernor.sol";
+import { CouncilGovernor, EnumerableSet } from "src/CouncilGovernor.sol";
 
 contract CouncilGovernorPublic is CouncilGovernor {
 	using EnumerableSet for EnumerableSet.AddressSet;
 
-	EnumerableSet.AddressSet winnerSet;
+	EnumerableSet.AddressSet private winnerSet;
 
 	constructor(address _safeProxy) CouncilGovernor(_safeProxy) {}
 
