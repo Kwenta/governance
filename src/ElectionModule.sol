@@ -16,7 +16,7 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 
 	/*///////////////////////////////////////////////////////////////
                               CONSTANTS
-    ///////////////////////////////////////////////////////////////*/
+  ///////////////////////////////////////////////////////////////*/
 
 	uint256 public constant EPOCH_LENGTH = 26 weeks;
 	uint256 public constant NOMINATION_WINDOW = 1 weeks;
@@ -26,27 +26,28 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 
 	/*///////////////////////////////////////////////////////////////
                               	STATE
-    ///////////////////////////////////////////////////////////////*/
+  ///////////////////////////////////////////////////////////////*/
 
-	/// @notice start time for the elections
+	/// @notice time where any election can start
 	uint256 public immutable startTime;
-
-	/// @notice mapping of election number to election
-	mapping(uint256 => Election) private elections;
-	uint256 public currentElection;
-	uint256 public lastFinalizedScheduledElection;
-
-	uint256 public quorumThreshold = 40;
-
-	// /// @notice tracker for timestamp start of last scheduled election
-	// uint256 public lastScheduledElectionStartTime;
 
 	/// @notice staking rewards V2 contract
 	IStakingRewardsV2 public immutable stakingRewardsV2;
 
+	/// @notice mapping storing all the elections following the schema (electionId => election)
+	mapping(uint256 => Election) private elections;
+
+	/// @notice the current election
+	uint256 public currentElection;
+	/// @notice the last finalized scheduled election
+	uint256 public lastFinalizedScheduledElection;
+
+	/// @notice the quorum threshold for a community election to be valid
+	uint256 public quorumThreshold = 40;
+
 	/*///////////////////////////////////////////////////////////////
                              CONSTRUCTOR
-    ///////////////////////////////////////////////////////////////*/
+	///////////////////////////////////////////////////////////////*/
 
 	constructor(address _stakingRewardsV2, address _safeProxy, uint256 _startTime) CouncilGovernor(_safeProxy) {
 		if (_stakingRewardsV2 == address(0)) revert Error.ZeroAddress();
@@ -56,49 +57,44 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 
 	/*///////////////////////////////////////////////////////////////
                               VIEWS
-    ///////////////////////////////////////////////////////////////*/
+  ///////////////////////////////////////////////////////////////*/
 
-	function isNominationWindow() public view returns (bool) {
-		return
-			block.timestamp >= elections[currentElection].startTime &&
-			block.timestamp < elections[currentElection].startTime + NOMINATION_WINDOW;
-	}
-
-	function isVotingWindow() public view returns (bool) {
-		return
-			hasOngoingElection() &&
-			block.timestamp >= elections[currentElection].startTime + NOMINATION_WINDOW &&
-			block.timestamp < elections[currentElection].startTime + ELECTION_DURATION;
-	}
-
+	/// @inheritdoc IElectionModule
 	function getElectionStartTime(uint256 _electionId) public view returns (uint256) {
 		return elections[_electionId].startTime;
 	}
 
+	/// @inheritdoc IElectionModule
 	function getElectionEndTime(uint256 _electionId) public view returns (uint256) {
 		return elections[_electionId].startTime + ELECTION_DURATION;
 	}
 
+	/// @inheritdoc IElectionModule
 	function getElectionTotalVotes(uint256 _electionId) public view returns (uint256) {
 		return elections[_electionId].totalVotes;
 	}
 
+	/// @inheritdoc IElectionModule
 	function getElectionStatus(uint256 _electionId) public view returns (ElectionStatus) {
 		return elections[_electionId].status;
 	}
 
+	/// @inheritdoc IElectionModule
 	function getElectionType(uint256 _electionId) public view returns (ElectionType) {
 		return elections[_electionId].electionType;
 	}
 
+	/// @inheritdoc IElectionModule
 	function getElectionCandidateAddress(uint256 _electionId, uint256 _index) public view returns (address) {
 		return elections[_electionId].candidates.at(_index);
 	}
 
+	/// @inheritdoc IElectionModule
 	function isElectionCandidate(uint256 _electionId, address _candidate) public view returns (bool) {
 		return elections[_electionId].candidates.contains(_candidate);
 	}
 
+	/// @inheritdoc IElectionModule
 	function getElectionWinners(uint256 _electionId) public view returns (address[] memory) {
 		EnumerableSet.AddressSet storage electionWinners = elections[_electionId].winners;
 		address[] memory winnersArray = new address[](electionWinners.length());
@@ -108,96 +104,61 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 		return winnersArray;
 	}
 
+	/// @inheritdoc IElectionModule
 	function isElectionWinner(uint256 _electionId, address _candidate) public view returns (bool) {
 		return elections[_electionId].winners.contains(_candidate);
 	}
 
+	/// @inheritdoc IElectionModule
 	function getElectionVotesForCandidate(uint256 _electionId, address _candidate) public view returns (uint256) {
 		return elections[_electionId].voteCounts[_candidate];
 	}
 
+	/// @inheritdoc IElectionModule
 	function hasVoted(uint256 _electionId, address _voter) public view returns (bool) {
 		return elections[_electionId].hasVoted[_voter];
 	}
 
-	function isElectionFinalized() public view returns (bool) {
-		return
-			elections[currentElection].status == ElectionStatus.Finalized ||
-			elections[currentElection].status == ElectionStatus.Invalid;
+	/// @inheritdoc IElectionModule
+	function canStartScheduledElection() external view returns (bool) {
+		return _canStartScheduledElection();
 	}
 
-	function isElectionCancelable() public view returns (bool) {
-		/// @dev an election can be cancelled if it has the Ongoing status AND
-		/// if nomination window ended with not enough candidates OR
-		/// voting window ended with not enough winners
-		uint256 seatsNumber = getAvailableSeatsForElection(elections[currentElection].electionType);
-		if (
-			elections[currentElection].status == ElectionStatus.Ongoing &&
-			((isVotingWindow() && elections[currentElection].candidates.length() < seatsNumber) ||
-				(block.timestamp > getElectionEndTime(currentElection) &&
-					elections[currentElection].winners.length() < seatsNumber))
-		) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	function hasOngoingElection() public view returns (bool) {
-		return elections[currentElection].status == ElectionStatus.Ongoing;
-	}
-
-	function hasOngoingScheduledElection() public view returns (bool) {
-		return hasOngoingElection() && elections[currentElection].electionType == ElectionType.Scheduled;
-	}
-
-	/// @dev a scheduled election can only be started if:
-	/// block.timestamp >= startTime AND
-	/// there is not another ongoing scheduled election AND
-	/// last finalized scheduled election was more than 6 months ago
-	function canStartScheduledElection() public view returns (bool) {
-		if (block.timestamp < startTime) return false;
-		if (hasOngoingScheduledElection()) return false;
-		if (
-			lastFinalizedScheduledElection > 0 &&
-			block.timestamp < elections[lastFinalizedScheduledElection].startTime + EPOCH_LENGTH
-		) return false;
-		return true;
-	}
-
-	function getAvailableSeatsForElection(ElectionType _electionType) public pure returns (uint256) {
-		return _electionType == ElectionType.Replacement ? SEATS_REPLACEMENT_ELECTION : SEATS_FULL_ELECTION;
-	}
-
-	function getQuorum(uint256 _timestamp) public view returns (uint256) {
-		return (stakingRewardsV2.totalSupplyAtTime(_timestamp) * quorumThreshold) / 100;
+	/// @inheritdoc IElectionModule
+	function hasOngoingElection() external view returns (bool) {
+		return _hasOngoingElection();
 	}
 
 	/*///////////////////////////////////////////////////////////////
                         MUTATIVE FUNCTIONS
-    ///////////////////////////////////////////////////////////////*/
+  ///////////////////////////////////////////////////////////////*/
 
+	/// @inheritdoc IElectionModule
 	function startScheduledElection() external {
-		if (!canStartScheduledElection()) revert Error.ElectionCannotStart();
-		if (hasOngoingElection()) {
+		if (!_canStartScheduledElection()) revert Error.ElectionCannotStart();
+		if (_hasOngoingElection()) {
 			_cancelElection();
 		}
 		_startElection(ElectionType.Scheduled);
 	}
 
+	/// @inheritdoc IElectionModule
 	function startCommunityElection() external noElectionOngoing {
 		if (stakingRewardsV2.balanceOf(msg.sender) == 0) revert Error.CallerIsNotStaking();
 		_startElection(ElectionType.Community);
 	}
 
+	/// @inheritdoc IElectionModule
 	function startReplacementElection(address _councilMember) external safeOnly {
 		_startReplacementElection(_councilMember);
 	}
 
+	/// @inheritdoc IElectionModule
 	function stepDownFromCouncil() external {
 		_startReplacementElection(msg.sender);
 	}
 
+	/// @inheritdoc IElectionModule
 	/// @dev this function can be called after a replacement election occured before but
 	/// ended up being invalid (no candidates or votes). To avoid multisig desertion,
 	/// we cannot start another replacement election until the current available seat has been filled.
@@ -206,21 +167,24 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 		_startElection(ElectionType.Replacement);
 	}
 
+	/// @inheritdoc IElectionModule
 	function nominateCandidate(address _candidate) external {
 		_nominateCandidate(_candidate);
 	}
 
-	function nominateMultipleCandidates(address[] calldata candidates) external {
-		for (uint256 i = 0; i < candidates.length; ) {
-			_nominateCandidate(candidates[i]);
+	/// @inheritdoc IElectionModule
+	function nominateMultipleCandidates(address[] calldata _candidates) external {
+		for (uint256 i = 0; i < _candidates.length; ) {
+			_nominateCandidate(_candidates[i]);
 			unchecked {
 				++i;
 			}
 		}
 	}
 
+	/// @inheritdoc IElectionModule
 	function vote(address _candidate) external {
-		if (!isVotingWindow()) revert Error.NotInVotingWindow();
+		if (!_isVotingWindow()) revert Error.NotInVotingWindow();
 
 		Election storage election = elections[currentElection];
 
@@ -239,17 +203,19 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 		_updateWinnerList(election, _candidate);
 	}
 
+	/// @inheritdoc IElectionModule
 	function finalizeElection() external {
-		if (isElectionFinalized()) revert Error.ElectionFinalizedOrInvalid();
+		if (_isElectionFinalized()) revert Error.ElectionFinalizedOrInvalid();
 		if (block.timestamp < getElectionEndTime(currentElection)) revert Error.ElectionNotReadyToBeFinalized();
 
 		Election storage election = elections[currentElection];
 
-		/// @dev if there are no votes, or if quorum isn't met for a Community Election then the election is invalid and needs to be canceled
-		uint256 seatsNumber = getAvailableSeatsForElection(election.electionType);
+		/// @dev if there are no votes, or if quorum isn't met for a Community Election
+		/// then the election is invalid and needs to be canceled
+		uint256 seatsNumber = _getAvailableSeatsForElection(election.electionType);
 		if (
 			election.winners.length() < seatsNumber ||
-			(election.electionType == ElectionType.Community && election.totalVotes < getQuorum(election.startTime))
+			(election.electionType == ElectionType.Community && election.totalVotes < _getQuorum(election.startTime))
 		) {
 			_cancelElection();
 			return;
@@ -267,20 +233,103 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 		}
 	}
 
+	/// @inheritdoc IElectionModule
 	function cancelElection() external {
-		if (!isElectionCancelable()) revert Error.ElectionNotCancelable();
+		if (!_isElectionCancelable()) revert Error.ElectionNotCancelable();
 		_cancelElection();
 	}
 
+	/// @inheritdoc IElectionModule
 	function setQuorumThreshold(uint256 _newThreshold) external safeOnly {
 		emit QuorumThresholdSet(quorumThreshold, _newThreshold);
 		quorumThreshold = _newThreshold;
 	}
 
-	// /*///////////////////////////////////////////////////////////////
-	//                       INTERNAL FUNCTIONS
-	// ///////////////////////////////////////////////////////////////*/
+	/*///////////////////////////////////////////////////////////////
+	                      INTERNAL FUNCTIONS
+	///////////////////////////////////////////////////////////////*/
 
+	/// @notice checks if the current election is in the nomination window
+	function _isNominationWindow() internal view returns (bool) {
+		return
+			block.timestamp >= elections[currentElection].startTime &&
+			block.timestamp < elections[currentElection].startTime + NOMINATION_WINDOW;
+	}
+
+	/// @notice checks if the current election is in the voting window
+	/// @dev _hasOngoingElection is called here because an election could possibly
+	/// be in the voting window but with no candidates at all, making it invalid
+	function _isVotingWindow() internal view returns (bool) {
+		return
+			_hasOngoingElection() &&
+			block.timestamp >= elections[currentElection].startTime + NOMINATION_WINDOW &&
+			block.timestamp < elections[currentElection].startTime + ELECTION_DURATION;
+	}
+
+	/// @notice checks if the current election has been finalized
+	function _isElectionFinalized() internal view returns (bool) {
+		return
+			elections[currentElection].status == ElectionStatus.Finalized ||
+			elections[currentElection].status == ElectionStatus.Invalid;
+	}
+
+	/// @notice checks if the current election is cancelable
+	/// @dev an election can be cancelled if it has the Ongoing status AND
+	/// if nomination window ended with not enough candidates OR
+	/// voting window ended with not enough winners
+	function _isElectionCancelable() internal view returns (bool) {
+		uint256 seatsNumber = _getAvailableSeatsForElection(elections[currentElection].electionType);
+		if (
+			elections[currentElection].status == ElectionStatus.Ongoing &&
+			((_isVotingWindow() && elections[currentElection].candidates.length() < seatsNumber) ||
+				(block.timestamp > getElectionEndTime(currentElection) &&
+					elections[currentElection].winners.length() < seatsNumber))
+		) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/// @notice checks if the current election has the Ongoing status
+	function _hasOngoingElection() internal view returns (bool) {
+		return elections[currentElection].status == ElectionStatus.Ongoing;
+	}
+
+	/// @notice checks if the current election has the Ongoing status and is scheduled
+	function _hasOngoingScheduledElection() internal view returns (bool) {
+		return _hasOngoingElection() && elections[currentElection].electionType == ElectionType.Scheduled;
+	}
+
+	/// @notice returns the number of available seats for an election type
+	function _getAvailableSeatsForElection(ElectionType _electionType) internal pure returns (uint256) {
+		return _electionType == ElectionType.Replacement ? SEATS_REPLACEMENT_ELECTION : SEATS_FULL_ELECTION;
+	}
+
+	/// @notice returns the quorum amount based on the stakingRewardsV2 total supply
+	/// @param _timestamp the timestamp to use to lookup the total supply
+	/// in the stakingRewardsV2 contract
+	function _getQuorum(uint256 _timestamp) internal view returns (uint256) {
+		return (stakingRewardsV2.totalSupplyAtTime(_timestamp) * quorumThreshold) / 100;
+	}
+
+	/// @notice checks if a scheduled election can be started or not
+	/// @dev a scheduled election can only be started if:
+	/// block.timestamp >= startTime AND
+	/// there is not another ongoing scheduled election AND
+	/// last finalized scheduled election was more than 6 months ago
+	function _canStartScheduledElection() internal view returns (bool) {
+		if (block.timestamp < startTime) return false;
+		if (_hasOngoingScheduledElection()) return false;
+		if (
+			lastFinalizedScheduledElection > 0 &&
+			block.timestamp < elections[lastFinalizedScheduledElection].startTime + EPOCH_LENGTH
+		) return false;
+		return true;
+	}
+
+	/// @notice starts a replacement election
+	/// @param _councilMember the address of the council member to be replaced
 	function _startReplacementElection(address _councilMember) internal noElectionOngoing {
 		if (!_isCouncilMember(_councilMember)) revert Error.NotInCouncil();
 
@@ -288,6 +337,7 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 		_removeMemberFromCouncil(_councilMember);
 	}
 
+	/// @notice starts any kind of election
 	function _startElection(ElectionType _electionType) internal {
 		++currentElection;
 		emit ElectionStarted(currentElection, _electionType);
@@ -299,14 +349,16 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 		election.electionType = _electionType;
 	}
 
+	/// @notice cancels the current election
 	function _cancelElection() internal {
 		emit ElectionCanceled(currentElection);
 		elections[currentElection].status = ElectionStatus.Invalid;
 	}
 
+	/// @notice nominate a candidate for the current election
 	function _nominateCandidate(address _candidate) internal {
-		if (!hasOngoingElection()) revert Error.ElectionFinalizedOrInvalid();
-		if (!isNominationWindow()) revert Error.NotInNominationWindow();
+		if (!_hasOngoingElection()) revert Error.ElectionFinalizedOrInvalid();
+		if (!_isNominationWindow()) revert Error.NotInNominationWindow();
 
 		Election storage election = elections[currentElection];
 
@@ -322,11 +374,12 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 		if (!election.candidates.add(_candidate)) revert Error.AddFailed();
 	}
 
+	/// @notice updates the winners list every time a vote is recorded
 	function _updateWinnerList(Election storage _election, address _candidate) internal {
 		/// @dev if candidate is already a winner, no action is required
 		if (_election.winners.contains(_candidate)) return;
 
-		uint256 seatsNumber = getAvailableSeatsForElection(elections[currentElection].electionType);
+		uint256 seatsNumber = _getAvailableSeatsForElection(elections[currentElection].electionType);
 
 		/// @dev if the set is not complete yet, we take the first empty seat
 		if (_election.winners.length() < seatsNumber) {
@@ -342,6 +395,7 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 		}
 	}
 
+	/// @notice find and returns the address and votes for the current least voted winner
 	function _findWinnerWithLeastVotes(
 		Election storage _election
 	) internal view returns (address leastVotedWinner, uint256 leastVotes) {
@@ -368,12 +422,13 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 		return (leastVotedWinner, leastVotes);
 	}
 
-	// /*///////////////////////////////////////////////////////////////
-	//                       		MODIFIERS
-	// ///////////////////////////////////////////////////////////////*/
+	/*///////////////////////////////////////////////////////////////
+	                      		MODIFIERS
+	///////////////////////////////////////////////////////////////*/
 
+	/// @notice reverts if there is no ongoing election
 	modifier noElectionOngoing() {
-		if (hasOngoingElection()) revert Error.ElectionAlreadyOngoing();
+		if (_hasOngoingElection()) revert Error.ElectionAlreadyOngoing();
 		_;
 	}
 }
