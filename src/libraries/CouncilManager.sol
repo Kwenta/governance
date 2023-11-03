@@ -10,10 +10,16 @@ import { EnumerableSet } from "openzeppelin-contracts/contracts/utils/structs/En
 library CouncilManager {
 	using EnumerableSet for EnumerableSet.AddressSet;
 
-	uint256 constant THRESHOLD = 3;
-	uint256 constant COUNCIL_SEATS_NUMBER = 5;
-	address constant DEFAULT_SENTINEL_ADDRESS = address(0x1);
+	/// @notice default signer threshold in the safe
+	uint256 internal constant THRESHOLD = 3;
+	/// @notice number of seats in the council (number of Safe owners)
+	uint256 internal constant COUNCIL_SEATS_NUMBER = 5;
+	/// @notice first and last default address in a Safe's owner mapping
+	address internal constant DEFAULT_SENTINEL_ADDRESS = address(0x1);
 
+	/// @notice adds and replaces new members to the council based on the last election's results
+	/// @param _safeProxy the proxy address of a safe
+	/// @param _winners the winners of an election
 	function _initiateNewCouncil(Safe _safeProxy, EnumerableSet.AddressSet storage _winners) internal {
 		for (uint256 i = 0; i < _winners.length(); i++) {
 			address winner = _winners.at(i);
@@ -47,6 +53,9 @@ library CouncilManager {
 		}
 	}
 
+	/// @notice adds a new member to the council
+	/// @param _safeProxy the proxy address of a safe
+	/// @param _winner the winner of a replacement election
 	function _addMemberToCouncil(Safe _safeProxy, address _winner) internal {
 		if (_safeProxy.getOwners().length == COUNCIL_SEATS_NUMBER) revert Error.NoSeatAvailableInCouncil();
 		if (!_addOwnerWithThreshold(_safeProxy, _winner, THRESHOLD)) revert Error.CouldNotModifyCouncil();
@@ -67,8 +76,11 @@ library CouncilManager {
 		}
 	}
 
-	/// @notice this is to call addOwnerWithThreshold() on the safe
+	/// @notice calls addOwnerWithThreshold() on a safe
 	/// @dev done with execTransactionFromModule()
+	/// @param _safeProxy the proxy address of a safe
+	/// @param _newOwner the address of the new safe owner
+	/// @param _threshold the wanted threshold when adding the new owner
 	function _addOwnerWithThreshold(Safe _safeProxy, address _newOwner, uint256 _threshold) internal returns (bool) {
 		bytes memory addOwner = abi.encodeWithSignature(
 			"addOwnerWithThreshold(address,uint256)",
@@ -78,6 +90,12 @@ library CouncilManager {
 		return _safeProxy.execTransactionFromModule(address(_safeProxy), 0, addOwner, Enum.Operation.Call);
 	}
 
+	/// @notice calls removeOwner() on a safe
+	/// @dev done with execTransactionFromModule()
+	/// @param _safeProxy the proxy address of a safe
+	/// @param _prevOwner the address of the safe owner placed before the one we want to remove
+	/// @param _owner the address of the safe owner we want to remove
+	/// @param _threshold the wanted threshold when removing the owner
 	function _removeOwner(
 		Safe _safeProxy,
 		address _prevOwner,
@@ -93,19 +111,23 @@ library CouncilManager {
 		return _safeProxy.execTransactionFromModule(address(_safeProxy), 0, removeOwner, Enum.Operation.Call);
 	}
 
-	/// @notice this is to call replaceOwner() on the safe
+	/// @notice calls swapOwner() on a safe
 	/// @dev done with execTransactionFromModule()
+	/// @param _safeProxy the proxy address of a safe
+	/// @param _prevOwner the address of the safe owner placed before the one we want to remove
+	/// @param _oldOwner the address of the safe owner we want to remove
+	/// @param _newOwner the address of the new owner
 	function _swapOwner(
 		Safe _safeProxy,
-		address prevOwner,
-		address oldOwner,
-		address newOwner
+		address _prevOwner,
+		address _oldOwner,
+		address _newOwner
 	) internal returns (bool) {
 		bytes memory swapOwner = abi.encodeWithSignature(
 			"swapOwner(address,address,address)",
-			prevOwner,
-			oldOwner,
-			newOwner
+			_prevOwner,
+			_oldOwner,
+			_newOwner
 		);
 		return _safeProxy.execTransactionFromModule(address(_safeProxy), 0, swapOwner, Enum.Operation.Call);
 	}
