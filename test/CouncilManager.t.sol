@@ -4,14 +4,14 @@ pragma solidity ^0.8.19;
 
 import { Test } from "forge-std/Test.sol";
 
-import { CouncilGovernorPublic } from "test/mocks/CouncilGovernorPublic.sol";
+import { CouncilManagerMock } from "test/mocks/CouncilManagerMock.sol";
 import { SafeProxyMock } from "test/mocks/SafeProxyMock.sol";
 
 import { Error } from "src/libraries/Error.sol";
 
 contract CouncilGovernorTest is Test {
 	SafeProxyMock public safeProxy;
-	CouncilGovernorPublic public councilGovernor;
+	CouncilManagerMock public councilGovernor;
 
 	address public user1 = vm.addr(1);
 	address public user2 = vm.addr(2);
@@ -41,7 +41,7 @@ contract InitiateNewCouncil is CouncilGovernorTest {
 		safeOwners[4] = user5;
 
 		safeProxy.initializeOwners(safeOwners, SAFE_THRESHOLD);
-		councilGovernor = new CouncilGovernorPublic(address(safeProxy));
+		councilGovernor = new CouncilManagerMock(address(safeProxy));
 
 		assertTrue(safeProxy.getThreshold() == SAFE_THRESHOLD);
 		assertTrue(safeProxy.getOwners().length == SEATS_NUMBER);
@@ -75,7 +75,7 @@ contract InitiateNewCouncil is CouncilGovernorTest {
 		safeOwners[4] = user5;
 
 		safeProxy.initializeOwners(safeOwners, SAFE_THRESHOLD);
-		councilGovernor = new CouncilGovernorPublic(address(safeProxy));
+		councilGovernor = new CouncilManagerMock(address(safeProxy));
 
 		// we now simulate a vote reelecting a few members and electing new ones
 		safeOwners[2] = vm.addr(6);
@@ -120,7 +120,7 @@ contract InitiateNewCouncil is CouncilGovernorTest {
 		safeOwners[1] = user2;
 
 		safeProxy.initializeOwners(safeOwners, 1);
-		councilGovernor = new CouncilGovernorPublic(address(safeProxy));
+		councilGovernor = new CouncilManagerMock(address(safeProxy));
 
 		assertTrue(safeProxy.getThreshold() == 1);
 		assertTrue(safeProxy.getOwners().length == 2);
@@ -161,7 +161,7 @@ contract InitiateNewCouncil is CouncilGovernorTest {
 		safeOwners[1] = user2;
 
 		safeProxy.initializeOwners(safeOwners, 1);
-		councilGovernor = new CouncilGovernorPublic(address(safeProxy));
+		councilGovernor = new CouncilManagerMock(address(safeProxy));
 
 		assertTrue(safeProxy.getThreshold() == 1);
 		assertTrue(safeProxy.getOwners().length == 2);
@@ -207,7 +207,7 @@ contract InitiateNewCouncil is CouncilGovernorTest {
 		safeOwners[1] = user2;
 
 		safeProxy.initializeOwners(safeOwners, 1);
-		councilGovernor = new CouncilGovernorPublic(address(safeProxy));
+		councilGovernor = new CouncilManagerMock(address(safeProxy));
 
 		assertTrue(safeProxy.getThreshold() == 1);
 		assertTrue(safeProxy.getOwners().length == 2);
@@ -260,7 +260,7 @@ contract InitiateNewCouncil is CouncilGovernorTest {
 		safeOwners[4] = user5;
 
 		safeProxy.initializeOwners(safeOwners, SAFE_THRESHOLD);
-		councilGovernor = new CouncilGovernorPublic(address(safeProxy));
+		councilGovernor = new CouncilManagerMock(address(safeProxy));
 
 		// we now simulate a vote replacing all members
 		safeOwners[0] = vm.addr(6);
@@ -322,7 +322,7 @@ contract AddMemberToCouncil is CouncilGovernorTest {
 		safeOwners[4] = user5;
 
 		safeProxy.initializeOwners(safeOwners, SAFE_THRESHOLD);
-		councilGovernor = new CouncilGovernorPublic(address(safeProxy));
+		councilGovernor = new CouncilManagerMock(address(safeProxy));
 
 		// we now try to add an extra member
 		vm.expectRevert(Error.NoSeatAvailableInCouncil.selector);
@@ -338,7 +338,7 @@ contract AddMemberToCouncil is CouncilGovernorTest {
 		safeOwners[3] = user4;
 
 		safeProxy.initializeOwners(safeOwners, SAFE_THRESHOLD - 1);
-		councilGovernor = new CouncilGovernorPublic(address(safeProxy));
+		councilGovernor = new CouncilManagerMock(address(safeProxy));
 
 		assertFalse(safeProxy.isOwner(user5));
 		assertTrue(safeProxy.getThreshold() == SAFE_THRESHOLD - 1);

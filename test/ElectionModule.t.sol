@@ -39,6 +39,7 @@ contract ElectionModuleTest is Test {
 	event ElectionCanceled(uint256 indexed electionId);
 	event RemovedOwner(address indexed owner);
 	event ChangedThreshold(uint256 threshold);
+	event QuorumThresholdSet(uint256 oldThreshold, uint256 newThreshold);
 
 	function setUp() public {
 		stakingRewards = new StakingRewardsV2Mock();
@@ -53,7 +54,7 @@ contract ElectionModuleTest is Test {
 
 		safeProxy.initializeOwners(safeOwners, SAFE_THRESHOLD);
 
-		electionModule = new ElectionModule(address(stakingRewards), address(safeProxy), DEFAULT_START_TIME);
+		electionModule = new ElectionModule(address(safeProxy), address(stakingRewards), DEFAULT_START_TIME);
 
 		vm.prank(user1);
 		stakingRewards.stake(DEFAULT_STAKE_AMOUNT);
@@ -142,8 +143,8 @@ contract Constructor is ElectionModuleTest {
 
 	function test_setsStorageVariables() public {
 		ElectionModule electionModule = new ElectionModule(
-			address(stakingRewards),
 			address(safeProxy),
+			address(stakingRewards),
 			DEFAULT_START_TIME
 		);
 		assertTrue(address(electionModule.stakingRewardsV2()) == address(stakingRewards));
@@ -1110,5 +1111,66 @@ contract CancelElection is ElectionModuleTest {
 		electionModule.cancelElection();
 
 		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Invalid);
+	}
+}
+
+contract SetQuorumThreshold is ElectionModuleTest {
+	function test_RevertIf_CallerNotSafe() public {
+		vm.expectRevert(Error.Unauthorized.selector);
+		electionModule.setQuorumThreshold(1);
+	}
+
+	function test_SetsNewThreshold() public {
+		assertTrue(electionModule.quorumThreshold() == 40);
+
+		uint256 newThreshold = 100;
+
+		vm.prank(address(safeProxy));
+		vm.expectEmit(false, false, false, true);
+		emit QuorumThresholdSet(40, newThreshold);
+		electionModule.setQuorumThreshold(newThreshold);
+
+		assertTrue(electionModule.quorumThreshold() == newThreshold);
+	}
+}
+
+// we group all the election getters in one single contract
+// to save space
+contract GetElection is ElectionModuleTest {
+	function test_GetElectionInfo() public {
+		generateElection(IElectionModule.ElectionType.Scheduled);
+
+		assertTrue(electionModule.getElectionStartTime(1) == DEFAULT_START_TIME);
+		assertTrue(electionModule.getElectionEndTime(1) == DEFAULT_START_TIME + ELECTION_DURATION);
+		assertTrue(electionModule.getElectionTotalVotes(1) == 500);
+		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Ongoing);
+		assertTrue(electionModule.getElectionType(1) == IElectionModule.ElectionType.Scheduled);
+		assertTrue(electionModule.getElectionCandidateAddress(1, 0) == user1);
+		assertTrue(electionModule.isElectionCandidate(1, user1));
+		assertFalse(electionModule.isElectionCandidate(1, vm.addr(10)));
+
+		address[] memory winners = electionModule.getElectionWinners(1);
+		assertTrue(winners[0] == user1);
+		assertTrue(winners[1] == user2);
+		assertTrue(winners[2] == user3);
+		assertTrue(winners[3] == user4);
+		assertTrue(winners[4] == user5);
+
+		assertTrue(electionModule.isElectionWinner(1, user1));
+		assertFalse(electionModule.isElectionWinner(1, user6));
+		assertTrue(electionModule.getElectionVotesForCandidate(1, user1) == 100);
+		assertTrue(electionModule.hasVoted(1, user1));
+		assertFalse(electionModule.hasVoted(1, vm.addr(10)));
+
+		electionModule.finalizeElection();
+
+		assertFalse(electionModule.canStartScheduledElection());
+		vm.warp(DEFAULT_START_TIME + EPOCH_LENGTH);
+		assertTrue(electionModule.canStartScheduledElection());
+		assertFalse(electionModule.hasOngoingElection());
+
+		generateNominations(IElectionModule.ElectionType.Community);
+
+		assertTrue(electionModule.hasOngoingElection());
 	}
 }

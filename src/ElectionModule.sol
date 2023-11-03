@@ -2,7 +2,7 @@
 // slither-disable-start timestamp
 pragma solidity ^0.8.19;
 
-import { CouncilGovernor } from "src/CouncilGovernor.sol";
+import { CouncilManager, Safe } from "src/libraries/CouncilManager.sol";
 
 import { IStakingRewardsV2 } from "src/interfaces/IStakingRewardsV2.sol";
 import { IElectionModule } from "src/interfaces/IElectionModule.sol";
@@ -11,7 +11,7 @@ import { Error } from "src/libraries/Error.sol";
 
 import { EnumerableSet } from "openzeppelin-contracts/contracts/utils/structs/EnumerableSet.sol";
 
-contract ElectionModule is CouncilGovernor, IElectionModule {
+contract ElectionModule is IElectionModule {
 	using EnumerableSet for EnumerableSet.AddressSet;
 
 	/*///////////////////////////////////////////////////////////////
@@ -27,12 +27,14 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 	/*///////////////////////////////////////////////////////////////
                               	STATE
   ///////////////////////////////////////////////////////////////*/
+	/// @notice Safe proxy contract
+	Safe public immutable safeProxy;
+
+	/// @notice StakingRewardsV2 contract
+	IStakingRewardsV2 public immutable stakingRewardsV2;
 
 	/// @notice time where any election can start
 	uint256 public immutable startTime;
-
-	/// @notice staking rewards V2 contract
-	IStakingRewardsV2 public immutable stakingRewardsV2;
 
 	/// @notice mapping storing all the elections following the schema (electionId => election)
 	mapping(uint256 => Election) private elections;
@@ -49,8 +51,11 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
                              CONSTRUCTOR
 	///////////////////////////////////////////////////////////////*/
 
-	constructor(address _stakingRewardsV2, address _safeProxy, uint256 _startTime) CouncilGovernor(_safeProxy) {
+	constructor(address _safeProxy, address _stakingRewardsV2, uint256 _startTime) {
+		if (_safeProxy == address(0)) revert Error.ZeroAddress();
 		if (_stakingRewardsV2 == address(0)) revert Error.ZeroAddress();
+
+		safeProxy = Safe(payable(address(_safeProxy)));
 		stakingRewardsV2 = IStakingRewardsV2(_stakingRewardsV2);
 		startTime = _startTime;
 	}
@@ -163,7 +168,8 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 	/// ended up being invalid (no candidates or votes). To avoid multisig desertion,
 	/// we cannot start another replacement election until the current available seat has been filled.
 	function startSingleSeatElection() external noElectionOngoing {
-		if (_getOwners().length == COUNCIL_SEATS_NUMBER) revert Error.NoSeatAvailableInCouncil();
+		if (safeProxy.getOwners().length == CouncilManager.COUNCIL_SEATS_NUMBER)
+			revert Error.NoSeatAvailableInCouncil();
 		_startElection(ElectionType.Replacement);
 	}
 
@@ -227,9 +233,9 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 		lastFinalizedScheduledElection = currentElection;
 
 		if (election.electionType == ElectionType.Replacement) {
-			_addMemberToCouncil(election.winners.at(0));
+			CouncilManager._addMemberToCouncil(safeProxy, election.winners.at(0));
 		} else {
-			_initiateNewCouncil(election.winners);
+			CouncilManager._initiateNewCouncil(safeProxy, election.winners);
 		}
 	}
 
@@ -331,10 +337,10 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 	/// @notice starts a replacement election
 	/// @param _councilMember the address of the council member to be replaced
 	function _startReplacementElection(address _councilMember) internal noElectionOngoing {
-		if (!_isCouncilMember(_councilMember)) revert Error.NotInCouncil();
+		if (!safeProxy.isOwner(_councilMember)) revert Error.NotInCouncil();
 
 		_startElection(ElectionType.Replacement);
-		_removeMemberFromCouncil(_councilMember);
+		CouncilManager._removeMemberFromCouncil(safeProxy, _councilMember);
 	}
 
 	/// @notice starts any kind of election
@@ -365,7 +371,7 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 		if (election.candidates.contains(_candidate)) revert Error.CandidateAlreadyNominated();
 
 		/// @dev this prevent a council member from being nominated in a replacement election (becoming member twice)
-		if (election.electionType == ElectionType.Replacement && _isCouncilMember(_candidate)) {
+		if (election.electionType == ElectionType.Replacement && safeProxy.isOwner(_candidate)) {
 			revert Error.CandidateAlreadyInCouncil();
 		}
 
@@ -429,6 +435,12 @@ contract ElectionModule is CouncilGovernor, IElectionModule {
 	/// @notice reverts if there is no ongoing election
 	modifier noElectionOngoing() {
 		if (_hasOngoingElection()) revert Error.ElectionAlreadyOngoing();
+		_;
+	}
+
+	/// @notice reverts if caller is not Safe proxy
+	modifier safeOnly() {
+		if (msg.sender != address(safeProxy)) revert Error.Unauthorized();
 		_;
 	}
 }
