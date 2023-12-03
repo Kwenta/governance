@@ -45,7 +45,7 @@ contract ElectionModule is IElectionModule {
 	uint256 public lastFinalizedScheduledElection;
 
 	/// @notice the quorum threshold for a community election to be valid
-	uint256 public quorumThreshold = 40;
+	uint256 public quorumThreshold = 4000;
 
 	/*///////////////////////////////////////////////////////////////
                              CONSTRUCTOR
@@ -65,28 +65,19 @@ contract ElectionModule is IElectionModule {
   ///////////////////////////////////////////////////////////////*/
 
 	/// @inheritdoc IElectionModule
-	function getElectionStartTime(uint256 _electionId) public view returns (uint256) {
-		return elections[_electionId].startTime;
-	}
-
-	/// @inheritdoc IElectionModule
-	function getElectionEndTime(uint256 _electionId) public view returns (uint256) {
-		return elections[_electionId].startTime + ELECTION_DURATION;
-	}
-
-	/// @inheritdoc IElectionModule
-	function getElectionTotalVotes(uint256 _electionId) public view returns (uint256) {
-		return elections[_electionId].totalVotes;
-	}
-
-	/// @inheritdoc IElectionModule
-	function getElectionStatus(uint256 _electionId) public view returns (ElectionStatus) {
-		return elections[_electionId].status;
-	}
-
-	/// @inheritdoc IElectionModule
-	function getElectionType(uint256 _electionId) public view returns (ElectionType) {
-		return elections[_electionId].electionType;
+	function getElectionDetails(
+		uint256 _electionId
+	)
+		external
+		view
+		returns (uint256 start, uint256 end, uint256 totalVotes, ElectionStatus status, ElectionType electionType)
+	{
+		Election storage election = elections[_electionId];
+		start = election.startTime;
+		end = election.startTime + ELECTION_DURATION;
+		totalVotes = election.totalVotes;
+		status = election.status;
+		electionType = election.electionType;
 	}
 
 	/// @inheritdoc IElectionModule
@@ -101,12 +92,7 @@ contract ElectionModule is IElectionModule {
 
 	/// @inheritdoc IElectionModule
 	function getElectionWinners(uint256 _electionId) public view returns (address[] memory) {
-		EnumerableSet.AddressSet storage electionWinners = elections[_electionId].winners;
-		address[] memory winnersArray = new address[](electionWinners.length());
-		for (uint256 i = 0; i < electionWinners.length(); ++i) {
-			winnersArray[i] = electionWinners.at(i);
-		}
-		return winnersArray;
+		return elections[_electionId].winners.values();
 	}
 
 	/// @inheritdoc IElectionModule
@@ -212,9 +198,10 @@ contract ElectionModule is IElectionModule {
 	/// @inheritdoc IElectionModule
 	function finalizeElection() external {
 		if (_isElectionFinalized()) revert Error.ElectionFinalizedOrInvalid();
-		if (block.timestamp < getElectionEndTime(currentElection)) revert Error.ElectionNotReadyToBeFinalized();
 
 		Election storage election = elections[currentElection];
+
+		if (block.timestamp < election.startTime + ELECTION_DURATION) revert Error.ElectionNotReadyToBeFinalized();
 
 		/// @dev if there are no votes, or if quorum isn't met for a Community Election
 		/// then the election is invalid and needs to be canceled
@@ -257,26 +244,25 @@ contract ElectionModule is IElectionModule {
 
 	/// @notice checks if the current election is in the nomination window
 	function _isNominationWindow() internal view returns (bool) {
-		return
-			block.timestamp >= elections[currentElection].startTime &&
-			block.timestamp < elections[currentElection].startTime + NOMINATION_WINDOW;
+		uint256 electionStartTime = elections[currentElection].startTime;
+		return block.timestamp >= electionStartTime && block.timestamp < electionStartTime + NOMINATION_WINDOW;
 	}
 
 	/// @notice checks if the current election is in the voting window
 	/// @dev _hasOngoingElection is called here because an election could possibly
 	/// be in the voting window but with no candidates at all, making it invalid
 	function _isVotingWindow() internal view returns (bool) {
+		uint256 electionStartTime = elections[currentElection].startTime;
 		return
 			_hasOngoingElection() &&
-			block.timestamp >= elections[currentElection].startTime + NOMINATION_WINDOW &&
-			block.timestamp < elections[currentElection].startTime + ELECTION_DURATION;
+			block.timestamp >= electionStartTime + NOMINATION_WINDOW &&
+			block.timestamp < electionStartTime + ELECTION_DURATION;
 	}
 
 	/// @notice checks if the current election has been finalized
 	function _isElectionFinalized() internal view returns (bool) {
-		return
-			elections[currentElection].status == ElectionStatus.Finalized ||
-			elections[currentElection].status == ElectionStatus.Invalid;
+		ElectionStatus electionStatus = elections[currentElection].status;
+		return electionStatus == ElectionStatus.Finalized || electionStatus == ElectionStatus.Invalid;
 	}
 
 	/// @notice checks if the current election is cancelable
@@ -284,17 +270,17 @@ contract ElectionModule is IElectionModule {
 	/// if nomination window ended with not enough candidates OR
 	/// voting window ended with not enough winners
 	function _isElectionCancelable() internal view returns (bool) {
+		Election storage election = elections[currentElection];
 		uint256 seatsNumber = _getAvailableSeatsForElection(elections[currentElection].electionType);
 		if (
 			elections[currentElection].status == ElectionStatus.Ongoing &&
 			((_isVotingWindow() && elections[currentElection].candidates.length() < seatsNumber) ||
-				(block.timestamp > getElectionEndTime(currentElection) &&
+				(block.timestamp > election.startTime + ELECTION_DURATION &&
 					elections[currentElection].winners.length() < seatsNumber))
 		) {
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	}
 
 	/// @notice checks if the current election has the Ongoing status
@@ -316,7 +302,7 @@ contract ElectionModule is IElectionModule {
 	/// @param _timestamp the timestamp to use to lookup the total supply
 	/// in the stakingRewardsV2 contract
 	function _getQuorum(uint256 _timestamp) internal view returns (uint256) {
-		return (stakingRewardsV2.totalSupplyAtTime(_timestamp) * quorumThreshold) / 100;
+		return (stakingRewardsV2.totalSupplyAtTime(_timestamp) * quorumThreshold) / 10000;
 	}
 
 	/// @notice checks if a scheduled election can be started or not
@@ -363,12 +349,11 @@ contract ElectionModule is IElectionModule {
 
 	/// @notice nominate a candidate for the current election
 	function _nominateCandidate(address _candidate) internal {
+		if (_candidate == address(0)) revert Error.ZeroAddress();
 		if (!_hasOngoingElection()) revert Error.ElectionFinalizedOrInvalid();
 		if (!_isNominationWindow()) revert Error.NotInNominationWindow();
 
 		Election storage election = elections[currentElection];
-
-		if (election.candidates.contains(_candidate)) revert Error.CandidateAlreadyNominated();
 
 		/// @dev this prevent a council member from being nominated in a replacement election (becoming member twice)
 		if (election.electionType == ElectionType.Replacement && safeProxy.isOwner(_candidate)) {
@@ -405,13 +390,14 @@ contract ElectionModule is IElectionModule {
 	function _findWinnerWithLeastVotes(
 		Election storage _election
 	) internal view returns (address leastVotedWinner, uint256 leastVotes) {
-		if (_election.winners.length() == 1) {
+		uint256 winnersLength = _election.winners.length();
+		if (winnersLength == 1) {
 			leastVotedWinner = _election.winners.at(0);
 			leastVotes = _election.voteCounts[leastVotedWinner];
 		} else {
 			leastVotes = type(uint256).max;
 
-			for (uint256 i = 0; i < _election.winners.length(); ) {
+			for (uint256 i = 0; i < winnersLength; ) {
 				address winner = _election.winners.at(i);
 				uint256 winnerVotes = _election.voteCounts[winner];
 

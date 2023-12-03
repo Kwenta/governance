@@ -196,15 +196,25 @@ contract StartScheduledElection is ElectionModuleTest {
 	function test_SetsElectionStruc() public {
 		uint256 electionId = 1;
 
-		assertTrue(electionModule.getElectionStartTime(electionId) == 0);
-		assertTrue(electionModule.getElectionStatus(electionId) == IElectionModule.ElectionStatus.Invalid);
+		(
+			uint256 electionStart,
+			,
+			,
+			IElectionModule.ElectionStatus electionStatus,
+			IElectionModule.ElectionType electionType
+		) = electionModule.getElectionDetails(electionId);
+
+		assertTrue(electionStart == 0);
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Invalid);
 
 		vm.warp(DEFAULT_START_TIME);
 		electionModule.startScheduledElection();
 
-		assertTrue(electionModule.getElectionStartTime(electionId) == DEFAULT_START_TIME);
-		assertTrue(electionModule.getElectionStatus(electionId) == IElectionModule.ElectionStatus.Ongoing);
-		assertTrue(electionModule.getElectionType(electionId) == IElectionModule.ElectionType.Scheduled);
+		(electionStart, , , electionStatus, electionType) = electionModule.getElectionDetails(electionId);
+
+		assertTrue(electionStart == DEFAULT_START_TIME);
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Ongoing);
+		assertTrue(electionType == IElectionModule.ElectionType.Scheduled);
 	}
 
 	function test_StartsElectionAfterFinalised() public {
@@ -212,11 +222,15 @@ contract StartScheduledElection is ElectionModuleTest {
 		generateElection(IElectionModule.ElectionType.Scheduled);
 		electionModule.finalizeElection();
 
+		(uint256 electionStart, , , , ) = electionModule.getElectionDetails(1);
+
 		// we now try call for a new election in the correct window
-		vm.warp(electionModule.getElectionStartTime(1) + EPOCH_LENGTH);
+		vm.warp(electionStart + EPOCH_LENGTH);
 		electionModule.startScheduledElection();
 
-		assertTrue(electionModule.getElectionStatus(2) == IElectionModule.ElectionStatus.Ongoing);
+		(, , , IElectionModule.ElectionStatus electionStatus, ) = electionModule.getElectionDetails(2);
+
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Ongoing);
 	}
 
 	function test_StartsElectionAfterInvalid() public {
@@ -244,7 +258,9 @@ contract StartScheduledElection is ElectionModuleTest {
 		vm.prank(user1);
 		electionModule.startCommunityElection();
 
-		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Ongoing);
+		(, , , IElectionModule.ElectionStatus electionStatus, ) = electionModule.getElectionDetails(1);
+
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Ongoing);
 
 		// we now start a scheduled election
 		vm.warp(DEFAULT_START_TIME + 1);
@@ -254,8 +270,11 @@ contract StartScheduledElection is ElectionModuleTest {
 		emit ElectionStarted(2, IElectionModule.ElectionType.Scheduled);
 		electionModule.startScheduledElection();
 
-		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Invalid);
-		assertTrue(electionModule.getElectionStatus(2) == IElectionModule.ElectionStatus.Ongoing);
+		(, , , IElectionModule.ElectionStatus electionStatus1, ) = electionModule.getElectionDetails(1);
+		(, , , IElectionModule.ElectionStatus electionStatus2, ) = electionModule.getElectionDetails(2);
+
+		assertTrue(electionStatus1 == IElectionModule.ElectionStatus.Invalid);
+		assertTrue(electionStatus2 == IElectionModule.ElectionStatus.Ongoing);
 	}
 }
 
@@ -295,9 +314,18 @@ contract StartCommunityElection is ElectionModuleTest {
 		vm.startPrank(user1);
 
 		electionModule.startCommunityElection();
-		assertTrue(electionModule.getElectionStartTime(1) == DEFAULT_START_TIME);
-		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Ongoing);
-		assertTrue(electionModule.getElectionType(1) == IElectionModule.ElectionType.Community);
+
+		(
+			uint256 electionStart,
+			,
+			,
+			IElectionModule.ElectionStatus electionStatus,
+			IElectionModule.ElectionType electionType
+		) = electionModule.getElectionDetails(1);
+
+		assertTrue(electionStart == DEFAULT_START_TIME);
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Ongoing);
+		assertTrue(electionType == IElectionModule.ElectionType.Community);
 
 		vm.stopPrank();
 	}
@@ -429,6 +457,11 @@ contract StartSingleSeatElection is ElectionModuleTest {
 }
 
 contract NominateCandidate is ElectionModuleTest {
+	function test_RevertIf_CandidateIsZero() public {
+		vm.expectRevert(Error.ZeroAddress.selector);
+		electionModule.nominateCandidate(address(0));
+	}
+
 	function test_RevertIf_NoOngoingElection() public {
 		vm.expectRevert(Error.ElectionFinalizedOrInvalid.selector);
 		electionModule.nominateCandidate(user1);
@@ -455,7 +488,7 @@ contract NominateCandidate is ElectionModuleTest {
 		electionModule.nominateCandidate(user1);
 
 		// we try to nominate user1 again
-		vm.expectRevert(Error.CandidateAlreadyNominated.selector);
+		vm.expectRevert(Error.AddFailed.selector);
 		electionModule.nominateCandidate(user1);
 	}
 
@@ -645,10 +678,12 @@ contract Vote is ElectionModuleTest {
 		vm.prank(address(safeProxy));
 		electionModule.startReplacementElection(user1);
 
+		(, , uint256 totalVotes, , ) = electionModule.getElectionDetails(1);
+
 		assertTrue(electionModule.hasVoted(1, user1) == false);
 		assertTrue(electionModule.hasVoted(1, user2) == false);
 		assertTrue(electionModule.getElectionVotesForCandidate(1, user2) == 0);
-		assertTrue(electionModule.getElectionTotalVotes(1) == 0);
+		assertTrue(totalVotes == 0);
 
 		// we nominate a candidate
 		electionModule.nominateCandidate(user2);
@@ -658,17 +693,21 @@ contract Vote is ElectionModuleTest {
 		vm.startPrank(user1);
 		electionModule.vote(user2);
 
+		(, , totalVotes, , ) = electionModule.getElectionDetails(1);
+
 		assertTrue(electionModule.hasVoted(1, user1) == true);
 		assertTrue(electionModule.getElectionVotesForCandidate(1, user2) == DEFAULT_STAKE_AMOUNT);
-		assertTrue(electionModule.getElectionTotalVotes(1) == DEFAULT_STAKE_AMOUNT);
+		assertTrue(totalVotes == DEFAULT_STAKE_AMOUNT);
 
 		// another user votes
 		vm.startPrank(user2);
 		electionModule.vote(user2);
 
+		(, , totalVotes, , ) = electionModule.getElectionDetails(1);
+
 		assertTrue(electionModule.hasVoted(1, user2) == true);
 		assertTrue(electionModule.getElectionVotesForCandidate(1, user2) == 2 * DEFAULT_STAKE_AMOUNT);
-		assertTrue(electionModule.getElectionTotalVotes(1) == 2 * DEFAULT_STAKE_AMOUNT);
+		assertTrue(totalVotes == 2 * DEFAULT_STAKE_AMOUNT);
 	}
 
 	function test_UpdatesWinnerListForScheduledElection() public {
@@ -920,53 +959,65 @@ contract FinalizeEelection is ElectionModuleTest {
 
 	function test_FinalizeScheduledElection() public {
 		assertTrue(electionModule.lastFinalizedScheduledElection() == 0);
-		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Invalid);
+
+		(, , , IElectionModule.ElectionStatus electionStatus, ) = electionModule.getElectionDetails(1);
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Invalid);
 
 		generateElection(IElectionModule.ElectionType.Scheduled);
 
 		assertTrue(electionModule.lastFinalizedScheduledElection() == 0);
-		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Ongoing);
+
+		(, , , electionStatus, ) = electionModule.getElectionDetails(1);
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Ongoing);
 
 		vm.expectEmit(true, false, false, false);
 		emit ElectionFinalized(1);
 		electionModule.finalizeElection();
 
+		(, , , electionStatus, ) = electionModule.getElectionDetails(1);
 		assertTrue(electionModule.lastFinalizedScheduledElection() == 1);
-		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Finalized);
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Finalized);
 	}
 
 	function test_FinalizeCommunityElection() public {
+		(, , , IElectionModule.ElectionStatus electionStatus, ) = electionModule.getElectionDetails(1);
 		assertTrue(electionModule.lastFinalizedScheduledElection() == 0);
-		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Invalid);
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Invalid);
 
 		generateElection(IElectionModule.ElectionType.Community);
 
+		(, , , electionStatus, ) = electionModule.getElectionDetails(1);
 		assertTrue(electionModule.lastFinalizedScheduledElection() == 0);
-		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Ongoing);
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Ongoing);
 
 		vm.expectEmit(true, false, false, false);
 		emit ElectionFinalized(1);
 		electionModule.finalizeElection();
 
+		(, , , electionStatus, ) = electionModule.getElectionDetails(1);
 		assertTrue(electionModule.lastFinalizedScheduledElection() == 1);
-		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Finalized);
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Finalized);
 	}
 
 	function test_FinalizeReplacementElection() public {
+		(, , , IElectionModule.ElectionStatus electionStatus, ) = electionModule.getElectionDetails(1);
+
 		assertTrue(electionModule.lastFinalizedScheduledElection() == 0);
-		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Invalid);
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Invalid);
 
 		generateElection(IElectionModule.ElectionType.Replacement);
 
+		(, , , electionStatus, ) = electionModule.getElectionDetails(1);
 		assertTrue(electionModule.lastFinalizedScheduledElection() == 0);
-		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Ongoing);
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Ongoing);
 
 		vm.expectEmit(true, false, false, false);
 		emit ElectionFinalized(1);
 		electionModule.finalizeElection();
 
+		(, , , electionStatus, ) = electionModule.getElectionDetails(1);
 		assertTrue(electionModule.lastFinalizedScheduledElection() == 1);
-		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Finalized);
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Finalized);
 	}
 
 	function test_InitiateNewCouncilAfterScheduledElection() public {
@@ -1104,13 +1155,16 @@ contract CancelElection is ElectionModuleTest {
 		electionModule.startScheduledElection();
 		electionModule.nominateCandidate(user1);
 
-		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Ongoing);
+		(, , , IElectionModule.ElectionStatus electionStatus, ) = electionModule.getElectionDetails(1);
+
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Ongoing);
 
 		// we close the nomination window making the election cancelable
 		vm.warp(DEFAULT_START_TIME + NOMINATION_WINDOW);
 		electionModule.cancelElection();
 
-		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Invalid);
+		(, , , electionStatus, ) = electionModule.getElectionDetails(1);
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Invalid);
 	}
 }
 
@@ -1121,13 +1175,13 @@ contract SetQuorumThreshold is ElectionModuleTest {
 	}
 
 	function test_SetsNewThreshold() public {
-		assertTrue(electionModule.quorumThreshold() == 40);
+		assertTrue(electionModule.quorumThreshold() == 4000);
 
 		uint256 newThreshold = 100;
 
 		vm.prank(address(safeProxy));
 		vm.expectEmit(false, false, false, true);
-		emit QuorumThresholdSet(40, newThreshold);
+		emit QuorumThresholdSet(4000, newThreshold);
 		electionModule.setQuorumThreshold(newThreshold);
 
 		assertTrue(electionModule.quorumThreshold() == newThreshold);
@@ -1140,11 +1194,19 @@ contract GetElection is ElectionModuleTest {
 	function test_GetElectionInfo() public {
 		generateElection(IElectionModule.ElectionType.Scheduled);
 
-		assertTrue(electionModule.getElectionStartTime(1) == DEFAULT_START_TIME);
-		assertTrue(electionModule.getElectionEndTime(1) == DEFAULT_START_TIME + ELECTION_DURATION);
-		assertTrue(electionModule.getElectionTotalVotes(1) == 500);
-		assertTrue(electionModule.getElectionStatus(1) == IElectionModule.ElectionStatus.Ongoing);
-		assertTrue(electionModule.getElectionType(1) == IElectionModule.ElectionType.Scheduled);
+		(
+			uint256 electionStart,
+			uint256 electionEnd,
+			uint256 totalVotes,
+			IElectionModule.ElectionStatus electionStatus,
+			IElectionModule.ElectionType electionType
+		) = electionModule.getElectionDetails(1);
+
+		assertTrue(electionStart == DEFAULT_START_TIME);
+		assertTrue(electionEnd == DEFAULT_START_TIME + ELECTION_DURATION);
+		assertTrue(totalVotes == 500);
+		assertTrue(electionStatus == IElectionModule.ElectionStatus.Ongoing);
+		assertTrue(electionType == IElectionModule.ElectionType.Scheduled);
 		assertTrue(electionModule.getElectionCandidateAddress(1, 0) == user1);
 		assertTrue(electionModule.isElectionCandidate(1, user1));
 		assertFalse(electionModule.isElectionCandidate(1, vm.addr(10)));

@@ -21,22 +21,24 @@ library CouncilManager {
 	/// @param _safeProxy the proxy address of a safe
 	/// @param _winners the winners of an election
 	function _initiateNewCouncil(Safe _safeProxy, EnumerableSet.AddressSet storage _winners) internal {
-		for (uint256 i = 0; i < _winners.length(); i++) {
+		uint256 winnersLength = _winners.length();
+		for (uint256 i = 0; i < winnersLength; i++) {
 			address winner = _winners.at(i);
 			/// @dev we first check if a winner isn't in the council yet
 			if (_safeProxy.isOwner(winner)) continue;
 
 			address[] memory currentOwners = _safeProxy.getOwners();
+			uint256 currentOwnersLength = currentOwners.length;
 
 			/// @dev if there is a free seat, we add a new owner
-			if (currentOwners.length < COUNCIL_SEATS_NUMBER) {
+			if (currentOwnersLength < COUNCIL_SEATS_NUMBER) {
 				/// @dev we make sure to readjust the threshold
-				uint256 threshold = THRESHOLD > currentOwners.length + 1 ? currentOwners.length + 1 : THRESHOLD;
+				uint256 threshold = THRESHOLD > currentOwnersLength + 1 ? currentOwnersLength + 1 : THRESHOLD;
 				if (!_addOwnerWithThreshold(_safeProxy, winner, threshold)) revert Error.CouldNotModifyCouncil();
 				/// @dev if no free seats available, we need to swap a current owner by a new elected one
 			} else {
 				/// @dev we go through all the current owners
-				for (uint256 j = 0; j < currentOwners.length; ) {
+				for (uint256 j = 0; j < currentOwnersLength; ) {
 					/// @dev if a current owner isn't found in the winners set, we replace it
 					if (!_winners.contains(currentOwners[j])) {
 						/// @dev we asssume the index before is always

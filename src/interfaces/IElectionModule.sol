@@ -34,25 +34,19 @@ interface IElectionModule {
                           	VIEW FUNCTIONS
 	///////////////////////////////////////////////////////////////*/
 
-	/// @notice returns the start time of an election
-	/// @param _electionId the election ID
-	function getElectionStartTime(uint256 _electionId) external view returns (uint256);
-
-	/// @notice returns the end time of an election
-	/// @param _electionId the election ID
-	function getElectionEndTime(uint256 _electionId) external view returns (uint256);
-
-	/// @notice returns the total votes of an election
-	/// @param _electionId the election ID
-	function getElectionTotalVotes(uint256 _electionId) external view returns (uint256);
-
-	/// @notice returns the status of an election
-	/// @param _electionId the election ID
-	function getElectionStatus(uint256 _electionId) external view returns (ElectionStatus);
-
-	/// @notice returns the type of an election
-	/// @param _electionId the election ID
-	function getElectionType(uint256 _electionId) external view returns (ElectionType);
+	/// @notice Returns all details of a specific election.
+	/// @param _electionId The ID of the election.
+	/// @return start The start time of the election.
+	/// @return end The end time of the election.
+	/// @return totalVotes The total votes in the election.
+	/// @return status The status of the election.
+	/// @return electionType The type of the election.
+	function getElectionDetails(
+		uint256 _electionId
+	)
+		external
+		view
+		returns (uint256 start, uint256 end, uint256 totalVotes, ElectionStatus status, ElectionType electionType);
 
 	/// @notice returns the address of a candidate for an election
 	/// @param _electionId the election ID
